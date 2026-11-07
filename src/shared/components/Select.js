@@ -51,7 +51,25 @@ export default function Select({
     const el = buttonRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setRect({ top: r.bottom + 6, left: r.left, width: r.width, bottom: r.top });
+    const gap = 6;
+    const edge = 8;
+    const maxListHeight = 288; // matches max-h-72
+    // Space the list can use without spilling past the viewport, so it never
+    // gets clipped (previously the popup always opened downward at its full
+    // height and the bottom options were unreachable on short viewports).
+    const spaceBelow = window.innerHeight - r.bottom - gap - edge;
+    const spaceAbove = r.top - gap - edge;
+    const placement = spaceBelow < maxListHeight && spaceAbove > spaceBelow ? "top" : "bottom";
+    const available = placement === "top" ? spaceAbove : spaceBelow;
+    setRect({
+      top: r.bottom + gap,
+      left: r.left,
+      width: r.width,
+      bottom: r.top,
+      placement,
+      maxHeight: Math.max(0, Math.min(maxListHeight, available)),
+      gap,
+    });
   }, []);
 
   useLayoutEffect(() => {
@@ -70,6 +88,20 @@ export default function Select({
       window.removeEventListener("resize", onResize);
     };
   }, [open, position]);
+
+  // Keep the keyboard-active option visible when the list is shorter than its content.
+  useEffect(() => {
+    if (!open || activeIndex < 0) return;
+    const listEl = listRef.current;
+    const optionEl = listEl?.querySelectorAll('[role="option"]')?.[activeIndex];
+    if (!listEl || !optionEl) return;
+    const optTop = optionEl.offsetTop;
+    const optBottom = optTop + optionEl.offsetHeight;
+    if (optTop < listEl.scrollTop) listEl.scrollTop = optTop;
+    else if (optBottom > listEl.scrollTop + listEl.clientHeight) {
+      listEl.scrollTop = optBottom - listEl.clientHeight;
+    }
+  }, [open, activeIndex]);
 
   useEffect(() => {
     if (!open) return;
@@ -129,13 +161,16 @@ export default function Select({
           id={`${selectId}-listbox`}
           role="listbox"
           aria-labelledby={selectId}
-          className="fixed z-[100] max-h-72 overflow-y-auto rounded-[10px] border border-border bg-surface p-1 shadow-[var(--shadow-elevated)] animate-pop-in custom-scrollbar"
+          className="fixed z-[100] max-h-72 overflow-y-auto overscroll-contain rounded-[10px] border border-border bg-surface p-1 shadow-[var(--shadow-elevated)] animate-pop-in custom-scrollbar"
           style={{
-            top: rect.top,
+            ...(rect.placement === "top"
+              ? { bottom: Math.max(8, window.innerHeight - rect.bottom + rect.gap) }
+              : { top: rect.top }),
             left: align === "right" ? undefined : rect.left,
             right: align === "right" ? Math.max(8, window.innerWidth - rect.left - rect.width) : undefined,
             minWidth: rect.width,
             maxWidth: 320,
+            maxHeight: rect.maxHeight,
           }}
         >
           {options.map((opt, i) => {
