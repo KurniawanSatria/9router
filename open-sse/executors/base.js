@@ -20,7 +20,7 @@ export class BaseExecutor {
   }
 
   getBaseUrls() {
-    return this.config.baseUrls || (this.config.baseUrl ? [this.config.baseUrl] : []);
+    return this.config?.baseUrls || (this.config?.baseUrl ? [this.config.baseUrl] : []);
   }
 
   getFallbackCount() {
@@ -40,7 +40,7 @@ export class BaseExecutor {
       return `${normalized}/messages`;
     }
     const baseUrls = this.getBaseUrls();
-    return baseUrls[urlIndex] || baseUrls[0] || this.config.baseUrl;
+    return baseUrls[urlIndex] || baseUrls[0] || this.config?.baseUrl;
   }
 
   buildHeaders(credentials, stream = true) {

@@ -90,9 +90,15 @@ const REFRESH_GRANTS = Object.fromEntries(
     })
 );
 
+// Dynamic compat nodes (openai-compatible-* / anthropic-compatible-*) have no
+// registry entry. A trimmed registry may also ship without openai/anthropic, which
+// would leave PROVIDERS.openai undefined and crash BaseExecutor.getBaseUrls().
+// Fall back to a minimal OpenAI-format transport instead.
+const COMPAT_FALLBACK_CONFIG = { format: "openai", baseUrl: OPENAI_COMPAT_BASE };
+
 export class DefaultExecutor extends BaseExecutor {
   constructor(provider) {
-    super(provider, PROVIDERS[provider] || PROVIDERS.openai);
+    super(provider, PROVIDERS[provider] || PROVIDERS.openai || COMPAT_FALLBACK_CONFIG);
   }
 
   transformRequest(model, body, stream, credentials) {

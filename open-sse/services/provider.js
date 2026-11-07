@@ -127,7 +127,7 @@ function getProviderConfig(provider, credentials = null) {
       baseUrl: ANTHROPIC_COMPATIBLE_DEFAULTS.baseUrl,
     };
   }
-  return PROVIDERS[provider] || PROVIDERS.openai;
+  return PROVIDERS[provider] || PROVIDERS.openai || { format: "openai", baseUrl: OPENAI_COMPAT_BASE };
 }
 
 // Get target format for provider
