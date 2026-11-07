@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LOCALES, LOCALE_COOKIE, normalizeLocale } from "@/i18n/config";
+import { LOCALES, LOCALE_COOKIE, LOCALE_NAMES, normalizeLocale } from "@/i18n/config";
+import { LOCALE_FLAGS } from "@/shared/constants/locales";
 import { reloadTranslations } from "@/i18n/runtime";
 
 function getLocaleFromCookie() {
@@ -13,48 +14,6 @@ function getLocaleFromCookie() {
   const value = cookie ? decodeURIComponent(cookie.split("=")[1]) : "en";
   return normalizeLocale(value);
 }
-
-// Locale display names and flags - will be translated by runtime i18n
-const getLocaleInfo = (locale) => {
-  const locales = {
-    "en": { name: "English", flag: "🇺🇸" },
-    "vi": { name: "Tiếng Việt", flag: "🇻🇳" },
-    "zh-CN": { name: "简体中文", flag: "🇨🇳" },
-    "zh-TW": { name: "繁體中文", flag: "🇹🇼" },
-    "ja": { name: "日本語", flag: "🇯🇵" },
-    "pt-BR": { name: "Português (Brasil)", flag: "🇧🇷" },
-    "pt-PT": { name: "Português (Portugal)", flag: "🇵🇹" },
-    "ko": { name: "한국어", flag: "🇰🇷" },
-    "es": { name: "Español", flag: "🇪🇸" },
-    "de": { name: "Deutsch", flag: "🇩🇪" },
-    "fr": { name: "Français", flag: "🇫🇷" },
-    "he": { name: "עברית", flag: "🇮🇱" },
-    "ar": { name: "العربية", flag: "🇸🇦" },
-    "ru": { name: "Русский", flag: "🇷🇺" },
-    "pl": { name: "Polski", flag: "🇵🇱" },
-    "cs": { name: "Čeština", flag: "🇨🇿" },
-    "nl": { name: "Nederlands", flag: "🇳🇱" },
-    "tr": { name: "Türkçe", flag: "🇹🇷" },
-    "uk": { name: "Українська", flag: "🇺🇦" },
-    "tl": { name: "Tagalog", flag: "🇵🇭" },
-    "id": { name: "Indonesia", flag: "🇮🇩" },
-    "th": { name: "ไทย", flag: "🇹🇭" },
-    "km": { name: "ខ្មែរ", flag: "🇰🇭" },
-    "hi": { name: "हिन्दी", flag: "🇮🇳" },
-    "bn": { name: "বাংলা", flag: "🇧🇩" },
-    "ur": { name: "اردو", flag: "🇵🇰" },
-    "ro": { name: "Română", flag: "🇷🇴" },
-    "sv": { name: "Svenska", flag: "🇸🇪" },
-    "it": { name: "Italiano", flag: "🇮🇹" },
-    "el": { name: "Ελληνικά", flag: "🇬🇷" },
-    "hu": { name: "Magyar", flag: "🇭🇺" },
-    "fi": { name: "Suomi", flag: "🇫🇮" },
-    "da": { name: "Dansk", flag: "🇩🇰" },
-    "no": { name: "Norsk", flag: "🇳🇴" },
-    "fa": { name: "فارسی", flag: "🇮🇷" }
-  };
-  return locales[locale] || { name: locale, flag: "🌐" };
-};
 
 export default function LanguageSwitcher({ className = "", isOpen: controlledOpen, onClose, hideTrigger = false }) {
   const [locale, setLocale] = useState("en");
@@ -123,8 +82,8 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
           data-i18n-skip="true"
         >
           <span className="material-symbols-outlined text-[20px]">language</span>
-          <span className="text-sm font-medium">{getLocaleInfo(locale).name}</span>
-          <span className="text-lg">{getLocaleInfo(locale).flag}</span>
+          <span className="text-sm font-medium">{LOCALE_NAMES[locale] || locale}</span>
+          <span className="text-lg">{LOCALE_FLAGS[locale] || "🌐"}</span>
         </button>
       )}
 
@@ -159,7 +118,6 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
               <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
                 {LOCALES.map((item) => {
                   const active = locale === item;
-                  const info = getLocaleInfo(item);
                   return (
                     <button
                       key={item}
@@ -170,11 +128,11 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
                           ? "bg-primary/15 text-primary ring-2 ring-primary"
                           : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
                       } ${isPending ? "opacity-70 cursor-wait" : ""}`}
-                      title={info.name}
+                      title={LOCALE_NAMES[item] || item}
                     >
-                      <span className="text-2xl">{info.flag}</span>
+                      <span className="text-2xl">{LOCALE_FLAGS[item] || "🌐"}</span>
                       {/* Fixed 2-line height so all cards are uniform */}
-                      <span className="text-center leading-tight line-clamp-2 h-8 flex items-center">{info.name}</span>
+                      <span className="text-center leading-tight line-clamp-2 h-8 flex items-center">{LOCALE_NAMES[item] || item}</span>
                       {active && (
                         <span className="material-symbols-outlined text-sm">check</span>
                       )}
