@@ -178,10 +178,13 @@ export function getModelLockKey(model) {
  * Reads flat field `modelLock_${model}` (or `modelLock___all` when model=null).
  */
 export function isModelLockActive(connection, model) {
-  const key = getModelLockKey(model);
-  const expiry = connection[key] || connection[MODEL_LOCK_ALL];
-  if (!expiry) return false;
-  return new Date(expiry).getTime() > Date.now();
+  const now = Date.now();
+  // Check both locks independently: a stale per-model lock must not shadow an
+  // active account-wide lock (and vice versa).
+  return [getModelLockKey(model), MODEL_LOCK_ALL].some((key) => {
+    const expiry = connection[key];
+    return !!expiry && new Date(expiry).getTime() > now;
+  });
 }
 
 /**
