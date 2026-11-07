@@ -12,6 +12,45 @@ export function getQuotaCooldown(backoffLevel = 0) {
   return Math.min(cooldown, BACKOFF_CONFIG.max);
 }
 
+const TOKENHARBOR_FREE_TIER_TEXT = /free allowance for ':free' models is used up/i;
+const TOKENHARBOR_RESET_TEXT = /comes back on (\d{1,2})\s+([a-z]{3})\s+(\d{4})\s+at\s+(\d{2}):(\d{2})\s+utc/i;
+const MONTH_INDEX = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+/**
+ * Token Harbor answers 429 free_tier_limit_reached with the exact reset time
+ * ("comes back on 10 Nov 2026 at 22:21 UTC") when an account's :free allowance
+ * is exhausted. Return that epoch so the caller can lock the account until then
+ * instead of retrying the same account on every :free model in a fallback combo.
+ */
+export function tokenharborFreeTierResetMs(status, errorText, provider = null) {
+  if (provider !== "tokenharbor" || Number(status) !== 429) return null;
+  const text = typeof errorText === "string" ? errorText : JSON.stringify(errorText ?? "");
+  if (!text.includes("free_tier_limit_reached") && !TOKENHARBOR_FREE_TIER_TEXT.test(text)) return null;
+  const match = text.match(TOKENHARBOR_RESET_TEXT);
+  if (!match) return null;
+
+  const day = Number(match[1]);
+  const month = MONTH_INDEX[match[2].toLowerCase()];
+  const year = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  if (month === undefined || day < 1 || day > 31 || hour > 23 || minute > 59) return null;
+
+  const resetMs = Date.UTC(year, month, day, hour, minute);
+  const resetDate = new Date(resetMs);
+  if (
+    resetDate.getUTCFullYear() !== year ||
+    resetDate.getUTCMonth() !== month ||
+    resetDate.getUTCDate() !== day ||
+    resetDate.getUTCHours() !== hour ||
+    resetDate.getUTCMinutes() !== minute
+  ) return null;
+  return resetMs > Date.now() ? resetMs : null;
+}
+
 /**
  * Check if error should trigger account fallback (switch to next account)
  * Config-driven: matches ERROR_RULES top-to-bottom (text rules first, then status)
