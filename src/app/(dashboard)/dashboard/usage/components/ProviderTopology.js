@@ -22,6 +22,8 @@ const FE_ACTIVE_TICK_MS = 1000;
 const KAME_PARTICLE_COUNT = 6;
 const SPARK_COUNT = 5;
 
+const FIT_OPTS = { padding: 0.2, duration: 200 };
+
 function getProviderConfig(providerId) {
   return AI_PROVIDERS[providerId] || { color: "#6b7280", name: providerId };
 }
@@ -411,30 +413,62 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 
   const rfInstance = useRef(null);
   const containerRef = useRef(null);
-  const fitOpts = { padding: 0.2, duration: 200 };
-  const onInit = useCallback((instance) => {
-    rfInstance.current = instance;
-    setTimeout(() => instance.fitView(fitOpts), 50);
+
+  // fitView on a 0×0 container (minimized window, hidden tab, bfcache restore)
+  // writes a NaN/off-screen viewport, which leaves the graph blank until the
+  // user resizes the window. Always measure first and skip empty frames.
+  const safeFit = useCallback(() => {
+    const instance = rfInstance.current;
+    const el = containerRef.current;
+    if (!instance || !el || (typeof document !== "undefined" && document.hidden)) return;
+    const { width, height } = el.getBoundingClientRect();
+    if (width < 2 || height < 2) return;
+    instance.fitView(FIT_OPTS);
   }, []);
 
-  // Re-fit on container resize
+  const onInit = useCallback((instance) => {
+    rfInstance.current = instance;
+    setTimeout(safeFit, 50);
+  }, [safeFit]);
+
+  // Re-fit on container resize (debounced so a resize storm cannot pile up
+  // interrupted fitView animations).
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let timer = 0;
     const ro = new ResizeObserver(() => {
-      if (rfInstance.current) rfInstance.current.fitView(fitOpts);
+      clearTimeout(timer);
+      timer = setTimeout(safeFit, 120);
     });
     ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    return () => {
+      ro.disconnect();
+      clearTimeout(timer);
+    };
+  }, [safeFit]);
+
+  // A window that is closed/minimized while the graph is mounted can come back
+  // with a stale viewport; re-fit once the page is visible again.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.hidden) return;
+      requestAnimationFrame(() => setTimeout(safeFit, 60));
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+    };
+  }, [safeFit]);
 
   // Re-fit when node count/layout changes
   useEffect(() => {
-    if (rfInstance.current) {
-      const id = setTimeout(() => rfInstance.current.fitView(fitOpts), 50);
-      return () => clearTimeout(id);
-    }
-  }, [nodes.length]);
+    if (!rfInstance.current) return;
+    const id = setTimeout(safeFit, 50);
+    return () => clearTimeout(id);
+  }, [nodes.length, safeFit]);
 
   return (
     <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]">
@@ -450,7 +484,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          fitViewOptions={fitOpts}
+          fitViewOptions={FIT_OPTS}
           minZoom={0.1}
           maxZoom={2}
           onInit={onInit}
