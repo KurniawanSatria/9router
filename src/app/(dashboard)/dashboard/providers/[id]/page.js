@@ -5,11 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getProviderIconSrc, markProviderIconMissing } from "@/shared/utils/providerIcon";
-import { Card, Button, Badge, Input, Modal, CardSkeleton, OAuthModal, KiroOAuthWrapper, CursorAuthModal, ZedAuthModal, XiaomiMimoAuthModal, IFlowCookieModal, GitLabAuthModal, Toggle, Select, EditConnectionModal, NoAuthProxyCard, ConfirmModal } from "@/shared/components";
+import { Card, Button, Badge, Input, Modal, CardSkeleton, OAuthModal, KiroOAuthWrapper, ZedAuthModal, IFlowCookieModal, GitLabAuthModal, Toggle, Select, EditConnectionModal, NoAuthProxyCard, ConfirmModal } from "@/shared/components";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS, FREE_PROVIDERS, FREE_TIER_PROVIDERS, WEB_COOKIE_PROVIDERS, getProviderAlias, isOpenAICompatibleProvider, isAnthropicCompatibleProvider, AI_PROVIDERS } from "@/shared/constants/providers";
 import { getModelsByProviderId, getModelKind } from "@/shared/constants/models";
 import { getThinkingLevels } from "open-sse/providers/thinkingLevels.js";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import { useNotificationStore } from "@/store/notificationStore";
 import { useModelCaps } from "@/shared/hooks/useModelCaps";
 import { translate } from "@/i18n/runtime";
 import { fetchSuggestedModels } from "@/shared/utils/providerModelsFetcher";
@@ -21,8 +22,6 @@ import ConnectionRow from "./ConnectionRow";
 import AddApiKeyModal from "./AddApiKeyModal";
 import EditCompatibleNodeModal from "./EditCompatibleNodeModal";
 import AddCustomModelModal from "./AddCustomModelModal";
-import BulkImportCodexModal from "./BulkImportCodexModal";
-import BulkImportGrokCliModal from "./BulkImportGrokCliModal";
 import CustomConfigCard from "./CustomConfigCard";
 import AutoPingScheduleModal from "./AutoPingScheduleModal";
 import WebLoginButton, { WEB_LOGIN_PROVIDERS } from "../components/WebLoginButton.js";
@@ -52,12 +51,9 @@ export default function ProviderDetailPage() {
   const [providerNode, setProviderNode] = useState(null);
   const [proxyPools, setProxyPools] = useState([]);
   const [showOAuthModal, setShowOAuthModal] = useState(false);
-  const [showXiaomiMimoModal, setShowXiaomiMimoModal] = useState(false);
   const [showIFlowCookieModal, setShowIFlowCookieModal] = useState(false);
   const [showAddApiKeyModal, setShowAddApiKeyModal] = useState(false);
   const [addConnectionError, setAddConnectionError] = useState("");
-  const [showBulkImportCodex, setShowBulkImportCodex] = useState(false);
-  const [showBulkImportGrokCli, setShowBulkImportGrokCli] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [showBulkProxyModal, setShowBulkProxyModal] = useState(false);
@@ -93,7 +89,9 @@ export default function ProviderDetailPage() {
   const stopOneByOneRef = useRef(false);
   const [importingQoderModels, setImportingQoderModels] = useState(false);
   const [importingClineModels, setImportingClineModels] = useState(false);
+  const [importingSuggestedModels, setImportingSuggestedModels] = useState(false);
   const { copied, copy } = useCopyToClipboard();
+  const notify = useNotificationStore();
 
   const AG_RISK_STORAGE_KEY = "ag_risk_confirmed";
 
@@ -108,11 +106,6 @@ export default function ProviderDetailPage() {
         setShowAgRiskModal(true);
         return;
       }
-    }
-    // Xiaomi Desktop: auto-import local credentials first, OAuth as fallback
-    if (providerId === "xiaomi-mimo") {
-      setShowXiaomiMimoModal(true);
-      return;
     }
     if (isOAuth) {
       openOAuthConnection();
@@ -700,9 +693,56 @@ export default function ProviderDetailPage() {
     }
   };
 
+  // Generic "Import from /models" — works for any provider whose registry
+  // declares modelsFetcher (openai-style /v1/models endpoint). Fetches via the
+  // connection-scoped route so the provider's own API key is used (their
+  // /v1/models requires auth), mirroring the Cline import button.
+  const handleImportSuggestedModels = async () => {
+    if (importingSuggestedModels) return;
+    const activeConnection = connections.find((conn) => conn.isActive !== false);
+    if (!activeConnection) {
+      notify.error("Please add an active connection first");
+      return;
+    }
+    setImportingSuggestedModels(true);
+    try {
+      const res = await fetch(`/api/providers/${activeConnection.id}/models`);
+      const data = await res.json();
+      if (!res.ok) {
+        notify.error(data.error || "Failed to fetch models");
+        return;
+      }
+      const models = data.models || [];
+      if (models.length === 0) {
+        notify.warning("No models returned by the provider");
+        return;
+      }
+      let importedCount = 0;
+      for (const model of models) {
+        const modelId = model.id || model.name;
+        if (!modelId) continue;
+        const alreadyExists = customModels.some(
+          (entry) => entry.providerAlias === providerStorageAlias && entry.id === modelId && (entry.kind || entry.type || "llm") === "llm"
+        ) || Object.values(modelAliases).includes(`${providerStorageAlias}/${modelId}`);
+        if (alreadyExists) continue;
+        await handleAddCustomModel(modelId, "llm", providerStorageAlias);
+        importedCount += 1;
+      }
+      if (importedCount === 0) {
+        notify.warning("All models already exist, no new models added");
+      } else {
+        notify.success(`Successfully added ${importedCount} models`);
+      }
+    } catch (error) {
+      console.log("Error importing suggested models:", error);
+      notify.error(`Error fetching models: ${error.message}`);
+    } finally {
+      setImportingSuggestedModels(false);
+    }
+  };
+
   const handleRunOneByOneTest = async () => {
     if (oneByOneRunning || connections.length === 0) return;
-
     const queuedState = Object.fromEntries(
       connections.map((connection) => [connection.id, { state: "queued", error: null }]),
     );
@@ -1291,6 +1331,22 @@ export default function ProviderDetailPage() {
           </button>
         )}
 
+        {/* Generic Import from /models — any provider declaring modelsFetcher */}
+        {!["qoder", "qoder-cn", "cline", "clinepass"].includes(providerId) &&
+          (OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId] || FREE_PROVIDERS[providerId] || FREE_TIER_PROVIDERS[providerId])?.modelsFetcher &&
+          connections.some((conn) => conn.isActive !== false) && (
+          <button
+            onClick={handleImportSuggestedModels}
+            disabled={importingSuggestedModels}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-blue-500/40 px-3 py-2 text-xs text-blue-600 dark:text-blue-400 transition-colors hover:border-blue-500 hover:bg-blue-500/5 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-sm" style={importingSuggestedModels ? { animation: "spin 1s linear infinite" } : undefined}>
+              {importingSuggestedModels ? "progress_activity" : "download"}
+            </span>
+            {importingSuggestedModels ? translate("Fetching...") : translate("Import from /models")}
+          </button>
+        )}
+
         {/* Suggested models from provider API — show only models not yet added */}
         {suggestedModels.length > 0 && (() => {
           const addedFullModels = new Set([
@@ -1781,16 +1837,18 @@ export default function ProviderDetailPage() {
               {"Available Models"}
             </h2>
             {providerThinkingLevels && (
-              <select
+              <Select
+                size="sm"
+                align="right"
                 value={thinkingMode}
-                onChange={(e) => handleThinkingModeChange(e.target.value)}
-                title="Appends (level) suffix to copied model names"
-                className="rounded-md border border-border bg-background px-2 py-1 text-xs focus:border-primary focus:outline-none"
-              >
-                {providerThinkingLevels.map((opt) => (
-                  <option key={opt} value={opt}>{`Thinking: ${opt.charAt(0).toUpperCase() + opt.slice(1)}`}</option>
-                ))}
-              </select>
+                onChange={handleThinkingModeChange}
+                options={providerThinkingLevels.map((opt) => ({
+                  value: opt,
+                  label: `Thinking: ${opt.charAt(0).toUpperCase() + opt.slice(1)}`,
+                }))}
+                ariaLabel="Thinking level suffix"
+                buttonClassName="min-w-[150px]"
+              />
             )}
           </div>
           {!isCompatible && (() => {
@@ -1860,12 +1918,6 @@ export default function ProviderDetailPage() {
           onSuccess={handleOAuthSuccess}
           onClose={() => setShowOAuthModal(false)}
         />
-      ) : providerId === "cursor" ? (
-        <CursorAuthModal
-          isOpen={showOAuthModal}
-          onSuccess={handleOAuthSuccess}
-          onClose={() => setShowOAuthModal(false)}
-        />
       ) : providerId === "zed" ? (
         <ZedAuthModal
           isOpen={showOAuthModal}
@@ -1890,12 +1942,6 @@ export default function ProviderDetailPage() {
         />
       )}
 
-      {/* Xiaomi Desktop: auto-import local credentials modal */}
-      <XiaomiMimoAuthModal
-        isOpen={showXiaomiMimoModal}
-        onSuccess={handleOAuthSuccess}
-        onClose={() => setShowXiaomiMimoModal(false)}
-      />
       {providerId === "iflow" && (
         <IFlowCookieModal
           isOpen={showIFlowCookieModal}
@@ -1953,21 +1999,6 @@ export default function ProviderDetailPage() {
         />
       )}
 
-      {providerId === "codex" && (
-        <BulkImportCodexModal
-          isOpen={showBulkImportCodex}
-          onClose={() => setShowBulkImportCodex(false)}
-          onSuccess={fetchConnections}
-        />
-      )}
-
-      {providerId === "grok-cli" && (
-        <BulkImportGrokCliModal
-          isOpen={showBulkImportGrokCli}
-          onClose={() => setShowBulkImportGrokCli(false)}
-          onSuccess={fetchConnections}
-        />
-      )}
 
       {scheduleConnection && (
         <AutoPingScheduleModal

@@ -135,6 +135,8 @@ export default function ModelSelectModal({
   const [providerNodes, setProviderNodes] = useState([]);
   const [customModels, setCustomModels] = useState([]);
   const [disabledModels, setDisabledModels] = useState({});
+  // Providers render collapsed by default; a search overrides collapsed state.
+  const [expandedProviders, setExpandedProviders] = useState(() => new Set());
   // Cursor and Cline expose the usable catalog per account, so the static catalog is
   // kept only as a fallback: it goes stale quickly and entitlements differ per account.
   // Single map driven by LIVE_CATALOG_PROVIDERS so the constant cannot drift
@@ -599,6 +601,15 @@ export default function ModelSelectModal({
     }
   };
 
+  const toggleProvider = (providerId) => {
+    setExpandedProviders((prev) => {
+      const next = new Set(prev);
+      if (next.has(providerId)) next.delete(providerId);
+      else next.add(providerId);
+      return next;
+    });
+  };
+
   const handleSelect = (model) => {
     const value = model?.value || model?.name || model;
     const isAdded = addedModelValues.includes(value);
@@ -754,11 +765,22 @@ export default function ModelSelectModal({
         {Object.entries(filteredGroups).map(([providerId, group]) => {
           const wildcardValue = `${group.alias || providerId}/*`;
           const isWildcardAdded = allowProviderWildcard && addedModelValues.includes(wildcardValue);
+          const expanded = searchQuery.trim() !== "" || expandedProviders.has(providerId);
 
           return (
             <div key={providerId}>
               {/* Provider header */}
-              <div className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-surface py-0.5 z-10">
+              <div
+                onClick={() => toggleProvider(providerId)}
+                className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-surface py-0.5 z-10 cursor-pointer select-none"
+                title={expanded ? `Collapse ${group.name}` : `Expand ${group.name}`}
+              >
+                <span
+                  className="material-symbols-outlined text-text-muted transition-transform"
+                  style={{ fontSize: "14px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+                >
+                  chevron_right
+                </span>
                 <ProviderIcon
                   src={`/providers/${providerId}.png`}
                   alt={group.name}
@@ -769,7 +791,7 @@ export default function ModelSelectModal({
                 {allowProviderWildcard ? (
                   <button
                     type="button"
-                    onClick={() => handleSelect({ value: wildcardValue, name: wildcardValue })}
+                    onClick={(e) => { e.stopPropagation(); handleSelect({ value: wildcardValue, name: wildcardValue }); }}
                     title={isWildcardAdded ? `Click to remove wildcard ${wildcardValue}` : `Click to allow all models from ${group.name} (${wildcardValue})`}
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer border ${
                       isWildcardAdded
@@ -795,6 +817,7 @@ export default function ModelSelectModal({
                 </span>
               </div>
 
+            {expanded && (
             <div className="flex flex-wrap gap-1.5">
               {group.models.map((model) => {
                 const isSelected = selectedModel === model.value;
@@ -842,6 +865,7 @@ export default function ModelSelectModal({
                 );
               })}
             </div>
+            )}
           </div>
         );
       })}

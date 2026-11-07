@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Button } from "@/shared/components";
+import ModelIcon from "@/shared/components/ModelIcon";
 import { getProviderCustomModelRows } from "@/shared/utils/providerCustomModels";
 function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
   const borderColor = testStatus === "ok"
@@ -11,20 +12,9 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
     ? "border-red-500/40"
     : "border-border";
 
-  const iconColor = testStatus === "ok"
-    ? "#22c55e"
-    : testStatus === "error"
-    ? "#ef4444"
-    : undefined;
-
   return (
     <div className={`flex items-center gap-3 p-3 rounded-lg border ${borderColor} hover:bg-sidebar/50`}>
-      <span
-        className="material-symbols-outlined text-base text-text-muted"
-        style={iconColor ? { color: iconColor } : undefined}
-      >
-        {testStatus === "ok" ? "check_circle" : testStatus === "error" ? "cancel" : "smart_toy"}
-      </span>
+      <ModelIcon modelId={modelId || fullModel} testStatus={testStatus} size={16} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{modelId}</p>
         <div className="flex items-center gap-1 mt-1">

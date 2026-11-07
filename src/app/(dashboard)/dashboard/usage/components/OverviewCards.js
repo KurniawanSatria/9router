@@ -6,29 +6,43 @@ import Card from "@/shared/components/Card";
 const fmt = (n) => new Intl.NumberFormat().format(n || 0);
 const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
 
+const STATS = [
+  { key: "totalRequests", label: "Requests", icon: "bolt", tone: "text-text-main" },
+  { key: "totalPromptTokens", label: "Input tokens", icon: "login", tone: "text-text-main" },
+  { key: "totalCachedTokens", label: "Cached", icon: "cached", tone: "text-text-muted" },
+  { key: "totalCompletionTokens", label: "Output tokens", icon: "logout", tone: "text-text-main" },
+];
+
 export default function OverviewCards({ stats }) {
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 sm:gap-4">
-      <Card className="flex min-w-0 flex-col items-center text-center gap-1 px-3 py-3 sm:px-4">
-        <span className="text-text-muted text-xs uppercase font-semibold sm:text-sm">Total Requests</span>
-        <span className="w-full truncate text-lg font-bold xl:text-xl" title={fmt(stats.totalRequests)}>{fmt(stats.totalRequests)}</span>
-      </Card>
-      <Card className="flex min-w-0 flex-col items-center text-center gap-1 px-3 py-3 sm:px-4">
-        <span className="text-text-muted text-xs uppercase font-semibold sm:text-sm">Total Input Tokens</span>
-        <span className="w-full truncate text-lg font-bold text-primary xl:text-xl" title={fmt(stats.totalPromptTokens)}>{fmt(stats.totalPromptTokens)}</span>
-      </Card>
-      <Card className="flex min-w-0 flex-col items-center text-center gap-1 px-3 py-3 sm:px-4">
-        <span className="text-text-muted text-xs uppercase font-semibold sm:text-sm">Cached Tokens</span>
-        <span className="w-full truncate text-lg font-bold text-info xl:text-xl" title={fmt(stats.totalCachedTokens)}>{fmt(stats.totalCachedTokens)}</span>
-      </Card>
-      <Card className="flex min-w-0 flex-col items-center text-center gap-1 px-3 py-3 sm:px-4">
-        <span className="text-text-muted text-xs uppercase font-semibold sm:text-sm">Output Tokens</span>
-        <span className="w-full truncate text-lg font-bold text-success xl:text-xl" title={fmt(stats.totalCompletionTokens)}>{fmt(stats.totalCompletionTokens)}</span>
-      </Card>
-      <Card className="flex min-w-0 flex-col items-center text-center gap-1 px-3 py-3 sm:px-4">
-        <span className="text-text-muted text-xs uppercase font-semibold sm:text-sm">Est. Cost</span>
-        <span className="w-full truncate text-lg font-bold text-warning xl:text-xl" title={`~${fmtCost(stats.totalCost)}`}>~{fmtCost(stats.totalCost)}</span>
-        <span className="text-[10px] text-text-muted">Estimated, not actual billing</span>
+    <div className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      {STATS.map(({ key, label, icon, tone }) => (
+        <Card key={key} padding="none" className="flex min-w-0 flex-col gap-2 p-4">
+          <div className="flex items-center gap-1.5 text-text-muted">
+            <span className="material-symbols-outlined text-[15px] leading-none">{icon}</span>
+            <span className="truncate text-[11px] font-medium uppercase tracking-wide">{label}</span>
+          </div>
+          <span
+            className={`truncate text-2xl font-semibold leading-none tabular-nums tracking-tight ${tone}`}
+            title={fmt(stats[key])}
+          >
+            {fmt(stats[key])}
+          </span>
+        </Card>
+      ))}
+
+      <Card padding="none" className="col-span-2 flex min-w-0 flex-col gap-2 p-4 md:col-span-1">
+        <div className="flex items-center gap-1.5 text-text-muted">
+          <span className="material-symbols-outlined text-[15px] leading-none">payments</span>
+          <span className="truncate text-[11px] font-medium uppercase tracking-wide">Est. cost</span>
+        </div>
+        <span
+          className="truncate text-2xl font-semibold leading-none tabular-nums tracking-tight text-text-main"
+          title={fmtCost(stats.totalCost)}
+        >
+          {fmtCost(stats.totalCost)}
+        </span>
+        <span className="truncate text-[10px] leading-none text-text-subtle">Estimated, not billed</span>
       </Card>
     </div>
   );

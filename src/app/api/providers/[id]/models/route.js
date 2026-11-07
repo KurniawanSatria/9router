@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getProviderConnectionById } from "@/models";
-import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
+import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider, AI_PROVIDERS } from "@/shared/constants/providers";
 import { GEMINI_CONFIG, ZED_HOSTED_CONFIG } from "@/lib/oauth/constants/oauth";
-import { refreshGoogleToken, refreshCodexToken, updateProviderCredentials } from "@/sse/services/tokenRefresh";
+import { refreshGoogleToken, updateProviderCredentials } from "@/sse/services/tokenRefresh";
 import { resolveOllamaLocalHost } from "open-sse/config/providers.js";
 import { getModelsByProviderId } from "open-sse/config/providerModels.js";
 import { resolveKiroModels } from "open-sse/services/kiroModels.js";
@@ -14,12 +14,10 @@ import { resolveCursorModels } from "open-sse/services/cursorModels.js";
 import { resolveZedModels } from "open-sse/shared/zedAuth.js";
 import { resolveClineModels, resolveClinepassModels } from "open-sse/services/clinepassModels.js";
 import { NOUS_MODELS_URL, normalizeNousModels } from "open-sse/services/nous.js";
-import codexProvider from "open-sse/providers/registry/codex.js";
 
 const GEMINI_CLI_MODELS_URL = "https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels";
 
 // Model discovery must identify as the same Codex CLI version as inference.
-const CODEX_MODELS_URL = `https://chatgpt.com/backend-api/codex/models?client_version=${codexProvider.transport.cliVersion}`;
 
 const parseOpenAIStyleModels = (data) => {
   if (Array.isArray(data)) return data;
@@ -68,7 +66,6 @@ const appendCodexReviewModels = (models) => models.flatMap((model) => {
   ];
 });
 
-const parseCodexModels = (data) => appendCodexReviewModels(parseOpenAIStyleModels(data));
 
 const createOpenAIModelsConfig = (url) => ({
   url,
@@ -203,22 +200,6 @@ const PROVIDER_MODELS_CONFIG = {
     headers: { "Content-Type": "application/json" },
     authQuery: "key", // Use query param for API key
     parseResponse: (data) => data.models || []
-  },
-  codex: {
-    customResolver: buildOAuthResolver({
-      refreshFn: (conn) => refreshCodexToken(conn.refreshToken),
-      fetchFn: (token) => fetch(CODEX_MODELS_URL, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "originator": "codex_cli_rs"
-        }
-      }),
-      parseFn: parseCodexModels,
-      errorLabel: "Failed to fetch Codex models"
-    })
   },
   antigravity: {
     url: "https://daily-cloudcode-pa.sandbox.googleapis.com/v1internal:models",
@@ -629,10 +610,46 @@ export async function GET(request, { params }) {
 
     const config = PROVIDER_MODELS_CONFIG[connection.provider];
     if (!config) {
-      return NextResponse.json(
-        { error: `Provider ${connection.provider} does not support models listing` },
-        { status: 400 }
-      );
+      // Registry-driven fallback: any provider declaring modelsFetcher (OpenAI-style
+      // /v1/models endpoint) is fetched here with the connection's own key, so
+      // aggregators (tokenharbor, unorouter, zro, orcarouter, …) work without a
+      // per-provider entry above.
+      const fetcher = AI_PROVIDERS[connection.provider]?.modelsFetcher;
+      if (!fetcher?.url) {
+        return NextResponse.json(
+          { error: `Provider ${connection.provider} does not support models listing` },
+          { status: 400 }
+        );
+      }
+      try {
+        const res = await fetch(fetcher.url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${connection.apiKey}`,
+          },
+        });
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.log(`Error fetching models from ${connection.provider}:`, errorText);
+          return NextResponse.json(
+            { error: `Failed to fetch models: ${res.status}` },
+            { status: res.status }
+          );
+        }
+        const data = await res.json();
+        const models = data.data || data.models || [];
+        return NextResponse.json({
+          provider: connection.provider,
+          connectionId: connection.id,
+          models
+        });
+      } catch (error) {
+        return NextResponse.json(
+          { error: `Failed to fetch models: ${error.message}` },
+          { status: 500 }
+        );
+      }
     }
 
     // Config-driven custom resolver path (OAuth refresh, non-OpenAI shape, etc.)

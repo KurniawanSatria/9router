@@ -27,31 +27,31 @@ function generateCrc(machineId, keyId) {
 
 /**
  * Generate API key with machineId embedded
- * Format: sk-{machineId}-{keyId}-{crc8}
+ * Format: sp-{machineId}-{keyId}-{crc8}
  * @param {string} machineId - 16-char machine ID
  * @returns {{ key: string, keyId: string }}
  */
 export function generateApiKeyWithMachine(machineId) {
   const keyId = generateKeyId();
   const crc = generateCrc(machineId, keyId);
-  const key = `sk-${machineId}-${keyId}-${crc}`;
+  const key = `sp-${machineId}-${keyId}-${crc}`;
   return { key, keyId };
 }
 
 /**
  * Parse API key and extract machineId + keyId
  * Supports both formats:
- * - New: sk-{machineId}-{keyId}-{crc8}
- * - Old: sk-{random8}
+ * - New: sp-{machineId}-{keyId}-{crc8}
+ * - Legacy: sk-{machineId}-{keyId}-{crc8} and sk-{random8}
  * @param {string} apiKey
  * @returns {{ machineId: string, keyId: string, isNewFormat: boolean } | null}
  */
 export function parseApiKey(apiKey) {
-  if (!apiKey || !apiKey.startsWith("sk-")) return null;
+  if (!apiKey || (!apiKey.startsWith("sp-") && !apiKey.startsWith("sk-"))) return null;
 
   const parts = apiKey.split("-");
-  
-  // New format: sk-{machineId}-{keyId}-{crc8} = 4 parts
+
+  // New format: sp-{machineId}-{keyId}-{crc8} = 4 parts (legacy sk- also accepted)
   if (parts.length === 4) {
     const [, machineId, keyId, crc] = parts;
     
@@ -62,7 +62,7 @@ export function parseApiKey(apiKey) {
     return { machineId, keyId, isNewFormat: true };
   }
   
-  // Old format: sk-{random8} = 2 parts
+  // Legacy format: sk-{random8} = 2 parts
   if (parts.length === 2) {
     return { machineId: null, keyId: parts[1], isNewFormat: false };
   }

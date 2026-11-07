@@ -30,6 +30,7 @@ import {
   getVercelAiGatewayUsage,
   getQoderUsage,
 } from "./usage/misc.js";
+import { getZroUsage, getTokenharborUsage } from "./usage/aggregators.js";
 
 /**
  * Get usage data for a provider connection
@@ -68,6 +69,10 @@ const USAGE_HANDLERS = {
   zed: (c) => getZedUsage(c.accessToken, c.providerSpecificData, c.proxyOptions),
   "xiaomi-mimo": (c) => getXiaomiMimoUsage(c.accessToken, c.providerSpecificData, c.proxyOptions),
   commandcode: (c) => getCommandCodeUsage(c.apiKey, c.proxyOptions),
+  // OpenAI-compatible aggregators: quota state only shows up as a 402/429
+  // body with a "resets in …" message on a probe request.
+  zro: (c) => getZroUsage(c.apiKey, c.proxyOptions),
+  tokenharbor: (c) => getTokenharborUsage(c.apiKey, c.proxyOptions),
   cursor: (c) => getCursorUsage(c.accessToken, c.providerSpecificData, c.proxyOptions),
 };
 

@@ -1,67 +1,259 @@
 "use client";
 
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import PropTypes from "prop-types";
 import { cn } from "@/shared/utils/cn";
 
+/**
+ * Select — a real dropdown, not a native <select>.
+ *
+ * Native selects cannot be styled consistently across platforms (the popup is
+ * drawn by the OS), so this renders a button plus a portal-positioned listbox.
+ * Keyboard: Enter/Space/ArrowDown open, arrows move, Enter selects, Esc closes.
+ */
 export default function Select({
-  label,
-  options = [],
   value,
   onChange,
+  options = [],
   placeholder = "Select an option",
-  error,
+  label,
   hint,
-  disabled = false,
+  error,
   required = false,
+  disabled = false,
+  size = "md",
+  align = "left",
   className,
-  selectClassName,
-  ...props
+  buttonClassName,
+  ariaLabel,
+  id,
 }) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [rect, setRect] = useState(null);
+  const buttonRef = useRef(null);
+  const listRef = useRef(null);
+  const autoId = useId();
+  const selectId = id || autoId;
+
+  const sizes = {
+    xs: "h-7 px-2 text-[11px] rounded-[7px] gap-1",
+    sm: "h-8 px-2.5 text-xs rounded-[8px] gap-1.5",
+    md: "h-9 px-3 text-sm rounded-[10px] gap-2",
+    lg: "h-11 px-4 text-sm rounded-[10px] gap-2",
+  };
+
+  const selected = options.find((o) => String(o.value) === String(value));
+  const displayLabel = selected?.label ?? placeholder;
+
+  const position = useCallback(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setRect({ top: r.bottom + 6, left: r.left, width: r.width, bottom: r.top });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    position();
+  }, [open, position]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onScroll = () => position();
+    const onResize = () => position();
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [open, position]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocDown = (e) => {
+      if (buttonRef.current?.contains(e.target)) return;
+      if (listRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
+  }, [open]);
+
+  const commit = (opt) => {
+    if (opt.disabled) return;
+    onChange?.(opt.value);
+    setOpen(false);
+    buttonRef.current?.focus();
+  };
+
+  const openList = () => {
+    const i = options.findIndex((o) => String(o.value) === String(value));
+    setActiveIndex(i >= 0 ? i : 0);
+    setOpen(true);
+  };
+
+  const onKeyDown = (e) => {
+    if (disabled) return;
+    if (!open) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        openList();
+      }
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(options.length - 1, i + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(0, i - 1));
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const opt = options[activeIndex];
+      if (opt) commit(opt);
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    }
+  };
+
+  const list = open && rect && typeof document !== "undefined"
+    ? createPortal(
+        <div
+          ref={listRef}
+          id={`${selectId}-listbox`}
+          role="listbox"
+          aria-labelledby={selectId}
+          className="fixed z-[100] max-h-72 overflow-y-auto rounded-[10px] border border-border bg-surface p-1 shadow-[var(--shadow-elevated)] animate-pop-in custom-scrollbar"
+          style={{
+            top: rect.top,
+            left: align === "right" ? undefined : rect.left,
+            right: align === "right" ? Math.max(8, window.innerWidth - rect.left - rect.width) : undefined,
+            minWidth: rect.width,
+            maxWidth: 320,
+          }}
+        >
+          {options.map((opt, i) => {
+            const isSelected = String(opt.value) === String(value);
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                disabled={opt.disabled}
+                onMouseEnter={() => setActiveIndex(i)}
+                onClick={() => commit(opt)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-left text-sm transition-colors",
+                  "disabled:cursor-not-allowed disabled:opacity-40",
+                  isSelected
+                    ? "bg-surface-2 font-medium text-text-main"
+                    : "text-text-muted hover:bg-surface-2 hover:text-text-main",
+                  i === activeIndex && !isSelected && "bg-surface-2/70"
+                )}
+              >
+                {opt.icon && (
+                  <span className="material-symbols-outlined text-[16px] leading-none">{opt.icon}</span>
+                )}
+                <span className="min-w-0 flex-1 truncate">{opt.label}</span>
+                {isSelected && (
+                  <span className="material-symbols-outlined text-[15px] leading-none text-primary">check</span>
+                )}
+              </button>
+            );
+          })}
+          {options.length === 0 && (
+            <div className="px-2.5 py-2 text-xs text-text-muted">No options</div>
+          )}
+        </div>,
+        document.body
+      )
+    : null;
+
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       {label && (
-        <label className="text-sm font-medium text-text-main">
+        <label htmlFor={selectId} className="text-xs font-medium text-text-muted">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
-      <div className="relative">
-        <select
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
+
+      <button
+        ref={buttonRef}
+        id={selectId}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? `${selectId}-listbox` : undefined}
+        aria-label={ariaLabel}
+        disabled={disabled}
+        onClick={() => (open ? setOpen(false) : openList())}
+        onKeyDown={onKeyDown}
+        className={cn(
+          "inline-flex min-w-0 items-center justify-between border bg-surface text-left transition-colors",
+          "hover:border-brand-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          open && "border-brand-500/50 ring-2 ring-brand-500/20",
+          error ? "border-red-500/50" : "border-border",
+          sizes[size],
+          buttonClassName
+        )}
+      >
+        <span className={cn("min-w-0 truncate", selected ? "text-text-main" : "text-text-subtle")}>
+          {displayLabel}
+        </span>
+        <span
           className={cn(
-            "w-full py-2.5 px-3 pr-10 text-sm text-text-main",
-            "bg-surface-2 border border-transparent rounded-[10px] appearance-none",
-            "focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500/40",
-            "transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
-            "text-[16px] sm:text-sm",
-            error && "ring-1 ring-red-500 focus:ring-2 focus:ring-red-500/40 border-red-500/40",
-            selectClassName
+            "material-symbols-outlined shrink-0 text-[16px] leading-none text-text-muted transition-transform duration-150",
+            open && "rotate-180"
           )}
-          {...props}
         >
-          <option value="" disabled>
-            {placeholder}
-          </option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
-          <span className="material-symbols-outlined text-[20px]">expand_more</span>
-        </div>
-      </div>
+          expand_more
+        </span>
+      </button>
+
       {error && (
-        <p className="text-xs text-red-500 flex items-center gap-1">
-          <span className="material-symbols-outlined text-[14px]">error</span>
+        <p className="flex items-center gap-1 text-xs text-red-500">
+          <span className="material-symbols-outlined text-[13px]">error</span>
           {error}
         </p>
       )}
-      {hint && !error && (
-        <p className="text-xs text-text-muted">{hint}</p>
-      )}
+      {hint && !error && <p className="text-xs text-text-muted">{hint}</p>}
+
+      {list}
     </div>
   );
 }
+
+Select.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      label: PropTypes.string.isRequired,
+      icon: PropTypes.string,
+      disabled: PropTypes.bool,
+    })
+  ),
+  placeholder: PropTypes.string,
+  label: PropTypes.string,
+  hint: PropTypes.string,
+  error: PropTypes.string,
+  required: PropTypes.bool,
+  disabled: PropTypes.bool,
+  size: PropTypes.oneOf(["xs", "sm", "md", "lg"]),
+  align: PropTypes.oneOf(["left", "right"]),
+  className: PropTypes.string,
+  buttonClassName: PropTypes.string,
+  ariaLabel: PropTypes.string,
+  id: PropTypes.string,
+};

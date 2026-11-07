@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Card from "@/shared/components/Card";
 import Button from "@/shared/components/Button";
+import Select from "@/shared/components/Select";
 import Drawer from "@/shared/components/Drawer";
 import Pagination from "@/shared/components/Pagination";
 import { cn } from "@/shared/utils/cn";
@@ -184,25 +185,18 @@ export default function RequestDetailsTab() {
       <Card padding="md">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex min-w-0 flex-col gap-2">
-            <label htmlFor="provider-filter" className="text-sm font-medium text-text-main">Provider</label>
-            <select
+            <Select
               id="provider-filter"
+              label="Provider"
               value={filters.provider}
-              onChange={(e) => setFilters({ ...filters, provider: e.target.value })}
-              className={cn(
-                "h-9 px-3 rounded-lg border border-black/10 dark:border-white/10 bg-surface",
-                "text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20",
-                "w-full min-w-0 cursor-pointer"
-              )}
-              style={{ colorScheme: 'auto' }}
-            >
-              <option value="">All Providers</option>
-              {providers.map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.name}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setFilters({ ...filters, provider: v })}
+              options={[
+                { value: "", label: "All Providers" },
+                ...providers.map((provider) => ({ value: provider.id, label: provider.name })),
+              ]}
+              className="w-full"
+              buttonClassName="w-full"
+            />
           </div>
           
           <div className="flex min-w-0 flex-col gap-2">
@@ -412,48 +406,6 @@ export default function RequestDetailsTab() {
                 </span>
               </div>
             </div>
-
-            {selectedDetail.pxpipe && (
-              <div className="rounded-lg border border-black/5 dark:border-white/5 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-[18px] text-text-muted">image</span>
-                  <span className="font-semibold text-sm text-text-main">PXPIPE</span>
-                  <span className={cn(
-                    "text-xs px-2 py-0.5 rounded",
-                    selectedDetail.pxpipe.applied
-                      ? "bg-green-500/15 text-green-600"
-                      : "bg-amber-500/15 text-amber-600"
-                  )}>
-                    {selectedDetail.pxpipe.applied ? "Activated" : "Skipped"}
-                  </span>
-                </div>
-                {selectedDetail.pxpipe.applied ? (
-                  <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                    <div>
-                      <span className="text-text-muted block text-xs">Original (est.)</span>
-                      <span className="font-mono">{(selectedDetail.pxpipe.tokensBeforeEst || 0).toLocaleString()} tokens</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Compressed (est.)</span>
-                      <span className="font-mono">{(selectedDetail.pxpipe.tokensAfterEst || 0).toLocaleString()} tokens</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Saved</span>
-                      <span className="font-mono text-green-600">{selectedDetail.pxpipe.savedPct || 0}%</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Images</span>
-                      <span className="font-mono">{selectedDetail.pxpipe.imageCount || 0} ({selectedDetail.pxpipe.durationMs || 0}ms)</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-text-muted">
-                    Reason: <span className="font-mono">{selectedDetail.pxpipe.reason}</span>
-                    {selectedDetail.pxpipe.detail ? ` — ${selectedDetail.pxpipe.detail}` : ""}
-                  </p>
-                )}
-              </div>
-            )}
 
             <div className="space-y-4">
               <CollapsibleSection title="1. Client Request (Input)" defaultOpen={true} icon="input">

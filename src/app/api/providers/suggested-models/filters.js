@@ -7,6 +7,13 @@ const KNOWN_FREE_OPENCODE_MODELS = ["big-pickle"];
 const DEAD_FREE_OPENCODE_MODELS = new Set(["deepseek-v4-flash-free"]);
 
 export const FILTERS = {
+  // Generic OpenAI-style /v1/models catalog: { data: [{id, ...}] } or
+  // { models: [...] }. Any id is selectable — the aggregator decides naming.
+  "openai": (models) =>
+    (Array.isArray(models) ? models : [])
+      .filter((m) => typeof m?.id === "string" && m.id.trim() !== "")
+      .map((m) => ({ id: m.id, name: m.name || m.id, contextLength: Number(m.context_length ?? m.context_length) || undefined })),
+
   "openrouter-free": (models) =>
     models
       .filter(

@@ -2,7 +2,7 @@ import { createErrorResult, parseUpstreamError, formatProviderError } from "../u
 import { HTTP_STATUS, FETCH_CONNECT_TIMEOUT_MS } from "../config/runtimeConfig.js";
 import { PROVIDER_MEDIA } from "../providers/index.js";
 import { getModelUpstreamId } from "../config/providerModels.js";
-import { generateSessionId } from "../executors/opencode-zen.js";
+import { generateSessionId } from "../executors/opencode.js";
 
 const OPENCODE_PROVIDERS = new Set(["opencode", "opencode-zen"]);
 

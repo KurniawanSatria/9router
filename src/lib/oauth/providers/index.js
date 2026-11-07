@@ -4,65 +4,25 @@ import "open-sse/index.js";
 import { generatePKCE } from "../utils/pkce.js";
 import { extractCodexAccountInfo, fetchKiroProfileArn } from "../providerHelpers.js";
 
-import claude from "./claude.js";
-import codex from "./codex.js";
-import xai from "./xai.js";
-import grokCli from "./grok-cli.js";
-import muse from "./muse.js";
-import geminiCli from "./gemini-cli.js";
 import antigravity from "./antigravity.js";
 import iflow from "./iflow.js";
-import qoder from "./qoder.js";
-import qoderCn from "./qoder-cn.js";
-import github from "./github.js";
 import kiro from "./kiro.js";
-import cursor from "./cursor.js";
-import kimi from "./kimi.js";
-import kilocode from "./kilocode.js";
-import cline from "./cline.js";
-import clinepass from "./clinepass.js";
 import gitlab from "./gitlab.js";
-import codebuddyCn from "./codebuddy-cn.js";
 import codebuddyIntl from "./codebuddy-intl.js";
-import kimchi from "./kimchi.js";
-import trae from "./trae.js";
 import windsurf from "./windsurf.js";
+import trae from "./trae.js";
 import zed from "./zed.js";
-import glm from "./glm.js";
-import minimaxCode from "./minimax-code.js";
-import minimaxCodeGlobal from "./minimax-code-global.js";
-import nous from "./nous.js";
 
 // Provider configurations
 const PROVIDERS = {
-  claude,
-  codex,
-  xai,
-  "grok-cli": grokCli,
-  muse,
-  "gemini-cli": geminiCli,
   antigravity,
   iflow,
-  qoder,
-  "qoder-cn": qoderCn,
-  github,
   kiro,
-  cursor,
-  kimi,
-  kilocode,
-  cline,
-  clinepass,
   gitlab,
-  "codebuddy-cn": codebuddyCn,
   "codebuddy-intl": codebuddyIntl,
-  kimchi,
-  trae,
   windsurf,
+  trae,
   zed,
-  glm,
-  "minimax-code": minimaxCode,
-  "minimax-code-global": minimaxCodeGlobal,
-  nous,
 };
 
 export { PROVIDERS };

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProviderIcon from "@/shared/components/ProviderIcon";
+import Select from "@/shared/components/Select";
 import QuotaTable from "./QuotaTable";
 import Toggle from "@/shared/components/Toggle";
 import Tooltip from "@/shared/components/Tooltip";
@@ -993,38 +994,31 @@ export default function ProviderLimits() {
               </>
             )}
           </div>
-          <select
+          <Select
+            size="sm"
+            align="right"
             value={accountFilter}
-            onChange={(event) => {
-              const nextValue = event.target.value;
+            onChange={(nextValue) => {
               if (shouldResetPage(accountFilter, nextValue)) {
                 setPage(1);
               }
               setAccountFilter(nextValue);
             }}
-            className="h-8 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary outline-none transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
-            aria-label="Filter accounts by status"
-          >
-            {ACCOUNT_FILTER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            options={ACCOUNT_FILTER_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            ariaLabel="Filter accounts by status"
+            buttonClassName="min-w-[130px]"
+          />
 
           {providerFilter === "codex" && (
-            <select
+            <Select
+              size="sm"
+              align="right"
               value={quotaSortMode}
-              onChange={(event) => setQuotaSortMode(event.target.value)}
-              className="h-8 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary outline-none transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
-              aria-label="Sort Codex quotas by remaining"
-            >
-              {QUOTA_SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={setQuotaSortMode}
+              options={QUOTA_SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              ariaLabel="Sort Codex quotas by remaining"
+              buttonClassName="min-w-[150px]"
+            />
           )}
 
           <button
@@ -1420,10 +1414,11 @@ export default function ProviderLimits() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs text-text-muted">{connectionsPageSummary}</span>
             <div className="flex flex-wrap items-center gap-2">
-              <select
+              <Select
+                size="sm"
+                align="right"
                 value={isCustomPageSize ? "custom" : String(pageSize)}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
+                onChange={(nextValue) => {
                   if (nextValue === "custom") return;
                   const nextPageSize = Number.parseInt(nextValue, 10);
                   if (Number.isFinite(nextPageSize)) {
@@ -1432,16 +1427,16 @@ export default function ProviderLimits() {
                     setCustomPageSizeInput(String(nextPageSize));
                   }
                 }}
-                className="h-8 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary outline-none transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
-                aria-label="Accounts per page"
-              >
-                {ACCOUNT_PAGE_SIZE_OPTIONS.map((option) => (
-                  <option key={option} value={String(option)}>
-                    {option} / page
-                  </option>
-                ))}
-                <option value="custom">Custom</option>
-              </select>
+                options={[
+                  ...ACCOUNT_PAGE_SIZE_OPTIONS.map((option) => ({
+                    value: String(option),
+                    label: `${option} / page`,
+                  })),
+                  { value: "custom", label: "Custom" },
+                ]}
+                ariaLabel="Accounts per page"
+                buttonClassName="min-w-[110px]"
+              />
               <input
                 type="number"
                 min="1"

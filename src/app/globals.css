@@ -27,10 +27,16 @@
   /* Primary (legacy alias for backward compat with existing components) */
   --color-primary: var(--color-brand-500);
   --color-primary-hover: var(--color-brand-600);
+  --color-primary-solid: #cc5236;
+  --color-primary-solid-hover: #a64027;
+  --color-on-primary: #ffffff;
 
   /* Surfaces & backgrounds (light) */
   --color-bg: #FDFAF6;
   --color-bg-alt: #F7F3EE;
+  --color-bg-subtle: #f4f1ec;
+  --color-bg-hover: rgba(60, 50, 45, 0.055);
+  --color-background: #FDFAF6;
   --color-surface: #ffffff;
   --color-surface-2: #f4f4f5;
   --color-surface-3: #e7e7e9;
@@ -64,7 +70,7 @@
     inset 0 1px 0 0 rgba(255,255,255,0.8),
     0 1px 2px rgba(15,23,42,0.04),
     0 12px 36px -8px rgba(15,23,42,0.10);
-  --shadow-focus: 0 0 0 3px rgba(229,106,74,0.18);
+  --shadow-focus: 0 0 0 3px rgba(229, 106, 74, 0.18);
 
   color-scheme: light;
 }
@@ -84,10 +90,16 @@
 
   --color-primary: #E56A4A;
   --color-primary-hover: #cc5236;
+  --color-primary-solid: #f4b59c;
+  --color-primary-solid-hover: #fdf1ed;
+  --color-on-primary: #ffffff;
 
   /* Surfaces (dark - Claude-like neutral warm) */
   --color-bg: #1a1a1a;
   --color-bg-alt: #1F1F1E;
+  --color-bg-subtle: #202020;
+  --color-bg-hover: rgba(255, 255, 255, 0.06);
+  --color-background: #1a1a1a;
   --color-surface: #262626;
   --color-surface-2: #303030;
   --color-surface-3: #3a3a3a;
@@ -150,10 +162,16 @@ select {
   /* Primary aliases */
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
+  --color-primary-solid: var(--color-primary-solid);
+  --color-primary-solid-hover: var(--color-primary-solid-hover);
+  --color-on-primary: var(--color-on-primary);
 
   /* Semantic */
   --color-bg: var(--color-bg);
   --color-bg-alt: var(--color-bg-alt);
+  --color-bg-subtle: var(--color-bg-subtle);
+  --color-bg-hover: var(--color-bg-hover);
+  --color-background: var(--color-background);
   --color-surface: var(--color-surface);
   --color-surface-2: var(--color-surface-2);
   --color-surface-3: var(--color-surface-3);
@@ -162,6 +180,7 @@ select {
   --color-border-subtle: var(--color-border-subtle);
   --color-text: var(--color-text);
   --color-text-main: var(--color-text-main);
+  --color-text-primary: var(--color-text-main);
   --color-text-muted: var(--color-text-muted);
   --color-text-subtle: var(--color-text-subtle);
   --color-accent: var(--color-brand-500);
@@ -220,7 +239,162 @@ body {
 
 /* iOS keyboard accent */
 input, textarea {
-  accent-color: var(--color-primary);
+  accent-color: var(--color-primary-solid);
+}
+
+/* ============================================================
+   Native form controls — stop them looking like 1998
+   ============================================================ */
+select,
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+input[type="url"],
+textarea {
+  font-family: inherit;
+}
+
+/* Native select: kill the OS chrome, draw our own chevron */
+select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 14px;
+  padding-right: 1.75rem;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+select:not([multiple]):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+}
+
+select:not([multiple]):focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+select:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+  padding: .4rem .5rem;
+}
+
+select optgroup {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Checkbox / radio: brand tint, real hit area */
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+  position: relative;
+}
+
+input[type="radio"] { border-radius: 9999px; }
+input[type="checkbox"] { border-radius: 5px; }
+
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: var(--color-primary-solid);
+  border-color: var(--color-primary-solid);
+}
+
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 9999px;
+  background: #fff;
+}
+
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* Range slider */
+input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-surface-3);
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 9999px;
+  background: var(--color-primary-solid);
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  transition: transform .15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type="range"]::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 9999px;
+  background: var(--color-primary-solid);
+  border: 2px solid var(--color-surface);
+}
+
+/* Placeholder consistency */
+::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
+}
+
+/* Global focus-visible for keyboard users */
+:focus-visible {
+  outline-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
 }
 
 /* Scrollbar (custom-scrollbar utility kept for compat) */
@@ -412,6 +586,120 @@ button:disabled,
 .slide-in-right { animation: slideInFromRight 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .fade-in { animation: fadeIn 0.2s ease-out forwards; }
 .slide-in-top { animation: slideInFromTop 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* ---- Motion system ---------------------------------------- */
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); max-height: 200px; }
+  to   { opacity: 0; transform: translateX(24px) scale(0.96); max-height: 0; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.9); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes progressIndeterminate {
+  0%   { transform: translateX(-100%) scaleX(0.4); }
+  50%  { transform: translateX(0%) scaleX(0.6); }
+  100% { transform: translateX(100%) scaleX(0.4); }
+}
+
+.animate-modal-in  { animation: modalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-overlay-in{ animation: overlayIn 0.18s ease-out both; }
+.animate-toast-in  { animation: toastIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-toast-out { animation: toastOut 0.2s ease-in both; }
+.animate-fade-up   { animation: fadeUp 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-pop-in    { animation: popIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Staggered list entrance — apply to a container, children animate in order */
+.stagger-children > * {
+  animation: fadeUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger-children > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2)  { animation-delay: 28ms; }
+.stagger-children > *:nth-child(3)  { animation-delay: 56ms; }
+.stagger-children > *:nth-child(4)  { animation-delay: 84ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 112ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 140ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 168ms; }
+.stagger-children > *:nth-child(8)  { animation-delay: 196ms; }
+.stagger-children > *:nth-child(9)  { animation-delay: 224ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 252ms; }
+.stagger-children > *:nth-child(n+11) { animation-delay: 280ms; }
+
+/* Skeleton shimmer */
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-surface-2) 0%,
+    color-mix(in srgb, var(--color-surface-3) 70%, var(--color-surface-2)) 50%,
+    var(--color-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Indeterminate progress bar */
+.progress-indeterminate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  animation: progressIndeterminate 1.4s ease-in-out infinite;
+}
+
+/* Interactive lift — for cards and tiles */
+.lift {
+  transition: transform .18s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow .18s ease,
+              border-color .18s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+}
+
+/* Press feedback for anything clickable */
+.pressable {
+  transition: transform .12s ease;
+}
+.pressable:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+/* Respect the user's motion preference — non-negotiable */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .lift:hover { transform: none; }
+}
 
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.4; transform: scale(1); }

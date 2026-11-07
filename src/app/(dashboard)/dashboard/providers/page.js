@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Toggle,
+  Select,
 } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { getProviderIconSrc } from "@/shared/utils/providerIcon";
@@ -106,7 +107,7 @@ export default function ProvidersPage() {
     useState(false);
   const [testingMode, setTestingMode] = useState(null);
   const [testResults, setTestResults] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
   const notify = useNotificationStore();
   const searchQuery = useHeaderSearchStore((s) => s.query);
   const registerSearch = useHeaderSearchStore((s) => s.register);
@@ -405,18 +406,15 @@ export default function ProvidersPage() {
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       <div className="flex items-center justify-end">
-        <select
+        <Select
+          size="sm"
+          align="right"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-8 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary outline-none transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
-          aria-label="Filter providers by connection status"
-        >
-          {STATUS_FILTER_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          onChange={setStatusFilter}
+          options={STATUS_FILTER_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          ariaLabel="Filter providers by connection status"
+          buttonClassName="min-w-[150px]"
+        />
       </div>
 
       {!hasAnyResult && (

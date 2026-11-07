@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Select from "@/shared/components/Select";
 import { FREE_PROVIDERS, AI_PROVIDERS } from "@/shared/constants/providers";
 
 // Keep providers without serviceKinds (default LLM) or with "llm" in serviceKinds
@@ -43,23 +44,28 @@ function TimeAgo({ timestamp }) {
 
 function RecentRequests({ requests = [] }) {
   return (
-    <Card className="flex min-w-0 flex-col overflow-hidden" padding="sm" style={{ height: 480 }}>
+    <Card className="flex min-w-0 flex-col overflow-hidden" padding="sm">
       {/* Header */}
-      <div className="px-1 py-2 border-b border-border shrink-0">
+      <div className="flex items-center justify-between gap-2 px-1 py-2 border-b border-border shrink-0">
         <span className="text-xs font-semibold text-text-muted uppercase tracking-wide">Recent Requests</span>
+        {requests.length > 0 && (
+          <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-text-muted">
+            {requests.length}
+          </span>
+        )}
       </div>
 
       {!requests.length ? (
         <div className="flex-1 flex items-center justify-center text-text-muted text-sm">No requests yet.</div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
-          <table className="w-full min-w-[300px] border-collapse text-xs">
+        <div className="max-h-[480px] overflow-y-auto custom-scrollbar">
+          <table className="w-full table-fixed border-collapse text-xs">
             <thead className="sticky top-0 bg-bg z-10">
               <tr className="border-b border-border">
-                <th className="py-1.5 text-left font-semibold text-text-muted w-2"></th>
+                <th className="py-1.5 pl-1 w-4"></th>
                 <th className="py-1.5 text-left font-semibold text-text-muted">Model</th>
-                <th className="py-1.5 text-right font-semibold text-text-muted whitespace-nowrap">In / Out</th>
-                <th className="py-1.5 text-right font-semibold text-text-muted">When</th>
+                <th className="py-1.5 text-right font-semibold text-text-muted whitespace-nowrap w-[78px]">In / Out</th>
+                <th className="py-1.5 pr-3 text-right font-semibold text-text-muted whitespace-nowrap w-[62px]">When</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -67,16 +73,16 @@ function RecentRequests({ requests = [] }) {
                 const ok = !r.status || r.status === "ok" || r.status === "success";
                 return (
                   <tr key={i} className="hover:bg-bg-subtle transition-colors">
-                    <td className="py-1.5">
+                    <td className="py-1.5 pl-1">
                       <span className={`block w-1.5 h-1.5 rounded-full ${ok ? "bg-success" : "bg-error"}`} />
                     </td>
-                    <td className="py-1.5 font-mono truncate max-w-[120px]" title={r.model}>{r.model}</td>
+                    <td className="py-1.5 font-mono truncate" title={r.model}>{r.model}</td>
                     <td className="py-1.5 text-right whitespace-nowrap">
                       <span className="text-primary">{fmt(r.promptTokens)}↑</span>
                       {" "}
                       <span className="text-success">{fmt(r.completionTokens)}↓</span>
                     </td>
-                    <td className="py-1.5 text-right text-text-muted whitespace-nowrap"><TimeAgo timestamp={r.timestamp} /></td>
+                    <td className="py-1.5 pr-3 text-right text-text-muted whitespace-nowrap"><TimeAgo timestamp={r.timestamp} /></td>
                   </tr>
                 );
               })}
@@ -473,7 +479,7 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
 
       {/* Provider topology + Recent Requests */}
       {loading ? spinner : (
-        <div className="grid min-w-0 grid-cols-1 items-stretch gap-2 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <div className="grid min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(380px,1fr)]">
           <ProviderTopology
             providers={providers}
             activeRequests={stats.activeRequests || []}
@@ -498,16 +504,15 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
       {/* Table with dropdown selector */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <select
+          <Select
+            size="sm"
             value={tableView}
-            onChange={(e) => setTableView(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50 sm:w-auto"
-            style={{ colorScheme: 'auto' }}
-          >
-            {TABLE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            onChange={setTableView}
+            options={TABLE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+            ariaLabel="Table view"
+            className="w-full sm:w-auto"
+            buttonClassName="min-w-[170px]"
+          />
           <div className="grid grid-cols-2 items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 sm:flex">
             <button
               onClick={() => setViewMode("costs")}

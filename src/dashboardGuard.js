@@ -43,7 +43,6 @@ const ALWAYS_PROTECTED = [
   "/api/settings/database",
   "/api/version/shutdown",
   "/api/version/update",
-  "/api/oauth/cursor/auto-import",
   "/api/oauth/kiro/auto-import",
   "/api/oauth/zed/auto-import",
   "/api/oauth/minimax-code/lease",
@@ -82,15 +81,11 @@ const LOCAL_ONLY_PATHS = [
   "/api/tunnel/tailscale-check",
   "/api/tunnel/enable",
   "/api/tunnel/disable",
-  "/api/oauth/cursor/auto-import",
   "/api/oauth/kiro/auto-import",
   "/api/oauth/zed/auto-import",
   "/api/oauth/minimax-code/lease",
   "/api/oauth/minimax-code-global/lease",
   "/api/auth/reset-password",
-  "/api/headroom/start",
-  "/api/headroom/stop",
-  "/api/headroom/proxy",
 ];
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);

@@ -3,7 +3,6 @@ import "open-sse/index.js";
 
 import { getSettings, getProviderConnections, updateProviderConnection } from "@/lib/localDb";
 import { getClaudeUsage } from "open-sse/services/usage/claude.js";
-import { getCodexUsage } from "open-sse/services/usage/codex.js";
 import { getExecutor } from "open-sse/executors/index.js";
 import { CLAUDE_CLI_SPOOF_HEADERS } from "open-sse/providers/shared.js";
 import { proxyAwareFetch } from "open-sse/utils/proxyFetch.js";
@@ -19,10 +18,6 @@ const providerHandlers = {
   claude: {
     getUsage: getClaudeUsage,
     sendPing: sendClaudePing,
-  },
-  codex: {
-    getUsage: getCodexUsage,
-    sendPing: sendCodexPing,
   },
 };
 
@@ -153,38 +148,6 @@ async function drainResponseBody(response) {
   }
 }
 
-async function sendCodexPing(connection, providerConfig, proxyOptions, deps) {
-  const executor = deps.getExecutor("codex");
-  const { response } = await executor.execute({
-    model: providerConfig.pingModel,
-    stream: true,
-    credentials: {
-      accessToken: connection.accessToken,
-      connectionId: connection.id,
-      providerSpecificData: connection.providerSpecificData,
-    },
-    proxyOptions,
-    log: console,
-    body: {
-      model: providerConfig.pingModel,
-      input: buildCodexPingInput(providerConfig.pingText),
-      instructions: providerConfig.pingInstructions,
-      reasoning: providerConfig.pingReasoningEffort
-        ? { effort: providerConfig.pingReasoningEffort, summary: "auto" }
-        : undefined,
-      store: false,
-      stream: true,
-    },
-  });
-  if (!response.ok) {
-    try { await response.body?.cancel?.(); } catch { /* noop */ }
-    return false;
-  }
-
-  // Codex only starts the 5h window after the streaming response completes.
-  await drainResponseBody(response);
-  return true;
-}
 
 function shouldSkipAfterFailure(state, key, nowMs = Date.now()) {
   const failedAt = state.failureCache[key];
