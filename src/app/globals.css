@@ -27,8 +27,8 @@
   /* Primary (legacy alias for backward compat with existing components) */
   --color-primary: var(--color-brand-500);
   --color-primary-hover: var(--color-brand-600);
-  --color-primary-solid: #cc5236;
-  --color-primary-solid-hover: #a64027;
+  --color-primary-solid: #E56A4A;
+  --color-primary-solid-hover: #cc5236;
   --color-on-primary: #ffffff;
 
   /* Surfaces & backgrounds (light) */
@@ -90,8 +90,8 @@
 
   --color-primary: #E56A4A;
   --color-primary-hover: #cc5236;
-  --color-primary-solid: #f4b59c;
-  --color-primary-solid-hover: #fdf1ed;
+  --color-primary-solid: #E56A4A;
+  --color-primary-solid-hover: #cc5236;
   --color-on-primary: #ffffff;
 
   /* Surfaces (dark - Claude-like neutral warm) */
