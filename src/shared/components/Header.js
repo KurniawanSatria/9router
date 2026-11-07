@@ -51,6 +51,13 @@ const getPageInfo = (pathname) => {
       icon: "layers",
       breadcrumbs: [],
     };
+  if (pathname.includes("/systemone"))
+    return {
+      title: "System One",
+      description: "Decision endpoint for state + typed questions",
+      icon: "psychology",
+      breadcrumbs: [],
+    };
   if (pathname.includes("/usage"))
     return {
       title: "Usage & Analytics",
