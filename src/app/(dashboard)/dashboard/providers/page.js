@@ -428,13 +428,21 @@ export default function ProvidersPage() {
         </div>
       )}
 
-      {/* Custom Providers (OpenAI/Anthropic Compatible) — dynamic */}
+      {/* Providers */}
+      {(oauthEntries.length > 0 ||
+        freeEntries.length > 0 ||
+        freeTierEntries.length > 0 ||
+        apikeyEntries.length > 0 ||
+        webCookieEntries.length > 0 ||
+        compatibleProviders.length > 0 ||
+        anthropicCompatibleProviders.length > 0) && (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
-            Custom Providers (OpenAI/Anthropic Compatible){" "}
+            Providers
           </h2>
-          <div className="grid grid-cols-1 gap-2 sm:flex sm:w-auto">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <ModelAvailabilityBadge />
             <Button
               size="sm"
               icon="add"
@@ -452,64 +460,37 @@ export default function ProvidersPage() {
             >
               Add OpenAI Compatible
             </Button>
-          </div>
-        </div>
-        {compatibleProviders.length === 0 &&
-        anthropicCompatibleProviders.length === 0 ? (
-          <div className="flex items-center justify-center gap-2 py-2 border border-dashed border-border rounded-xl text-text-muted text-sm">
-            <span className="material-symbols-outlined text-[18px]">extension</span>
-            <span>No custom providers — use buttons above to add OpenAI/Anthropic compatible endpoints</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {[...compatibleProviders, ...anthropicCompatibleProviders].map(
-              (info) => (
-                <ApiKeyProviderCard
-                  key={info.id}
-                  providerId={info.id}
-                  provider={info}
-                  stats={getProviderStats(info.id, "apikey")}
-                  authType="compatible"
-                  onToggle={(active) =>
-                    handleToggleProvider(info.id, "apikey", active)
-                  }
-                />
-              ),
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* OAuth Providers */}
-      {oauthEntries.length > 0 && (
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
-            OAuth Providers
-          </h2>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <ModelAvailabilityBadge />
             <button
-              onClick={() => handleBatchTest("oauth")}
+              onClick={() => handleBatchTest("all")}
               disabled={!!testingMode}
               className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
-                testingMode === "oauth"
+                testingMode === "all"
                   ? "bg-primary/20 border-primary/40 text-primary animate-pulse"
                   : "bg-bg border-border text-text-muted hover:text-text-main hover:border-primary/40"
               }`}
-              title="Test all OAuth connections"
-              aria-label="Test all OAuth connections"
+              title="Test all connections"
+              aria-label="Test all provider connections"
             >
               <span
-                className={`material-symbols-outlined text-[14px]${testingMode === "oauth" ? " animate-spin" : ""}`}
+                className={`material-symbols-outlined text-[14px]${testingMode === "all" ? " animate-spin" : ""}`}
               >
                 play_arrow
               </span>
-              {testingMode === "oauth" ? "Testing..." : "Test All"}
+              {testingMode === "all" ? "Testing..." : "Test All"}
             </button>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          {[...compatibleProviders, ...anthropicCompatibleProviders].map((info) => (
+            <ApiKeyProviderCard
+              key={info.id}
+              providerId={info.id}
+              provider={info}
+              stats={getProviderStats(info.id, "apikey")}
+              authType="compatible"
+              onToggle={(active) => handleToggleProvider(info.id, "apikey", active)}
+            />
+          ))}
           {oauthEntries.map(([key, info]) => {
             const authTypes = dualAuthTypes(info, key);
             return (
@@ -523,40 +504,7 @@ export default function ProvidersPage() {
               />
             );
           })}
-        </div>
-      </div>
-      )}
-
-      {/* Free Tier Providers */}
-      {(freeEntries.length > 0 || freeTierEntries.length > 0) && (
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
-            Free Tier Providers
-          </h2>
-          <button
-            onClick={() => handleBatchTest("free")}
-            disabled={!!testingMode}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
-              testingMode === "free"
-                ? "bg-primary/20 border-primary/40 text-primary animate-pulse"
-                : "bg-bg border-border text-text-muted hover:text-text-main hover:border-primary/40"
-            }`}
-            title="Test all Free connections"
-            aria-label="Test all Free provider connections"
-          >
-            <span
-              className={`material-symbols-outlined text-[14px]${testingMode === "free" ? " animate-spin" : ""}`}
-            >
-              play_arrow
-            </span>
-            {testingMode === "free" ? "Testing..." : "Test All"}
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
           {freeEntries.map(([key, info]) => {
-            // Dual-auth (e.g. kiro): count/toggle oauth + apikey/api_key so the
-            // card total matches the provider detail page.
             const freeAuthTypes = dualAuthTypes(info, key);
             return (
               <ProviderCard
@@ -584,37 +532,6 @@ export default function ProvidersPage() {
               />
             );
           })}
-        </div>
-      </div>
-      )}
-
-      {/* API Key Providers — fixed list */}
-      {apikeyEntries.length > 0 && (
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
-            API Key Providers{" "}
-          </h2>
-          <button
-            onClick={() => handleBatchTest("apikey")}
-            disabled={!!testingMode}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
-              testingMode === "apikey"
-                ? "bg-primary/20 border-primary/40 text-primary animate-pulse"
-                : "bg-bg border-border text-text-muted hover:text-text-main hover:border-primary/40"
-            }`}
-            title="Test all API Key connections"
-            aria-label="Test all API Key connections"
-          >
-            <span
-              className={`material-symbols-outlined text-[14px]${testingMode === "apikey" ? " animate-spin" : ""}`}
-            >
-              play_arrow
-            </span>
-            {testingMode === "apikey" ? "Testing..." : "Test All"}
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
           {visibleApikeyEntries.map(([key, info]) => (
             <ApiKeyProviderCard
               key={key}
@@ -642,7 +559,7 @@ export default function ProvidersPage() {
             className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 px-3 py-2.5 text-sm font-medium text-primary transition-colors hover:border-primary hover:bg-primary/5"
           >
             <span className="material-symbols-outlined text-[16px]">expand_more</span>
-            Show all {apikeyEntries.length} providers
+            Show all {apikeyEntries.length} API key providers
           </button>
         )}
       </div>
