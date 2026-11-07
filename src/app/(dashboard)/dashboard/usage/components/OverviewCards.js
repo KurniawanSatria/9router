@@ -18,30 +18,30 @@ export default function OverviewCards({ stats }) {
     <div className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
       {STATS.map(({ key, label, icon, tone }) => (
         <Card key={key} padding="none" className="flex min-w-0 flex-col gap-2 p-4">
-          <div className="flex items-center gap-1.5 text-text-muted">
-            <span className="material-symbols-outlined text-[15px] leading-none">{icon}</span>
-            <span className="truncate text-[11px] font-medium uppercase tracking-wide">{label}</span>
+          <span className="truncate text-[11px] font-medium uppercase tracking-wide text-text-muted">{label}</span>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="material-symbols-outlined shrink-0 text-[16px] leading-none text-text-muted">{icon}</span>
+            <span
+              className={`truncate text-2xl font-semibold leading-none tabular-nums tracking-tight ${tone}`}
+              title={fmt(stats[key])}
+            >
+              {fmt(stats[key])}
+            </span>
           </div>
-          <span
-            className={`truncate text-2xl font-semibold leading-none tabular-nums tracking-tight ${tone}`}
-            title={fmt(stats[key])}
-          >
-            {fmt(stats[key])}
-          </span>
         </Card>
       ))}
 
       <Card padding="none" className="col-span-2 flex min-w-0 flex-col gap-2 p-4 md:col-span-1">
-        <div className="flex items-center gap-1.5 text-text-muted">
-          <span className="material-symbols-outlined text-[15px] leading-none">payments</span>
-          <span className="truncate text-[11px] font-medium uppercase tracking-wide">Est. cost</span>
+        <span className="truncate text-[11px] font-medium uppercase tracking-wide text-text-muted">Est. cost</span>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="material-symbols-outlined shrink-0 text-[16px] leading-none text-text-muted">payments</span>
+          <span
+            className="truncate text-2xl font-semibold leading-none tabular-nums tracking-tight text-text-main"
+            title={fmtCost(stats.totalCost)}
+          >
+            {fmtCost(stats.totalCost)}
+          </span>
         </div>
-        <span
-          className="truncate text-2xl font-semibold leading-none tabular-nums tracking-tight text-text-main"
-          title={fmtCost(stats.totalCost)}
-        >
-          {fmtCost(stats.totalCost)}
-        </span>
         <span className="truncate text-[10px] leading-none text-text-subtle">Estimated, not billed</span>
       </Card>
     </div>

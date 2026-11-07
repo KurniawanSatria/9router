@@ -49,6 +49,8 @@ const DEFAULT_SETTINGS = {
   mitmRouterBaseUrl: DEFAULT_MITM_ROUTER_BASE,
   dnsToolEnabled: {},
   providerOverrides: {},
+  // Sidebar item order (keys from shared/constants/sidebarItems.js). Empty = default.
+  sidebarOrder: [],
 };
 
 async function readRaw() {

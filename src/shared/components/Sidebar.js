@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,25 +10,7 @@ import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import useSettingsStore from "@/store/settingsStore";
 import Button from "./Button";
 import { ConfirmModal } from "./Modal";
-
-
-const navItems = [
-  { href: "/dashboard/endpoint", label: "Endpoint & Key", icon: "api" },
-  { href: "/dashboard/usage", label: "Usage", icon: "speed" },
-  { href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage" },
-  { href: "/dashboard/providers", label: "Providers", icon: "dns" },
-  // { href: "/dashboard/basic-chat", label: "Basic Chat", icon: "chat" }, // Hidden
-  { href: "/dashboard/combos", label: "Combo", icon: "layers" },
-];
-
-const debugItems = [
-  { href: "/dashboard/console-log", label: "Console Log", icon: "terminal" },
-  { href: "/dashboard/translator", label: "Translator", icon: "translate" },
-];
-
-const systemItems = [
-  { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
-];
+import { resolveSidebarItems } from "@/shared/constants/sidebarItems";
 
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
@@ -38,6 +20,8 @@ export default function Sidebar({ onClose }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [shutdownCountdown, setShutdownCountdown] = useState(0);
   const [enableTranslator, setEnableTranslator] = useState(false);
+  const sidebarOrder = useSettingsStore((s) => s.settings?.sidebarOrder);
+  const sidebarItems = useMemo(() => resolveSidebarItems(sidebarOrder), [sidebarOrder]);
   const { copied, copy } = useCopyToClipboard(2000);
 
   const INSTALL_CMD = UPDATER_CONFIG.installCmdLatest;
@@ -65,6 +49,8 @@ export default function Sidebar({ onClose }) {
     }
     return pathname.startsWith(href);
   };
+
+  const visibleSidebarItems = sidebarItems.filter((item) => !item.needsTranslator || enableTranslator);
 
   // Open manual update panel (no countdown yet — user must click Copy to trigger shutdown)
   const handleUpdate = () => {
@@ -149,66 +135,16 @@ export default function Sidebar({ onClose }) {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                isActive(item.href)
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-              )}
-            >
-              <span
-                className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+          {visibleSidebarItems.map((item, idx) => {
+            const startsSystem = item.group === "system" && visibleSidebarItems[idx - 1]?.group !== "system";
+            return (
+              <div key={item.key} className={startsSystem ? "pt-3 mt-2" : ""}>
+                {startsSystem && (
+                  <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
+                    System
+                  </p>
                 )}
-              >
-                {item.icon}
-              </span>
-              <span className="text-[13px] font-medium">{item.label}</span>
-            </Link>
-          ))}
-
-          {/* System section */}
-          <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
-              System
-            </p>
-
-            {systemItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-                )}
-              >
-                <span
-                  className={cn(
-                    "material-symbols-outlined text-[18px]",
-                    isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
-                  )}
-                >
-                  {item.icon}
-                </span>
-                <span className="text-[13px] font-medium">{item.label}</span>
-              </Link>
-            ))}
-
-            {/* Debug items (inside System section, before Settings) */}
-            {debugItems.map((item) => {
-              const show = item.href !== "/dashboard/translator" || enableTranslator;
-              return show ? (
                 <Link
-                  key={item.href}
                   href={item.href}
                   onClick={onClose}
                   className={cn(
@@ -228,10 +164,12 @@ export default function Sidebar({ onClose }) {
                   </span>
                   <span className="text-[13px] font-medium">{item.label}</span>
                 </Link>
-              ) : null;
-            })}
+              </div>
+            );
+          })}
 
-            {/* Settings */}
+          {/* Settings (pinned) */}
+          <div className={visibleSidebarItems.length === 0 || visibleSidebarItems[visibleSidebarItems.length - 1].group !== "system" ? "pt-3 mt-2" : ""}>
             <Link
               href="/dashboard/profile"
               onClick={onClose}

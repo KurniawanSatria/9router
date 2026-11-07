@@ -9,6 +9,12 @@ import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
 import { LOCALE_COOKIE, normalizeLocale } from "@/i18n/config";
 import { LOCALE_FLAGS } from "@/shared/constants/locales";
+import { resolveSidebarItems } from "@/shared/constants/sidebarItems";
+import useSettingsStore from "@/store/settingsStore";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 
 function getLocaleFromCookie() {
   if (typeof document === "undefined") return "en";
@@ -752,8 +758,7 @@ export default function ProfilePage() {
     setShutdownOpen(false);
   };
 
-  const handleLogout = async () => {
-    try {
+  const handleLogout = async () => {    try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
         window.location.assign("/login");
@@ -761,6 +766,44 @@ export default function ProfilePage() {
     } catch (err) {
       console.error("Failed to logout:", err);
     }
+  };
+
+  const orderedSidebarItems = resolveSidebarItems(settings.sidebarOrder);
+
+  const sidebarSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const saveSidebarOrder = async (list) => {
+    const order = list.map((item) => item.key);
+    setSettings((prev) => ({ ...prev, sidebarOrder: order }));
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sidebarOrder: order }),
+      });
+      if (res.ok) await useSettingsStore.getState().fetchSettings(true);
+    } catch (err) {
+      console.error("Failed to save sidebar order:", err);
+    }
+  };
+
+  const moveSidebarItem = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= orderedSidebarItems.length) return;
+    const next = [...orderedSidebarItems];
+    [next[index], next[target]] = [next[target], next[index]];
+    saveSidebarOrder(next);
+  };
+
+  const handleSidebarDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedSidebarItems.findIndex((item) => item.key === active.id);
+    const newIndex = orderedSidebarItems.findIndex((item) => item.key === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    saveSidebarOrder(arrayMove(orderedSidebarItems, oldIndex, newIndex));
   };
 
   return (
@@ -838,6 +881,39 @@ export default function ProfilePage() {
                 {dbStatus.message}
               </p>
             )}
+          </div>
+        </Card>
+
+        {/* Sidebar order */}
+        <Card>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[20px]">reorder</span>
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold">Sidebar order</h3>
+              <p className="text-xs text-text-muted">Reorder the navigation items. Settings stays pinned at the bottom.</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 mt-3">
+            <DndContext
+              sensors={sidebarSensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleSidebarDragEnd}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+            >
+              <SortableContext items={orderedSidebarItems.map((item) => item.key)} strategy={verticalListSortingStrategy}>
+                {orderedSidebarItems.map((item, idx) => (
+                  <SidebarOrderRow
+                    key={item.key}
+                    item={item}
+                    index={idx}
+                    total={orderedSidebarItems.length}
+                    onMove={moveSidebarItem}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
         </Card>
 
@@ -1697,6 +1773,56 @@ export default function ProfilePage() {
           autoFocus
         />
       </Modal>
+    </div>
+  );
+}
+
+function SidebarOrderRow({ item, index, total, onMove }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: item.key });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 999 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-2 rounded-lg border border-border bg-bg px-3 py-1.5 transition-colors ${isDragging ? "shadow-md ring-1 ring-primary/30" : ""}`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        type="button"
+        className="shrink-0 cursor-grab touch-none rounded p-0.5 text-text-muted hover:text-primary active:cursor-grabbing"
+        title="Drag to reorder"
+        aria-label={`Reorder ${item.label}`}
+      >
+        <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
+      </button>
+      <span className="material-symbols-outlined text-[18px] text-text-muted">{item.icon}</span>
+      <span className="flex-1 truncate text-sm text-text-main">{item.label}</span>
+      <button
+        type="button"
+        onClick={() => onMove(index, -1)}
+        disabled={index === 0}
+        className="rounded p-1 text-text-muted transition-colors hover:bg-surface-2 hover:text-text-main disabled:opacity-30 disabled:hover:bg-transparent"
+        aria-label={`Move ${item.label} up`}
+        title="Move up"
+      >
+        <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onMove(index, 1)}
+        disabled={index === total - 1}
+        className="rounded p-1 text-text-muted transition-colors hover:bg-surface-2 hover:text-text-main disabled:opacity-30 disabled:hover:bg-transparent"
+        aria-label={`Move ${item.label} down`}
+        title="Move down"
+      >
+        <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
+      </button>
     </div>
   );
 }
