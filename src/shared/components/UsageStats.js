@@ -59,13 +59,13 @@ function RecentRequests({ requests = [] }) {
         <div className="flex-1 flex items-center justify-center text-text-muted text-sm">No requests yet.</div>
       ) : (
         <div className="max-h-[480px] overflow-y-auto custom-scrollbar">
-          <table className="w-full table-fixed border-collapse text-xs">
+          <table className="w-full border-collapse text-xs">
             <thead className="sticky top-0 bg-bg z-10">
               <tr className="border-b border-border">
                 <th className="py-1.5 pl-1 w-4"></th>
                 <th className="py-1.5 text-left font-semibold text-text-muted">Model</th>
-                <th className="py-1.5 text-right font-semibold text-text-muted whitespace-nowrap w-[78px]">In / Out</th>
-                <th className="py-1.5 pr-3 text-right font-semibold text-text-muted whitespace-nowrap w-[62px]">When</th>
+                <th className="py-1.5 pr-5 text-right font-semibold text-text-muted whitespace-nowrap">In / Out</th>
+                <th className="py-1.5 pr-3 text-right font-semibold text-text-muted whitespace-nowrap">When</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -76,8 +76,8 @@ function RecentRequests({ requests = [] }) {
                     <td className="py-1.5 pl-1">
                       <span className={`block w-1.5 h-1.5 rounded-full ${ok ? "bg-success" : "bg-error"}`} />
                     </td>
-                    <td className="py-1.5 font-mono truncate" title={r.model}>{r.model}</td>
-                    <td className="py-1.5 text-right whitespace-nowrap">
+                    <td className="py-1.5 font-mono truncate w-full max-w-0" title={r.model}>{r.model}</td>
+                    <td className="py-1.5 pr-5 text-right whitespace-nowrap">
                       <span className="text-primary">{fmt(r.promptTokens)}↑</span>
                       {" "}
                       <span className="text-success">{fmt(r.completionTokens)}↓</span>
