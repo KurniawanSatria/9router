@@ -41,6 +41,19 @@ export const TRANSIENT_COOLDOWN_MS = 30 * 1000;
 // Hard cap for provider-reported rate limit cooldown (e.g. codex resets_at can be 5-6h)
 export const MAX_RATE_LIMIT_COOLDOWN_MS = 30 * 60 * 1000;
 
+/**
+ * Providers whose rate limit applies to the whole account/key, where a 429 must
+ * lock every model instead of only the requested one.
+ *
+ * OrcaRouter allows 1 request/minute per key. The generic 429 backoff starts at
+ * seconds and the lock is per model, so a combo with several Orca members (or
+ * another session) can hit the same key again inside the same minute. Locking
+ * the account for the full window keeps the router from spamming it.
+ */
+export const ACCOUNT_WIDE_RATE_LIMITS = {
+  orcarouter: { cooldownMs: 60 * 1000 },
+};
+
 // Cooldown durations (ms)
 const COOLDOWN = {
   long: 2 * 60 * 1000,

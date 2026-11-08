@@ -26,9 +26,8 @@ export default {
     // through providers/capabilities.js.
     baseUrl: "https://api.unorouter.com/v1/chat/completions",
     validateUrl: "https://api.unorouter.com/v1/models",
-    retry: {
-      429: 2,
-    },
+    // Free keys allow 1 request/minute; retrying a 429 immediately only burns
+    // the next window. Account fallback rotates to another key instead.
   },
   models: [],
   modelsFetcher: { url: "https://api.unorouter.com/v1/models", type: "openai" },

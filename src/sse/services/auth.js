@@ -1,7 +1,7 @@
 import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings, getProxyPools } from "@/lib/localDb";
 import { resolveConnectionProxyConfig, pickProxyPoolId } from "@/lib/network/connectionProxy";
 import { formatRetryAfter, checkFallbackError, isModelLockActive, buildModelLockUpdate, getEarliestModelLockUntil, getModelUnlockTimeMs, tokenharborFreeTierResetMs } from "open-sse/services/accountFallback.js";
-import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
+import { MAX_RATE_LIMIT_COOLDOWN_MS, ACCOUNT_WIDE_RATE_LIMITS } from "open-sse/config/errorConfig.js";
 import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.js";
 import { getAntigravityQuotaCache, getAntigravityModelQuota } from "./antigravityQuota.js";
 import * as log from "../utils/logger.js";
@@ -400,10 +400,24 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
   } else {
     ({ shouldFallback, cooldownMs, newBackoffLevel } = checkFallbackError(status, errorText, backoffLevel, resolveProviderId(provider)));
   }
+
+  // Providers with an account-wide rate limit (e.g. OrcaRouter: 1 req/min per
+  // key) must stop every model on the key, not just the model that got the 429.
+  // Otherwise the next combo member or session fires another request inside the
+  // same window and burns it again.
+  const providerId = resolveProviderId(provider);
+  const accountWideRateLimit = ACCOUNT_WIDE_RATE_LIMITS[providerId];
+  const accountWideRateLimitHit = Number(status) === 429 && !!accountWideRateLimit;
+  if (accountWideRateLimitHit) {
+    shouldFallback = true;
+    cooldownMs = Math.max(cooldownMs || 0, accountWideRateLimit.cooldownMs);
+    newBackoffLevel = 0;
+  }
+
   if (!shouldFallback) return { shouldFallback: false, cooldownMs: 0 };
 
   const reason = typeof errorText === "string" ? errorText.slice(0, 200) : "Provider error";
-  const accountWideLock = githubResetAtMs || tokenharborResetAtMs;
+  const accountWideLock = githubResetAtMs || tokenharborResetAtMs || accountWideRateLimitHit;
   const lockModel = accountWideLock ? null : model;
   const lockUpdate = buildModelLockUpdate(lockModel, cooldownMs);
 

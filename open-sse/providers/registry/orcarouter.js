@@ -26,9 +26,9 @@ export default {
     // through providers/capabilities.js.
     baseUrl: "https://www.orcarouter.ai/v1/chat/completions",
     validateUrl: "https://www.orcarouter.ai/v1/models",
-    retry: {
-      429: 2,
-    },
+    // OrcaRouter allows 1 request/minute per key. Never retry a 429 in-process
+    // (the default retry config already skips 429); let account fallback lock
+    // the key instead of firing two more doomed requests at the same window.
   },
   models: [],
   modelsFetcher: { url: "https://www.orcarouter.ai/v1/models", type: "openai" },

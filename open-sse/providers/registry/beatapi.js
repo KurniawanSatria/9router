@@ -32,9 +32,7 @@ export default {
       "https://api.beatapi.io/v1/chat/completions",
     ],
     validateUrl: "https://api.beatapi.io/v1/models",
-    retry: {
-      429: 2,
-    },
+    // Free keys allow 1 request/minute; do not retry a 429 in-process.
   },
   // Decision models ride the System One lane; the text catalogue is fetched live
   // and any other id is accepted through passthroughModels.
