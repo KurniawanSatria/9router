@@ -8,6 +8,18 @@
 const DEFAULT_WEBHOOK_URL =
   "https://discord.com/api/webhooks/1568897847724613682/Fh80Y5erfX7j_s7Ybtl5FLh1Wxd5lUdDSS3gJfcvw7XxxJI-QQKDc5WrLPi-vKwhCEhC";
 
+function appendWithComponents(url) {
+  try {
+    const u = new URL(url);
+    if (!u.searchParams.has("with_components")) u.searchParams.set("with_components", "true");
+    return u.toString();
+  } catch {
+    return url.includes("?")
+      ? `${url}&with_components=true`
+      : `${url}?with_components=true`;
+  }
+}
+
 const THROTTLE_MS = 60_000;
 const lastSent = new Map();
 
@@ -46,14 +58,15 @@ export async function notifyDiscordError({ title, description, color = 0xed4245,
     components: [
       {
         type: 17,
-        accent_color: color,
         components,
       },
     ],
   };
 
+  const sendUrl = appendWithComponents(url);
+
   try {
-    await fetch(url, {
+    await fetch(sendUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
