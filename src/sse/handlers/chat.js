@@ -26,6 +26,7 @@ import { stripModelContextMarker } from "open-sse/utils/modelMarkers.js";
 import { getKeyAccessContext, enforceKeyAccess, filterAdapterModels } from "../services/keyAccess.js";
 import { resolveSmartChoice } from "../services/systemoneRouter.js";
 import { reorderModelsByProviderAvailability } from "../services/providerAvailability.js";
+import { notifyDiscordError } from "../services/discordWebhook.js";
 
 /**
  * Handle chat completion request
@@ -161,6 +162,7 @@ export async function handleChat(request, clientRawRequest = null) {
           })
         : null,
       reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
+      notifyError: (info) => notifyDiscordError({ title: `Combo ${modelStr} failed`, description: info?.message, color: 0xed4245 }),
     });
   }
 
@@ -181,6 +183,7 @@ export async function handleChat(request, clientRawRequest = null) {
       comboName: modelStr,
       comboStrategy: getActiveAdapterStrategy(requiredCapabilities, settings),
       reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
+      notifyError: (info) => notifyDiscordError({ title: `Combo ${modelStr} failed`, description: info?.message, color: 0xed4245 }),
     });
   }
 
@@ -258,6 +261,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
             })
           : null,
         reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
+      notifyError: (info) => notifyDiscordError({ title: `Combo ${modelStr} failed`, description: info?.message, color: 0xed4245 }),
       });
     }
     log.warn("CHAT", "Invalid model format", { model: modelStr });

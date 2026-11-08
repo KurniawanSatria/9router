@@ -3,6 +3,7 @@ import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.
 import { getModelUnlockTimeMs, formatRetryAfter } from "open-sse/services/accountFallback.js";
 import { getAntigravityQuotaCache, getAntigravityModelQuota } from "./antigravityQuota.js";
 import { getConnectionCooldownUntil, isConnectionEligible } from "./auth.js";
+import { notifyDiscordError } from "./discordWebhook.js";
 import { getModelInfo } from "./model.js";
 
 /**
@@ -130,6 +131,14 @@ export function getProviderAvailability(providerId, models = [], activeConnectio
   const retryAfter = !available && expiries.length
     ? new Date(Math.min(...expiries)).toISOString()
     : null;
+
+  if (!available) {
+    void notifyDiscordError({
+      title: `Provider ${resolvedProviderId} unavailable`,
+      description: `All ${connections.length} account(s) unavailable. Reset after ${retryAfter || "unknown"}.`,
+      color: 0xed4245,
+    });
+  }
 
   return {
     providerId: resolvedProviderId,

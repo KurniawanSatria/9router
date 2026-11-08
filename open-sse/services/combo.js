@@ -350,6 +350,7 @@ export function isZeroContentResponse(data) {
  * @param {number} [options.confidenceThreshold=0.8] - Minimum confidence required for model switch (0-1)
  * @param {Function|null} [options.resolveSmartChoice=null] - Smart router resolver callback: (body, models) => Promise<{ choice, probabilities, confidence } | null>
  * @param {Function|null} [options.reorderModels=null] - Optional health-order callback: (models) => Promise<string[]>. Called after rotation/capability ordering, right before the fallback loop. Fail-open.
+ * @param {Function|null} [options.notifyError=null] - Optional error notifier callback, invoked when every combo member has failed.
  * @returns {Promise<Response>}
  */
 export async function handleComboChat({
@@ -367,6 +368,7 @@ export async function handleComboChat({
   confidenceThreshold = 0.8,
   resolveSmartChoice = null,
   reorderModels = null,
+  notifyError = null,
 }) {
   let rotatedModels = models;
   let activeStickyModel = null;
@@ -670,6 +672,13 @@ export async function handleComboChat({
   }
 
   log.warn("COMBO", `All models failed | ${msg}`);
+  if (typeof notifyError === "function") {
+    try {
+      notifyError({ comboName, message: msg, status, lastError, lastStatus, earliestRetryAfter });
+    } catch {
+      // best effort
+    }
+  }
   return new Response(
     JSON.stringify({ error: { message: msg } }),
     { status, headers: { "Content-Type": "application/json" } }

@@ -457,9 +457,8 @@ export default function CombosPage() {
                       value=""
                       placeholder="Set strategy…"
                       disabled={bulkBusy}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v) handleBulkSetStrategy(v);
+                      onChange={(value) => {
+                        if (value) handleBulkSetStrategy(value);
                       }}
                       selectClassName="py-1.5 text-xs"
                     />
@@ -726,7 +725,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
             <Select
               options={STRATEGY_OPTIONS}
               value={current}
-              onChange={(e) => onSetStrategy({ fallbackStrategy: e.target.value })}
+              onChange={(value) => onSetStrategy({ fallbackStrategy: value })}
               selectClassName="py-1.5 text-xs"
             />
           </div>
