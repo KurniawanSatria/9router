@@ -188,6 +188,28 @@ export function isModelLockActive(connection, model) {
 }
 
 /**
+ * Effective unlock time for `model` on this connection, in epoch ms.
+ * Eligibility requires BOTH the per-model lock and the account-wide lock to be
+ * expired, so the earliest moment this account can serve `model` is the LATER
+ * of the two expiries. Returning the earliest lock of any model (the previous
+ * behaviour) reports a retry time that is too early and makes clients hammer a
+ * connection that is still account-wide locked.
+ */
+export function getModelUnlockTimeMs(connection, model) {
+  if (!connection) return null;
+  const now = Date.now();
+  let unlock = null;
+  for (const key of [getModelLockKey(model), MODEL_LOCK_ALL]) {
+    const expiry = connection[key];
+    if (!expiry) continue;
+    const t = new Date(expiry).getTime();
+    if (!Number.isFinite(t) || t <= now) continue;
+    if (unlock === null || t > unlock) unlock = t;
+  }
+  return unlock;
+}
+
+/**
  * Get earliest active model lock expiry across all modelLock_* fields.
  * Used for UI cooldown display.
  */

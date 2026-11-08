@@ -12,7 +12,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { model, state, questions } = body || {};
+  const { model, state, questions, assets } = body || {};
   if (!model) {
     return NextResponse.json({ ok: false, error: "Model required" }, { status: 400 });
   }
@@ -31,7 +31,7 @@ export async function POST(request) {
     const res = await fetch(`${baseUrl}/api/v1/systemone`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ model, state, questions }),
+      body: JSON.stringify({ model, state, questions, ...(assets ? { assets } : {}) }),
       signal: AbortSignal.timeout(60000),
     });
     const latencyMs = Date.now() - started;

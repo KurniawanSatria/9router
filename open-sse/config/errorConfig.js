@@ -45,6 +45,11 @@ export const MAX_RATE_LIMIT_COOLDOWN_MS = 30 * 60 * 1000;
 const COOLDOWN = {
   long: 2 * 60 * 1000,
   short: 5 * 1000,
+  // Provider-declared "under heavy load / slowed down for a few minutes"
+  // throttles. A few-seconds exp backoff makes the router retry the same
+  // account while the provider is still shedding load, so hold it for the
+  // window the provider itself announces.
+  heavyLoad: 3 * 60 * 1000,
 };
 
 /**
@@ -65,6 +70,13 @@ export const ERROR_RULES = [
   { text: "no credentials",           cooldownMs: COOLDOWN.long },
   { text: "request not allowed",      cooldownMs: COOLDOWN.short },
   { text: "improperly formed request", cooldownMs: COOLDOWN.long },
+  // Provider-side load shedding. The account is throttled for minutes, not
+  // seconds: Token Harbor answers 429 `server_busy` with "under heavy load …
+  // slowed down for a few minutes". Keep these above the generic rate-limit
+  // rules so they win by specificity, and lock for the announced window.
+  { text: "server_busy",              cooldownMs: COOLDOWN.heavyLoad },
+  { text: "under heavy load",         cooldownMs: COOLDOWN.heavyLoad },
+  { text: "slowed down for a few minutes", cooldownMs: COOLDOWN.heavyLoad },
   { text: "rate limit",               backoff: true },
   { text: "too many requests",        backoff: true },
   { text: "quota exceeded",           backoff: true },

@@ -25,6 +25,7 @@ import { getProjectIdForConnection } from "open-sse/services/projectId.js";
 import { stripModelContextMarker } from "open-sse/utils/modelMarkers.js";
 import { getKeyAccessContext, enforceKeyAccess, filterAdapterModels } from "../services/keyAccess.js";
 import { resolveSmartChoice } from "../services/systemoneRouter.js";
+import { reorderModelsByProviderAvailability } from "../services/providerAvailability.js";
 
 /**
  * Handle chat completion request
@@ -159,6 +160,7 @@ export async function handleChat(request, clientRawRequest = null) {
             log,
           })
         : null,
+      reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
     });
   }
 
@@ -177,7 +179,8 @@ export async function handleChat(request, clientRawRequest = null) {
       ),
       log,
       comboName: modelStr,
-      comboStrategy: getActiveAdapterStrategy(requiredCapabilities, settings)
+      comboStrategy: getActiveAdapterStrategy(requiredCapabilities, settings),
+      reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
     });
   }
 
@@ -254,6 +257,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
               log,
             })
           : null,
+        reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
       });
     }
     log.warn("CHAT", "Invalid model format", { model: modelStr });

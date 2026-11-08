@@ -24,13 +24,13 @@ export default {
     // `thinkingFormat` is deliberately NOT declared: UnoRouter forwards
     // requests verbatim, so each model resolves its own thinking wire format
     // through providers/capabilities.js.
-    baseUrl: "https://unorouter.com/v1/chat/completions",
-    validateUrl: "https://unorouter.com/v1/models",
+    baseUrl: "https://api.unorouter.com/v1/chat/completions",
+    validateUrl: "https://api.unorouter.com/v1/models",
     retry: {
       429: 2,
     },
   },
   models: [],
-  modelsFetcher: { url: "https://unorouter.com/v1/models", type: "openai" },
+  modelsFetcher: { url: "https://api.unorouter.com/v1/models", type: "openai" },
   passthroughModels: true,
 };

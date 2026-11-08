@@ -183,7 +183,11 @@ export class DefaultExecutor extends BaseExecutor {
     if (this.config.urlSuffix) {
       return `${this.config.baseUrl}${this.config.urlSuffix}`;
     }
-    const url = this.config.baseUrl;
+    // Multi-endpoint providers declare `baseUrls`; honor the active urlIndex so
+    // fallback hosts are reachable. Single-endpoint providers fall back to
+    // `baseUrl` (getBaseUrls wraps it in a one-element array).
+    const baseUrls = this.getBaseUrls();
+    const url = baseUrls[urlIndex] || baseUrls[0] || this.config.baseUrl;
     if (url?.includes("{accountId}")) {
       const accountId = credentials?.providerSpecificData?.accountId;
       if (!accountId) throw new Error(`${this.provider} requires accountId in providerSpecificData`);

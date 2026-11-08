@@ -74,6 +74,7 @@ import p71 from "./xquik.js";
 import p72 from "./youcom.js";
 import p73 from "./zed.js";
 import p74 from "./zro.js";
+import p75 from "./beatapi.js";
 
 export default [
   p0,
@@ -151,4 +152,5 @@ export default [
   p72,
   p73,
   p74,
+  p75,
 ];

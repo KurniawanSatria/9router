@@ -1,6 +1,6 @@
 import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings, getProxyPools } from "@/lib/localDb";
 import { resolveConnectionProxyConfig, pickProxyPoolId } from "@/lib/network/connectionProxy";
-import { formatRetryAfter, checkFallbackError, isModelLockActive, buildModelLockUpdate, getEarliestModelLockUntil, tokenharborFreeTierResetMs } from "open-sse/services/accountFallback.js";
+import { formatRetryAfter, checkFallbackError, isModelLockActive, buildModelLockUpdate, getEarliestModelLockUntil, getModelUnlockTimeMs, tokenharborFreeTierResetMs } from "open-sse/services/accountFallback.js";
 import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
 import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.js";
 import { getAntigravityQuotaCache, getAntigravityModelQuota } from "./antigravityQuota.js";
@@ -8,6 +8,109 @@ import * as log from "../utils/logger.js";
 
 // Mutex to prevent race conditions during account selection
 let selectionMutex = Promise.resolve();
+
+// Process-local cooldowns, written the instant an upstream failure is observed
+// and consulted before (and in addition to) the persisted modelLock_* row.
+//
+// Why both: the persisted lock is the durable source of truth across restarts
+// and processes, but it is only written after `markAccountUnavailable` resolves.
+// Concurrent fallback attempts that select between "the 429 arrived" and "the
+// row is committed" would otherwise pick the same cooling account again. The
+// in-memory entry closes that window, so any selection that happens after the
+// error skips the account immediately. Successful requests clear it.
+/** @type {Map<string, Map<string, number>>} connectionId -> (modelKey -> untilMs) */
+const localCooldowns = new Map();
+const LOCAL_COOLDOWN_ALL = "__all";
+
+function cooldownModelKey(model) {
+  return model || LOCAL_COOLDOWN_ALL;
+}
+
+function pruneLocalCooldowns(now = Date.now()) {
+  for (const [connectionId, models] of localCooldowns) {
+    for (const [key, until] of models) {
+      if (until <= now) models.delete(key);
+    }
+    if (models.size === 0) localCooldowns.delete(connectionId);
+  }
+}
+
+function rememberLocalCooldown(connectionId, model, untilMs) {
+  if (!connectionId || connectionId === "noauth" || !untilMs) return;
+  let models = localCooldowns.get(connectionId);
+  if (!models) {
+    models = new Map();
+    localCooldowns.set(connectionId, models);
+  }
+  const key = cooldownModelKey(model);
+  models.set(key, Math.max(models.get(key) || 0, untilMs));
+}
+
+function forgetLocalCooldown(connectionId, model = undefined) {
+  if (!connectionId) return;
+  if (model === undefined) {
+    localCooldowns.delete(connectionId);
+    return;
+  }
+  const models = localCooldowns.get(connectionId);
+  if (!models) return;
+  models.delete(cooldownModelKey(model));
+  models.delete(LOCAL_COOLDOWN_ALL);
+  if (models.size === 0) localCooldowns.delete(connectionId);
+}
+
+/**
+ * Epoch ms at which `model` may use this connection again, considering both the
+ * per-model and account-wide cooldowns, or null when it is eligible now.
+ */
+function localCooldownUntil(connectionId, model, now = Date.now()) {
+  if (!connectionId) return null;
+  const models = localCooldowns.get(connectionId);
+  if (!models) return null;
+  let until = null;
+  for (const key of [cooldownModelKey(model), LOCAL_COOLDOWN_ALL]) {
+    const t = models.get(key);
+    if (t == null) continue;
+    if (t <= now) { models.delete(key); continue; }
+    if (until === null || t > until) until = t;
+  }
+  if (models.size === 0) localCooldowns.delete(connectionId);
+  return until;
+}
+
+/**
+ * Read-only in-process cooldown expiry for a connection+model.
+ * Used by provider-health ordering; unlike getProviderCredentials it never
+ * selects or mutates an account.
+ */
+export function getConnectionCooldownUntil(connectionId, model, now = Date.now()) {
+  return localCooldownUntil(connectionId, model, now);
+}
+
+/**
+ * Single source of truth for "can getProviderCredentials select this account
+ * for this model right now?". Provider-health ordering uses the same predicate
+ * so combo ordering can never disagree with real routing.
+ *
+ * `excludeConnectionIds` and `antigravityQuotaCache` are optional; callers that
+ * only inspect health leave them out.
+ */
+export function isConnectionEligible(connection, providerId, model, options = {}) {
+  if (!connection) return false;
+  const { excludeConnectionIds = null, requestedModel = model, antigravityQuotaCache = null, now = Date.now() } = options;
+  if (excludeConnectionIds?.has?.(connection.id)) return false;
+  if (isModelLockActive(connection, model)) return false;
+  if (localCooldownUntil(connection.id, model, now) !== null) return false;
+  const resolvedProviderId = resolveProviderId(providerId);
+  const enabled = connection.providerSpecificData?.enabledModels;
+  if (resolvedProviderId === "codex" && Array.isArray(enabled) && enabled.length && requestedModel && !enabled.includes(requestedModel)) return false;
+  if (resolvedProviderId === "antigravity" && model && antigravityQuotaCache) {
+    const connQuotas = antigravityQuotaCache.get(connection.id);
+    const quota = getAntigravityModelQuota(connQuotas, model) || connQuotas?.[model];
+    if (quota && quota.remainingPercentage <= 0 && quota.resetAt && new Date(quota.resetAt).getTime() > now) return false;
+  }
+  return true;
+}
 
 const GITHUB_MONTHLY_USAGE_LIMIT = "you've reached your additional usage limit for your plan";
 
@@ -39,6 +142,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
 
   try {
     await currentMutex;
+    pruneLocalCooldowns();
 
     // Resolve alias to provider ID (e.g., "kc" -> "kilocode")
     const providerId = resolveProviderId(provider);
@@ -84,23 +188,21 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     const antigravityQuotaCache = isAntigravity && model ? getAntigravityQuotaCache() : null;
 
     // Filter out model-locked, excluded, and Antigravity quota-exhausted connections.
-    const availableConnections = connections.filter(c => {
-      if (excludeSet.has(c.id)) return false;
-      if (isModelLockActive(c, model)) return false;
-      const enabled = c.providerSpecificData?.enabledModels;
-      if (providerId === "codex" && Array.isArray(enabled) && enabled.length && requestedModel && !enabled.includes(requestedModel)) return false;
-      // Antigravity: skip if live quota exhausted for this model
-      if (isAntigravity && model && antigravityQuotaCache) {
+    if (isAntigravity && model && antigravityQuotaCache) {
+      for (const c of connections) {
         const connQuotas = antigravityQuotaCache.get(c.id);
         const quota = getAntigravityModelQuota(connQuotas, model) || connQuotas?.[model];
         if (quota && quota.remainingPercentage <= 0 && quota.resetAt && new Date(quota.resetAt).getTime() > Date.now()) {
           const account = c.id?.slice(0, 8) || "unknown";
           log.info("AG_QUOTA", `${account} | CACHE_BLOCK ${model} — skip upstream until ${quota.resetAt}`);
-          return false;
         }
       }
-      return true;
-    });
+    }
+    const availableConnections = connections.filter(c => isConnectionEligible(c, providerId, model, {
+      excludeConnectionIds: excludeSet,
+      requestedModel,
+      antigravityQuotaCache,
+    }));
 
     log.debug("AUTH", `${provider} | available: ${availableConnections.length}/${connections.length}`);
     connections.forEach(c => {
@@ -113,27 +215,47 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     });
 
     if (availableConnections.length === 0) {
-      // Find earliest persistent lock or lazy Antigravity quota-cache reset for retry timing.
-      const lockedConns = connections.filter(c => isModelLockActive(c, model));
-      const expiries = lockedConns.map(c => getEarliestModelLockUntil(c)).filter(Boolean);
+      // Earliest moment any connection can serve this model again. Eligibility
+      // needs BOTH the per-model and account-wide persisted locks expired, so the
+      // wait per connection is the LATER of the two (getModelUnlockTimeMs), and
+      // it is at least any in-process cooldown recorded before the row commit.
+      // The previous code used the earliest lock of *any* model, which
+      // under-reported the wait and made clients retry into an account that was
+      // still cooling down.
+      const now = Date.now();
+      const expiries = [];
+      let errorConn = null;
+      for (const c of connections) {
+        const persisted = getModelUnlockTimeMs(c, model);
+        const local = localCooldownUntil(c.id, model, now);
+        let until = null;
+        if (persisted !== null && local !== null) until = Math.max(persisted, local);
+        else if (persisted !== null) until = persisted;
+        else if (local !== null) until = local;
+        if (until === null) continue;
+        expiries.push(until);
+        if (!errorConn || (!errorConn.lastError && c.lastError)) errorConn = c;
+      }
+      // Lazy Antigravity quota-cache reset for retry timing.
       if (isAntigravity && model && antigravityQuotaCache) {
         connections.forEach((c) => {
           const connQuotas = antigravityQuotaCache.get(c.id);
           const quota = getAntigravityModelQuota(connQuotas, model) || connQuotas?.[model];
           const resetAt = quota?.resetAt;
-          if (resetAt && new Date(resetAt).getTime() > Date.now()) expiries.push(resetAt);
+          if (resetAt && new Date(resetAt).getTime() > now) expiries.push(new Date(resetAt).getTime());
         });
       }
-      const earliest = expiries.sort()[0] || null;
+      const earliest = expiries.length ? Math.min(...expiries) : null;
       if (earliest) {
-        const earliestConn = lockedConns[0];
-        log.warn("AUTH", `${provider} | all ${connections.length} accounts locked for ${model || "all"} (${formatRetryAfter(earliest)}) | lastError=${earliestConn?.lastError?.slice(0, 50)}`);
+        const earliestISO = new Date(earliest).toISOString();
+        const conn = errorConn || connections[0];
+        log.warn("AUTH", `${provider} | all ${connections.length} accounts locked for ${model || "all"} (${formatRetryAfter(earliestISO)}) | lastError=${conn?.lastError?.slice(0, 50)}`);
         return {
           allRateLimited: true,
-          retryAfter: earliest,
-          retryAfterHuman: formatRetryAfter(earliest),
-          lastError: earliestConn?.lastError || null,
-          lastErrorCode: earliestConn?.errorCode || null
+          retryAfter: earliestISO,
+          retryAfterHuman: formatRetryAfter(earliestISO),
+          lastError: conn?.lastError || null,
+          lastErrorCode: conn?.errorCode || null
         };
       }
       log.warn("AUTH", `${provider} | all ${connections.length} accounts unavailable`);
@@ -143,7 +265,9 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     const settings = await getSettings();
     // Per-provider strategy overrides global setting
     const providerOverride = (settings.providerStrategies || {})[providerId] || {};
-    const strategy = providerOverride.fallbackStrategy || settings.fallbackStrategy || "fill-first";
+    // Callers (e.g. the virtual System One "Auto" combo) may request a strategy
+    // for one call without touching the saved provider/global setting.
+    const strategy = options?.fallbackStrategy || providerOverride.fallbackStrategy || settings.fallbackStrategy || "fill-first";
 
     let connection;
     // Pin to preferred connection if specified and available
@@ -156,7 +280,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     if (connection) {
       // skip strategy
     } else if (strategy === "round-robin") {
-      const stickyLimit = providerOverride.stickyRoundRobinLimit || settings.stickyRoundRobinLimit || 3;
+      const stickyLimit = options?.stickyRoundRobinLimit || providerOverride.stickyRoundRobinLimit || settings.stickyRoundRobinLimit || 3;
 
       // Sort by lastUsed (most recent first) to find current candidate
       const byRecency = [...availableConnections].sort((a, b) => {
@@ -280,7 +404,13 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
 
   const reason = typeof errorText === "string" ? errorText.slice(0, 200) : "Provider error";
   const accountWideLock = githubResetAtMs || tokenharborResetAtMs;
-  const lockUpdate = buildModelLockUpdate(accountWideLock ? null : model, cooldownMs);
+  const lockModel = accountWideLock ? null : model;
+  const lockUpdate = buildModelLockUpdate(lockModel, cooldownMs);
+
+  // Record the cooldown in-process BEFORE persisting. Selections that run while
+  // the DB write below is still in flight must already see the account as
+  // cooling; otherwise concurrent fallback attempts re-pick the same account.
+  rememberLocalCooldown(connectionId, lockModel, Date.now() + cooldownMs);
 
   await updateProviderConnection(connectionId, {
     ...lockUpdate,
@@ -313,6 +443,10 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
  */
 export async function clearAccountError(connectionId, currentConnection, model = null) {
   if (!connectionId || connectionId === "noauth") return;
+  // The request just succeeded on this account/model, so any process-local
+  // cooldown recorded for it is stale — drop it so the next selection can use
+  // the account immediately instead of waiting out a phantom cooldown.
+  forgetLocalCooldown(connectionId, model);
   const conn = currentConnection._connection || currentConnection;
   const now = Date.now();
   const allLockKeys = Object.keys(conn).filter(k => k.startsWith("modelLock_"));

@@ -349,6 +349,7 @@ export function isZeroContentResponse(data) {
  * @param {boolean} [options.sessionSticky=true] - Keep chosen model across session requests to retain prompt cache
  * @param {number} [options.confidenceThreshold=0.8] - Minimum confidence required for model switch (0-1)
  * @param {Function|null} [options.resolveSmartChoice=null] - Smart router resolver callback: (body, models) => Promise<{ choice, probabilities, confidence } | null>
+ * @param {Function|null} [options.reorderModels=null] - Optional health-order callback: (models) => Promise<string[]>. Called after rotation/capability ordering, right before the fallback loop. Fail-open.
  * @returns {Promise<Response>}
  */
 export async function handleComboChat({
@@ -365,6 +366,7 @@ export async function handleComboChat({
   sessionSticky = true,
   confidenceThreshold = 0.8,
   resolveSmartChoice = null,
+  reorderModels = null,
 }) {
   let rotatedModels = models;
   let activeStickyModel = null;
@@ -460,6 +462,26 @@ export async function handleComboChat({
         log.info("COMBO", `auto-switch for [${[...required].join(",")}] → ${reordered[0]}`);
       }
       rotatedModels = reordered;
+    }
+  }
+
+  // Provider health: move members whose provider has no eligible account to
+  // the end. Runs last so a dead provider cannot be floated back to the front
+  // by rotation or capability switching. Never drops a member, so recovery and
+  // all-down fallback keep working. Injected by the app layer because account
+  // health lives in localDb; fail open when it throws.
+  if (typeof reorderModels === "function") {
+    try {
+      const reordered = await reorderModels(rotatedModels);
+      if (Array.isArray(reordered) && reordered.length === rotatedModels.length) {
+        const changed = reordered.some((model, index) => model !== rotatedModels[index]);
+        rotatedModels = reordered;
+        if (changed) {
+          log.info("COMBO", `provider-availability order → ${rotatedModels.join(", ")}`);
+        }
+      }
+    } catch (err) {
+      log.warn("COMBO", `provider-availability reorder failed, keeping current order (${err?.message || String(err)})`);
     }
   }
   

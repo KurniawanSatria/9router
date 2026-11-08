@@ -35,12 +35,18 @@ const QUESTION_TYPES = [
     label: "Score",
     desc: "Numeric score plus a legend describing the scale.",
   },
+  {
+    type: "box",
+    label: "Box",
+    desc: "Locate one thing in an image (fractions of width/height). Needs an image in `assets`.",
+  },
 ];
 
 export default function SystemOnePage() {
   const [model, setModel] = useState("");
   const [state, setState] = useState(DEFAULT_STATE);
   const [questionsText, setQuestionsText] = useState(DEFAULT_QUESTIONS);
+  const [assetsText, setAssetsText] = useState("");
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [activeProviders, setActiveProviders] = useState([]);
   const [running, setRunning] = useState(false);
@@ -84,6 +90,12 @@ export default function SystemOnePage() {
   const isConnected = (providerId) =>
     connectedIds.has(providerId) || noAuthIds.has(providerId);
 
+  // Number of lanes the virtual "Auto" combo would round-robin right now.
+  const connectedLaneCount = lanes.reduce(
+    (total, lane) => total + (isConnected(lane.provider.id) ? lane.models.length : 0),
+    0
+  );
+
   const requestCurl = useMemo(() => {
     let questions = DEFAULT_QUESTIONS;
     try {
@@ -124,20 +136,30 @@ export default function SystemOnePage() {
       return;
     }
 
+    let assets;
+    if (assetsText.trim()) {
+      try {
+        assets = JSON.parse(assetsText);
+      } catch (err) {
+        setError(`Assets is not valid JSON: ${err.message}`);
+        return;
+      }
+    }
+
     setRunning(true);
     try {
       const res = await fetch("/api/systemone/probe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, state, questions }),
+        body: JSON.stringify({ model, state, questions, ...(assets ? { assets } : {}) }),
       });
       const data = await res.json();
       setResult(data);
       if (!res.ok) {
-        setError(data?.error || `Probe gagal (HTTP ${res.status})`);
+        setError(data?.error || `Probe failed (HTTP ${res.status})`);
       }
     } catch (err) {
-      setError(`Probe gagal: ${err.message}`);
+      setError(`Probe failed: ${err.message}`);
     } finally {
       setRunning(false);
     }
@@ -177,6 +199,40 @@ export default function SystemOnePage() {
           icon="hub"
         >
           <div className="flex flex-col gap-3">
+            <div className="rounded-[10px] border border-brand-500/40 bg-brand-500/5 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-text-main">Auto</span>
+                    <Badge variant="success" size="sm" dot>
+                      dynamic
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    Round-robin across every connected System One lane. Locked, rate-limited and
+                    cooling-down accounts are skipped automatically, and lanes whose provider has
+                    no available account move to the end.
+                  </p>
+                </div>
+                {connectedLaneCount > 0 && (
+                  <Badge size="sm">{connectedLaneCount} lane</Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setModel("Auto")}
+                  className={`font-mono text-[11px] px-2 py-1 rounded-[6px] border transition-colors cursor-pointer ${
+                    model === "Auto"
+                      ? "border-brand-500/50 bg-brand-500/10 text-brand-600 dark:text-brand-300"
+                      : "border-border text-text-muted hover:text-text-main hover:bg-surface"
+                  }`}
+                  title="Round-robin every connected System One lane"
+                >
+                  Auto
+                </button>
+              </div>
+            </div>
             {lanes.length === 0 && (
               <p className="text-sm text-text-muted">No System One lanes in the registry yet.</p>
             )}
@@ -253,6 +309,14 @@ export default function SystemOnePage() {
                   </span>
                   <span className="material-symbols-outlined text-[18px] text-text-muted">expand_more</span>
                 </button>
+                <Button
+                  variant={model === "Auto" ? "primary" : "secondary"}
+                  size="sm"
+                  onClick={() => setModel("Auto")}
+                  title="Round-robin every connected System One lane"
+                >
+                  Auto
+                </Button>
                 {model && (
                   <Button variant="ghost" size="sm" icon="close" onClick={() => setModel("")} aria-label="Clear model" />
                 )}
@@ -326,7 +390,7 @@ export default function SystemOnePage() {
       </div>
 
       <Card title="Question types" subtitle="Question shapes accepted by System One lanes" icon="help">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {QUESTION_TYPES.map((q) => (
             <div key={q.type} className="rounded-[10px] border border-border-subtle bg-surface-2/50 p-3">
               <div className="flex items-center gap-2">
@@ -338,7 +402,8 @@ export default function SystemOnePage() {
           ))}
         </div>
         <p className="text-xs text-text-muted mt-4">
-          `drex-max` also accepts a top-level `images` array (PNG / JPEG / WebP, up to 8 per request).
+          Images ride the top-level `assets` object: define each one once and reference its key in the text
+          (`&quot;&lt;picture&gt;&quot;`). `drex-max` instead takes a top-level `images` array (PNG / JPEG / WebP, up to 8 per request).
         </p>
       </Card>
 
