@@ -15,7 +15,11 @@ const LOG_LEVEL_COLORS = {
 const LEVELS = ["ALL", "LOG", "INFO", "WARN", "ERROR", "DEBUG"];
 
 function getLevel(line) {
-  return line.match(/\[(LOG|INFO|WARN|ERROR|DEBUG)\]/i)?.[1]?.toUpperCase() || "LOG";
+  return (
+    line.match(/\[(LOG|INFO|WARN|ERROR|DEBUG)\]/i)?.[1]?.toUpperCase() ||
+    line.match(/^\S+\s+(LOG|INFO|WARN|ERROR|DEBUG)\b/i)?.[1]?.toUpperCase() ||
+    "LOG"
+  );
 }
 
 function colorLine(line) {

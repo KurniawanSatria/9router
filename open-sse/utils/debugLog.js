@@ -8,7 +8,9 @@ function ts() {
 
 export function dbg(tag, msg) {
   if (!isDev) return;
-  console.log(`[${ts()}] 🐛 [DBG:${tag}] ${msg}`);
+  const dim = process.env.NO_COLOR ? "" : "\x1b[2m";
+  const reset = process.env.NO_COLOR ? "" : "\x1b[0m";
+  console.log(`${dim}[${ts()}] DEBUG [DBG:${tag}] ${msg}${reset}`);
 }
 
 export const isDebugEnabled = isDev;

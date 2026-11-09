@@ -13,34 +13,52 @@ function formatTime() {
   return new Date().toLocaleTimeString("en-US", { hour12: false });
 }
 
-// Colored-dot tags to correlate request lines by session (same session → same color)
-const REQ_TAGS = ["🟢", "🔵", "🟣", "🟡", "🟠", "🔴", "⚪", "🟤"];
+// Short hex tags to correlate request lines by session (same session → same tag)
 let tagCursor = 0;
+
+function toTag(n) {
+  return (n >>> 0).toString(16).padStart(4, "0").slice(0, 4);
+}
 
 // Allocate next rotating tag (fallback when no session seed available)
 export function nextTag() {
-  const tag = REQ_TAGS[tagCursor % REQ_TAGS.length];
-  tagCursor++;
-  return tag;
+  return toTag(tagCursor++);
 }
 
-// Stable tag derived from a session/connection seed: same seed always maps to the same color
+// Stable tag derived from a session/connection seed: same seed always maps to the same tag
 export function tagForSession(seed) {
   if (!seed) return nextTag();
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return REQ_TAGS[Math.abs(h) % REQ_TAGS.length];
+  return toTag(h);
+}
+
+const RESET = "\x1b[0m";
+const COLORS = {
+  DEBUG: "\x1b[2m",
+  INFO: "",
+  WARN: "\x1b[33m",
+  ERROR: "\x1b[31m",
+  HTTP: "\x1b[36m",
+  DONE: "\x1b[32m",
+};
+
+const COLORS_ENABLED = !process.env.NO_COLOR;
+
+function paint(color, text) {
+  return color && COLORS_ENABLED ? `${color}${text}${RESET}` : text;
 }
 
 // Print one correlated line: [time] tag symbol message
 export function line(tag, symbol, message) {
   if (LEVEL > LOG_LEVELS.INFO) return;
-  console.log(`[${formatTime()}] ${tag} ${symbol} ${message}`);
+  const color = symbol === "📊" ? COLORS.DONE : symbol === "✗" ? COLORS.ERROR : symbol === "▶" ? COLORS.HTTP : COLORS.INFO;
+  console.log(paint(color, `[${formatTime()}] ${tag} ${symbol} ${message}`));
 }
 
 // Like line() but always printed regardless of LOG_LEVEL (errors must never be hidden)
 export function errorLine(tag, symbol, message) {
-  console.log(`[${formatTime()}] ${tag} ${symbol} ${message}`);
+  console.log(paint(COLORS.ERROR, `[${formatTime()}] ${tag} ${symbol} ${message}`));
 }
 
 // Format thinking intent for the request line ("high(10k)" / "off" / "auto")
@@ -69,45 +87,45 @@ function formatData(data) {
 export function debug(tag, message, data) {
   if (LEVEL <= LOG_LEVELS.DEBUG) {
     const dataStr = data ? ` ${formatData(data)}` : "";
-    console.log(`[${formatTime()}] 🔍 [${tag}] ${message}${dataStr}`);
+    console.log(paint(COLORS.DEBUG, `[${formatTime()}] DEBUG [${tag}] ${message}${dataStr}`));
   }
 }
 
 export function info(tag, message, data) {
   if (LEVEL <= LOG_LEVELS.INFO) {
     const dataStr = data ? ` ${formatData(data)}` : "";
-    console.log(`[${formatTime()}] ℹ️  [${tag}] ${message}${dataStr}`);
+    console.log(`[${formatTime()}] INFO  [${tag}] ${message}${dataStr}`);
   }
 }
 
 export function warn(tag, message, data) {
   if (LEVEL <= LOG_LEVELS.WARN) {
     const dataStr = data ? ` ${formatData(data)}` : "";
-    console.warn(`[${formatTime()}] ⚠️  [${tag}] ${message}${dataStr}`);
+    console.warn(paint(COLORS.WARN, `[${formatTime()}] WARN  [${tag}] ${message}${dataStr}`));
   }
 }
 
 export function error(tag, message, data) {
   if (LEVEL <= LOG_LEVELS.ERROR) {
     const dataStr = data ? ` ${formatData(data)}` : "";
-    console.log(`[${formatTime()}] ❌ [${tag}] ${message}${dataStr}`);
+    console.log(paint(COLORS.ERROR, `[${formatTime()}] ERROR [${tag}] ${message}${dataStr}`));
   }
 }
 
 export function request(method, path, extra) {
   const dataStr = extra ? ` ${formatData(extra)}` : "";
-  console.log(`\x1b[36m[${formatTime()}] 📥 ${method} ${path}${dataStr}\x1b[0m`);
+  console.log(paint(COLORS.HTTP, `[${formatTime()}] HTTP  → ${method} ${path}${dataStr}`));
 }
 
 export function response(status, duration, extra) {
-  const icon = status < 400 ? "📤" : "💥";
   const dataStr = extra ? ` ${formatData(extra)}` : "";
-  console.log(`[${formatTime()}] ${icon} ${status} (${duration}ms)${dataStr}`);
+  const color = status < 400 ? COLORS.HTTP : COLORS.ERROR;
+  console.log(paint(color, `[${formatTime()}] HTTP  ← ${status} ${duration}ms${dataStr}`));
 }
 
 export function stream(event, data) {
   const dataStr = data ? ` ${formatData(data)}` : "";
-  console.log(`[${formatTime()}] 🌊 [STREAM] ${event}${dataStr}`);
+  console.log(`[${formatTime()}] INFO  [STREAM] ${event}${dataStr}`);
 }
 
 // Mask sensitive data

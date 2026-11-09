@@ -148,3 +148,20 @@ export function formatProviderError(error, provider, model, statusCode) {
   const causeStr = causeCode || causeMsg ? ` (cause: ${[causeCode, causeMsg].filter(Boolean).join(": ")})` : "";
   return `[${code}]: ${message}${causeStr}`;
 }
+
+/**
+ * One-line, size-capped error text for logs. Unwraps nested JSON bodies and
+ * keeps the provider error code so a log line stays scannable.
+ */
+export function summarizeProviderError(message, maxLength = 300) {
+  let text = typeof message === "string" ? message.trim() : message ? JSON.stringify(message) : "";
+  try {
+    const json = JSON.parse(text);
+    const err = json?.error && typeof json.error === "object" ? json.error : json;
+    const code = err?.code || json?.code;
+    const detail = err?.message || json?.message;
+    if (detail) text = `${code ? `${code}: ` : ""}${typeof detail === "string" ? detail : JSON.stringify(detail)}`;
+  } catch {}
+  text = text.replace(/\s+/g, " ").trim();
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+}
