@@ -413,47 +413,61 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 
   const rfInstance = useRef(null);
   const containerRef = useRef(null);
+  const fitTimer = useRef(0);
 
-  // fitView on a 0×0 container (minimized window, hidden tab, bfcache restore)
-  // writes a NaN/off-screen viewport, which leaves the graph blank until the
-  // user resizes the window. Always measure first and skip empty frames.
+  // A fit on a 0×0 container or before nodes are measured produces an empty
+  // bounds box, so fitView clamps to maxZoom and leaves a giant, off-centre
+  // graph until the window is resized. Measure both before fitting.
   const safeFit = useCallback(() => {
     const instance = rfInstance.current;
     const el = containerRef.current;
-    if (!instance || !el || (typeof document !== "undefined" && document.hidden)) return;
+    if (!instance || !el || (typeof document !== "undefined" && document.hidden)) return false;
     const { width, height } = el.getBoundingClientRect();
-    if (width < 2 || height < 2) return;
+    if (width < 2 || height < 2) return false;
+    const measured = instance.getNodes().every((n) => {
+      const m = instance.getInternalNode(n.id)?.measured;
+      return m && m.width > 0 && m.height > 0;
+    });
+    if (!measured) return false;
     instance.fitView(FIT_OPTS);
+    return true;
   }, []);
+
+  // Nodes remount after a hidden tab, so measurement can lag behind the
+  // visibility event. Retry briefly instead of fitting once too early.
+  const scheduleFit = useCallback((delay = 50) => {
+    clearTimeout(fitTimer.current);
+    let attempts = 20;
+    const run = () => {
+      if (safeFit() || attempts-- <= 0) return;
+      fitTimer.current = setTimeout(run, 100);
+    };
+    fitTimer.current = setTimeout(run, delay);
+  }, [safeFit]);
+
+  useEffect(() => () => clearTimeout(fitTimer.current), []);
 
   const onInit = useCallback((instance) => {
     rfInstance.current = instance;
-    setTimeout(safeFit, 50);
-  }, [safeFit]);
+    scheduleFit(50);
+  }, [scheduleFit]);
 
   // Re-fit on container resize (debounced so a resize storm cannot pile up
   // interrupted fitView animations).
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    let timer = 0;
-    const ro = new ResizeObserver(() => {
-      clearTimeout(timer);
-      timer = setTimeout(safeFit, 120);
-    });
+    const ro = new ResizeObserver(() => scheduleFit(120));
     ro.observe(el);
-    return () => {
-      ro.disconnect();
-      clearTimeout(timer);
-    };
-  }, [safeFit]);
+    return () => ro.disconnect();
+  }, [scheduleFit]);
 
   // A window that is closed/minimized while the graph is mounted can come back
   // with a stale viewport; re-fit once the page is visible again.
   useEffect(() => {
     const onVisible = () => {
       if (document.hidden) return;
-      requestAnimationFrame(() => setTimeout(safeFit, 60));
+      scheduleFit(60);
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("pageshow", onVisible);
@@ -461,14 +475,13 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("pageshow", onVisible);
     };
-  }, [safeFit]);
+  }, [scheduleFit]);
 
   // Re-fit when node count/layout changes
   useEffect(() => {
     if (!rfInstance.current) return;
-    const id = setTimeout(safeFit, 50);
-    return () => clearTimeout(id);
-  }, [nodes.length, safeFit]);
+    scheduleFit(50);
+  }, [nodes.length, scheduleFit]);
 
   return (
     <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]">
@@ -483,8 +496,6 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
           edges={edges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          fitView
-          fitViewOptions={FIT_OPTS}
           minZoom={0.1}
           maxZoom={2}
           onInit={onInit}
