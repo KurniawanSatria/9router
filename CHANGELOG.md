@@ -1,3 +1,17 @@
+# v1.0.0 (2026-11-09)
+
+## Features
+- **Dashboard updates**: add a one-click update button in the sidebar. Docker deployments pull the latest image and recreate the container through Watchtower; npm installs use the built-in updater. The page reconnects and reloads automatically when the new version is back.
+- **Usage**: humanize model names in usage tables, grouped rows and the top-models chart instead of showing raw upstream ids
+- **Models**: use local brand icons for Zhipu GLM and StepFun
+
+## Branding
+- Rebrand the app to Saturia Proxy and trim built-in providers, savers and pages
+- Add freepi OAuth with beatapi branding and provider cleanup
+
+## Fixes
+- Clamp freepi model limits to the CLI context window
+
 # v0.5.112 (2026-10-28)
 
 ## Features
