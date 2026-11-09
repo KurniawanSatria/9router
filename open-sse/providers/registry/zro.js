@@ -33,4 +33,8 @@ export default {
   models: [],
   modelsFetcher: { url: "https://zro.moonmath.ai/v1/models", type: "openai" },
   passthroughModels: true,
+  features: {
+    usage: true,
+    usageApikey: true,
+  },
 };

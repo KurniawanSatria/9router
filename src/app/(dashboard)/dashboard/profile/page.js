@@ -86,6 +86,10 @@ export default function ProfilePage() {
   const [proxyStatus, setProxyStatus] = useState({ type: "", message: "" });
   const [proxyLoading, setProxyLoading] = useState(false);
   const [proxyTestLoading, setProxyTestLoading] = useState(false);
+  const [webhookForm, setWebhookForm] = useState({ enabled: true, url: "" });
+  const [webhookStatus, setWebhookStatus] = useState({ type: "", message: "" });
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [webhookTestLoading, setWebhookTestLoading] = useState(false);
 
   const [isRemoteHost, setIsRemoteHost] = useState(false);
   useEffect(() => {
@@ -127,6 +131,10 @@ export default function ProfilePage() {
           outboundProxyEnabled: data?.outboundProxyEnabled === true,
           outboundProxyUrl: data?.outboundProxyUrl || "",
           outboundNoProxy: data?.outboundNoProxy || "",
+        });
+        setWebhookForm({
+          enabled: data?.discordWebhookEnabled !== false,
+          url: data?.discordWebhookUrl || "",
         });
         setLoading(false);
       })
@@ -230,6 +238,95 @@ export default function ProfilePage() {
       setProxyStatus({ type: "error", message: "An error occurred" });
     } finally {
       setProxyLoading(false);
+    }
+  };
+
+  const saveWebhook = async (e) => {
+    e.preventDefault();
+    setWebhookLoading(true);
+    setWebhookStatus({ type: "", message: "" });
+
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          discordWebhookUrl: (webhookForm.url || "").trim(),
+          discordWebhookEnabled: webhookForm.enabled === true,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSettings((prev) => ({ ...prev, ...data }));
+        setWebhookForm({
+          enabled: data?.discordWebhookEnabled !== false,
+          url: data?.discordWebhookUrl || "",
+        });
+        setWebhookStatus({ type: "success", message: "Webhook saved" });
+      } else {
+        setWebhookStatus({ type: "error", message: data.error || "Failed to save webhook" });
+      }
+    } catch (err) {
+      setWebhookStatus({ type: "error", message: "An error occurred" });
+    } finally {
+      setWebhookLoading(false);
+    }
+  };
+
+  const testWebhook = async () => {
+    setWebhookTestLoading(true);
+    setWebhookStatus({ type: "", message: "" });
+
+    try {
+      const res = await fetch("/api/settings/webhook-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: (webhookForm.url || "").trim() || undefined }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data?.ok) {
+        setWebhookStatus({
+          type: "success",
+          message: `Test message sent${data?.source ? ` (source: ${data.source})` : ""}`,
+        });
+      } else {
+        setWebhookStatus({ type: "error", message: data?.error || "Webhook test failed" });
+      }
+    } catch (err) {
+      setWebhookStatus({ type: "error", message: "An error occurred" });
+    } finally {
+      setWebhookTestLoading(false);
+    }
+  };
+
+  const updateWebhookEnabled = async (discordWebhookEnabled) => {
+    setWebhookLoading(true);
+    setWebhookStatus({ type: "", message: "" });
+
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discordWebhookEnabled }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSettings((prev) => ({ ...prev, ...data }));
+        setWebhookForm((prev) => ({ ...prev, enabled: data?.discordWebhookEnabled !== false }));
+        setWebhookStatus({
+          type: "success",
+          message: discordWebhookEnabled ? "Webhook notifications enabled" : "Webhook notifications disabled",
+        });
+      } else {
+        setWebhookStatus({ type: "error", message: data.error || "Failed to update webhook" });
+      }
+    } catch (err) {
+      setWebhookStatus({ type: "error", message: "An error occurred" });
+    } finally {
+      setWebhookLoading(false);
     }
   };
 
@@ -1669,6 +1766,73 @@ export default function ProfilePage() {
             {proxyStatus.message && (
               <p className={`text-xs sm:text-sm ${proxyStatus.type === "error" ? "text-red-500" : "text-green-500"} pt-2 border-t border-border/50`}>
                 {proxyStatus.message}
+              </p>
+            )}
+          </div>
+        </Card>
+
+        {/* Notifications / Webhook */}
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
+              <span className="material-symbols-outlined text-[20px]">notifications_active</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold">Notifications</h3>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start sm:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">Discord Webhook</p>
+                <p className="text-xs sm:text-sm text-text-muted">
+                  Send an alert when a provider or combo fails. Throttled to one message per minute per title.
+                </p>
+              </div>
+              <Toggle
+                checked={webhookForm.enabled === true}
+                onChange={() => updateWebhookEnabled(!(webhookForm.enabled === true))}
+                disabled={loading || webhookLoading}
+              />
+            </div>
+
+            {webhookForm.enabled === true && (
+              <form onSubmit={saveWebhook} className="flex flex-col gap-4 pt-2 border-t border-border/50">
+                <div className="flex flex-col gap-2">
+                  <label className="font-medium text-sm sm:text-base">Webhook URL</label>
+                  <Input
+                    type="url"
+                    placeholder="https://discord.com/api/webhooks/123456789/abcdef..."
+                    value={webhookForm.url}
+                    onChange={(e) => setWebhookForm((prev) => ({ ...prev, url: e.target.value }))}
+                    disabled={loading || webhookLoading}
+                  />
+                  <p className="text-xs sm:text-sm text-text-muted">
+                    Paste the full Discord webhook URL to send alerts to your own channel. Leave empty to use the
+                    built-in default (or the <code>DISCORD_WEBHOOK_URL</code> env var).
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-border/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    loading={webhookTestLoading}
+                    disabled={loading || webhookLoading}
+                    onClick={testWebhook}
+                    className="w-full sm:w-auto"
+                  >
+                    Send test message
+                  </Button>
+                  <Button type="submit" variant="primary" loading={webhookLoading} className="w-full sm:w-auto">
+                    Save
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {webhookStatus.message && (
+              <p className={`text-xs sm:text-sm ${webhookStatus.type === "error" ? "text-red-500" : "text-green-500"} pt-2 border-t border-border/50`}>
+                {webhookStatus.message}
               </p>
             )}
           </div>

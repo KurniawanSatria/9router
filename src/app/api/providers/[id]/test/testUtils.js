@@ -112,6 +112,13 @@ const OAUTH_TEST_CONFIG = {
   // codebuddy-intl uses the same JWT token structure as codebuddy-cn
   // (access + refresh token pair, ~1-year expiry) — same test strategy (#4232).
   "codebuddy-intl": { tokenExists: true },
+  freepi: {
+    url: "https://api.freepi.ai/me/stats",
+    method: "GET",
+    authHeader: "Authorization",
+    authPrefix: "Bearer ",
+    refreshable: false,
+  },
   kimchi: {
     url: KIMCHI_CONFIG.validationUrl || "https://api.cast.ai/v1/llm/openai/supported-providers",
     method: "GET",
@@ -869,10 +876,8 @@ async function testApiKeyConnection(connection, effectiveProxy = null) {
         const valid = res.status !== 401 && res.status !== 403;
         return { valid, error: valid ? null : "Invalid API key" };
       }
-      case "xiaomi-mimo":
-      case "xiaomi-tokenplan": {
-        const baseUrls = { "xiaomi-mimo": "https://api.xiaomimimo.com/v1", "xiaomi-tokenplan": "https://token-plan-sgp.xiaomimimo.com/v1" };
-        const res = await fetchWithConnectionProxy(`${baseUrls[connection.provider]}/models`, {
+      case "xiaomi-mimo": {
+        const res = await fetchWithConnectionProxy("https://api.xiaomimimo.com/v1/models", {
           headers: { Authorization: `Bearer ${connection.apiKey}` },
         }, effectiveProxy);
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };

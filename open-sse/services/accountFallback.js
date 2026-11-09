@@ -12,8 +12,8 @@ export function getQuotaCooldown(backoffLevel = 0) {
   return Math.min(cooldown, BACKOFF_CONFIG.max);
 }
 
-const TOKENHARBOR_FREE_TIER_TEXT = /free allowance for ':free' models is used up/i;
-const TOKENHARBOR_RESET_TEXT = /comes back on (\d{1,2})\s+([a-z]{3})\s+(\d{4})\s+at\s+(\d{2}):(\d{2})\s+utc/i;
+const TOKENHARBOR_FREE_TIER_TEXT = /free allowance for ':free' models is used up|used this period's free allowance/i;
+const TOKENHARBOR_RESET_TEXT = /(?:comes back on|period starts on)\s+(\d{1,2})\s+([a-z]{3})\s+(\d{4})\s+at\s+(\d{2}):(\d{2})\s+utc/i;
 const MONTH_INDEX = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
   jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,

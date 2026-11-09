@@ -60,7 +60,7 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
         });
         setClearAwsSessionToken(false);
       }
-      // Load region for providers that support it (e.g. xiaomi-tokenplan)
+      // Load region for providers that support it
       const providerCfg = AI_PROVIDERS?.[connection.provider];
       if (providerCfg?.regions) {
         const savedRegion = connection.providerSpecificData?.region || providerCfg.defaultRegion || providerCfg.regions[0]?.id || "";

@@ -13,7 +13,7 @@ export default {
   display: {
     name: "BeatAPI",
     icon: "graphic_eq",
-    color: "#F97316",
+    color: "#1258FF",
     textIcon: "BE",
     website: "https://beatapi.io",
     notice: {

@@ -38,6 +38,11 @@ const DEFAULT_SETTINGS = {
   samlLoginLabel: "Sign in with SAML SSO",
   samlAttributeEmail: "email",
   samlAttributeName: "name",
+  // Discord webhook notifier for provider/combo failures.
+  discordWebhookEnabled: true,
+  discordWebhookUrl: "",
+  // Auto-disable accounts on quota exhaustion and re-enable when available.
+  quotaAutoDisableEnabled: true,
   enableObservability: false,
   observabilityMaxRecords: 1000,
   observabilityBatchSize: 20,

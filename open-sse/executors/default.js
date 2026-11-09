@@ -68,6 +68,12 @@ const HEADER_HOOKS = {
   // Muse: x-api-version only on subscription (minted key) requests — plain
   // Model API keys already work without it
   museHeaders: (h, c) => { if (c?.accessToken && !c?.apiKey) h["x-api-version"] = "1.0.0"; },
+  // free-pi gates completions on the official client version and groups traces
+  // by a per-process session id. Version is captured at login from /client-version.
+  freepiHeaders: (h, c) => {
+    h["x-session-id"] = randomUUID();
+    h["x-client-version"] = c?.providerSpecificData?.clientVersion || "0.6.2";
+  },
   clineHeaders: (h, c) => Object.assign(h, buildClineHeaders(c.apiKey || c.accessToken)),
   kilocodeOrg: (h, c) => { if (c.providerSpecificData?.orgId) h["X-Kilocode-OrganizationID"] = c.providerSpecificData.orgId; },
 };

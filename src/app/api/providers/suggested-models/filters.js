@@ -64,4 +64,9 @@ export const FILTERS = {
       .sort((a, b) => String(a.id).localeCompare(String(b.id))),
 
   "nous-free": normalizeNousFreeModels,
+
+  freepi: (models) =>
+    (Array.isArray(models) ? models : [])
+      .filter((m) => typeof m?.id === "string" && m.id.trim() !== "" && m.unavailable !== true)
+      .map((m) => ({ id: m.id, name: String(m.name || m.id).replace(/\s*·\s*unavailable\s*$/i, "") })),
 };

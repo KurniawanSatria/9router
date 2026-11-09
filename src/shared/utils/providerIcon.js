@@ -12,7 +12,6 @@ const ICON_ALIASES = {
   // Zen is the same opencode.ai brand
   "opencode-zen": "opencode",
   // Web-cookie variants ride their brand's existing mark
-  "deepseek-web": "deepseek",
   "muse-web": "muse",
   "gemini-web": "gemini",
   "chatgpt-web": "openai",

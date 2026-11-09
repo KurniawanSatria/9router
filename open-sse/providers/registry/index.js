@@ -11,7 +11,6 @@ import p8 from "./codebuddy-intl.js";
 import p9 from "./comfyui.js";
 import p10 from "./coqui.js";
 import p11 from "./deepgram.js";
-import p12 from "./deepseek-web.js";
 import p13 from "./devin-cli.js";
 import p14 from "./edge-tts.js";
 import p15 from "./elevenlabs.js";
@@ -61,20 +60,18 @@ import p58 from "./tokenharbor.js";
 import p59 from "./tokenrouter.js";
 import p60 from "./topaz.js";
 import p61 from "./tortoise.js";
-import p62 from "./trae.js";
 import p63 from "./uc-web.js";
 import p64 from "./unorouter.js";
 import p65 from "./v1m.js";
 import p66 from "./veoaifree-web.js";
 import p67 from "./volcengine-ark.js";
 import p68 from "./voyage-ai.js";
-import p69 from "./windsurf.js";
-import p70 from "./xiaomi-tokenplan.js";
 import p71 from "./xquik.js";
 import p72 from "./youcom.js";
 import p73 from "./zed.js";
 import p74 from "./zro.js";
 import p75 from "./beatapi.js";
+import p76 from "./freepi.js";
 
 export default [
   p0,
@@ -89,7 +86,6 @@ export default [
   p9,
   p10,
   p11,
-  p12,
   p13,
   p14,
   p15,
@@ -139,18 +135,16 @@ export default [
   p59,
   p60,
   p61,
-  p62,
   p63,
   p64,
   p65,
   p66,
   p67,
   p68,
-  p69,
-  p70,
   p71,
   p72,
   p73,
   p74,
   p75,
+  p76,
 ];

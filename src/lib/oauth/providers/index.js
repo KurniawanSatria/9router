@@ -9,9 +9,8 @@ import iflow from "./iflow.js";
 import kiro from "./kiro.js";
 import gitlab from "./gitlab.js";
 import codebuddyIntl from "./codebuddy-intl.js";
-import windsurf from "./windsurf.js";
-import trae from "./trae.js";
 import zed from "./zed.js";
+import freepi from "./freepi.js";
 
 // Provider configurations
 const PROVIDERS = {
@@ -20,9 +19,8 @@ const PROVIDERS = {
   kiro,
   gitlab,
   "codebuddy-intl": codebuddyIntl,
-  windsurf,
-  trae,
   zed,
+  freepi,
 };
 
 export { PROVIDERS };
@@ -60,8 +58,7 @@ export async function generateAuthData(providerName, redirectUri, meta) {
     ? await provider.prepareConfig(provider.config, meta || {})
     : provider.config;
   const { codeVerifier: pkceVerifier, codeChallenge, state: pkceState } = generatePKCE(provider.pkceVerifierBytes);
-  // Trae uses loginTraceID (set by prepareConfig) as the callback matcher, not PKCE state.
-  const state = config.loginTraceID || pkceState;
+  const state = pkceState;
   // Zed: codeVerifier carries the encoded RSA private key (from prepareConfig), not a PKCE verifier.
   const codeVerifier = config.privateKeyVerifier || pkceVerifier;
 
@@ -176,7 +173,8 @@ export async function pollForToken(providerName, deviceCode, codeVerifier, extra
         return {
           success: false,
           error: result.data.error || 'no_access_token',
-          errorDescription: result.data.error_description || result.data.message || 'No access token received'
+          errorDescription: result.data.error_description || result.data.message || 'No access token received',
+          ...(result.data.fatal ? { fatal: true } : {}),
         };
       }
     }

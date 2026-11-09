@@ -12,7 +12,6 @@ export const WEB_LOGIN_PROVIDERS = new Set([
   "chatgpt-web",
   "gemini-web",
   "muse-web",
-  "deepseek-web",
   "uc-web",
 ]);
 

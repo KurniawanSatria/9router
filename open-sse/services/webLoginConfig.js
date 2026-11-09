@@ -41,25 +41,6 @@ export const WEB_LOGIN_CONFIGS = {
       { type: "cookie", name: "hatch_native_auth_device", optional: true },
     ],
   },
-  // deepseek-web stores its credential in localStorage, not a cookie.
-  // Stored as JSON {"value":"<base64-token>","__version":"0"} or raw token.
-  "deepseek-web": {
-    loginUrl: "https://chat.deepseek.com/sign_in",
-    cookieDomain: ".deepseek.com",
-    tokenSources: [{ type: "localStorage", name: "userToken" }],
-    // The executor expects the raw token value, not a cookie header.
-    credentialFrom: "localStorageValue",
-    validateToken: (value) => {
-      if (typeof value !== "string" || !value.trim()) return false;
-      try {
-        const parsed = JSON.parse(value);
-        const token = typeof parsed?.value === "string" ? parsed.value : value;
-        return typeof token === "string" && token.length >= 20;
-      } catch {
-        return value.length >= 20;
-      }
-    },
-  },
   "uc-web": {
     loginUrl: "https://uncensored.com/",
     cookieDomain: ".uncensored.com",

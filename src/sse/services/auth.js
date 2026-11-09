@@ -22,6 +22,27 @@ let selectionMutex = Promise.resolve();
 const localCooldowns = new Map();
 const LOCAL_COOLDOWN_ALL = "__all";
 
+// Providers whose upstream accepts only one request per window (e.g. OrcaRouter,
+// BeatAPI: 1/min per key). A successful request is not proof the next one will
+// pass, and waiting for the 429 costs the combo a full round trip. Record the
+// dispatch time so subsequent selections inside the window skip the account
+// instead of spamming it. Kept separate from localCooldowns because a successful
+// request must NOT clear this window.
+const minIntervalCooldowns = new Map();
+
+function rememberMinInterval(connectionId, untilMs) {
+  if (!connectionId || connectionId === "noauth" || !untilMs) return;
+  minIntervalCooldowns.set(connectionId, Math.max(minIntervalCooldowns.get(connectionId) || 0, untilMs));
+}
+
+function minIntervalUntil(connectionId, now = Date.now()) {
+  if (!connectionId) return null;
+  const until = minIntervalCooldowns.get(connectionId);
+  if (until == null) return null;
+  if (until <= now) { minIntervalCooldowns.delete(connectionId); return null; }
+  return until;
+}
+
 function cooldownModelKey(model) {
   return model || LOCAL_COOLDOWN_ALL;
 }
@@ -101,6 +122,7 @@ export function isConnectionEligible(connection, providerId, model, options = {}
   if (excludeConnectionIds?.has?.(connection.id)) return false;
   if (isModelLockActive(connection, model)) return false;
   if (localCooldownUntil(connection.id, model, now) !== null) return false;
+  if (minIntervalUntil(connection.id, now) !== null) return false;
   const resolvedProviderId = resolveProviderId(providerId);
   const enabled = connection.providerSpecificData?.enabledModels;
   if (resolvedProviderId === "codex" && Array.isArray(enabled) && enabled.length && requestedModel && !enabled.includes(requestedModel)) return false;
@@ -228,10 +250,12 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       for (const c of connections) {
         const persisted = getModelUnlockTimeMs(c, model);
         const local = localCooldownUntil(c.id, model, now);
+        const interval = minIntervalUntil(c.id, now);
         let until = null;
         if (persisted !== null && local !== null) until = Math.max(persisted, local);
         else if (persisted !== null) until = persisted;
         else if (local !== null) until = local;
+        if (interval !== null) until = until === null ? interval : Math.max(until, interval);
         if (until === null) continue;
         expiries.push(until);
         if (!errorConn || (!errorConn.lastError && c.lastError)) errorConn = c;
@@ -322,6 +346,12 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       // Default: fill-first (already sorted by priority in getProviderConnections)
       connection = availableConnections[0];
     }
+
+    // The credential returned here is about to issue one upstream request. Hold
+    // the account for the provider's per-key window so a combo or another session
+    // does not fire a second request into a guaranteed 429.
+    const minIntervalMs = ACCOUNT_WIDE_RATE_LIMITS[providerId]?.minIntervalMs;
+    if (minIntervalMs) rememberMinInterval(connection.id, Date.now() + minIntervalMs);
 
     const resolvedProxy = await resolveConnectionProxyConfig(connection.providerSpecificData || {});
 

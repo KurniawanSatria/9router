@@ -24,6 +24,7 @@ import { getCursorUsage } from "./usage/cursor.js";
 import { resolveQoderCredentials } from "./qoderModels.js";
 import { getGlmUsage } from "./usage/glm.js";
 import { getCommandCodeUsage } from "./usage/commandcode.js";
+import { getFreepiUsage } from "./usage/freepi.js";
 import {
   getIflowUsage,
   getOllamaUsage,
@@ -73,6 +74,7 @@ const USAGE_HANDLERS = {
   // body with a "resets in …" message on a probe request.
   zro: (c) => getZroUsage(c.apiKey, c.proxyOptions),
   tokenharbor: (c) => getTokenharborUsage(c.apiKey, c.proxyOptions),
+  freepi: (c) => getFreepiUsage(c.accessToken, c.proxyOptions),
   cursor: (c) => getCursorUsage(c.accessToken, c.providerSpecificData, c.proxyOptions),
 };
 

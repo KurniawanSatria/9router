@@ -51,7 +51,8 @@ export const MAX_RATE_LIMIT_COOLDOWN_MS = 30 * 60 * 1000;
  * the account for the full window keeps the router from spamming it.
  */
 export const ACCOUNT_WIDE_RATE_LIMITS = {
-  orcarouter: { cooldownMs: 60 * 1000 },
+  orcarouter: { cooldownMs: 60 * 1000, minIntervalMs: 60 * 1000 },
+  beatapi: { cooldownMs: 60 * 1000, minIntervalMs: 60 * 1000 },
 };
 
 // Cooldown durations (ms)

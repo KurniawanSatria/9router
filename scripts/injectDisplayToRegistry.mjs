@@ -119,7 +119,7 @@ for (const [cat, re] of Object.entries(CATEGORIES)) {
       try { extra.hiddenKinds = JSON.parse(hiddenKindsM[1].replace(/'/g, '"')); } catch {}
     }
 
-    // regions (xiaomi-tokenplan)
+    // regions
     const regionsM = line.match(/regions:\s*(\[[\s\S]*?\])/);
     if (regionsM) {
       try { extra.regions = JSON.parse(regionsM[1].replace(/'/g, '"')); } catch {}

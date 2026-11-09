@@ -677,6 +677,22 @@ export function parseQuotaData(provider, data) {
         }
         break;
 
+      case "freepi":
+        if (data.quotas) {
+          Object.entries(data.quotas).forEach(([name, quota]) => {
+            normalizedQuotas.push({
+              name,
+              used: quota.used || 0,
+              total: quota.total || 0,
+              resetAt: quota.resetAt || null,
+              remainingPercentage: quota.remainingPercentage,
+              isCreditBalance: quota.isCreditBalance === true,
+              currency: quota.currency,
+            });
+          });
+        }
+        break;
+
       case "kimi":
         // Weekly / Ratelimit from /v1/usages. Prefer remainingPercentage only.
         if (data.quotas) {

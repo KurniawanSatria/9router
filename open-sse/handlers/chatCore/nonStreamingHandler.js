@@ -175,9 +175,9 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
     // OpenAI client without a `choices` array and surface as a UI test error.
     // Early return if the response is already in OpenAI format (has choices array)
     // or if it has content as a non-array value (likely a different non-Claude format).
-    // Some providers (e.g. xiaomi-tokenplan) return OpenAI-format responses even when
-    // the request was translated to Claude format — the targetFormat is Claude but the
-    // actual response is OpenAI-native and needs no further translation.
+    // Some providers return OpenAI-format responses even when the request was
+    // translated to Claude format — the targetFormat is Claude but the actual
+    // response is OpenAI-native and needs no further translation.
     if (responseBody.choices || (responseBody.content && !Array.isArray(responseBody.content))) return responseBody;
 
     let textContent = "", thinkingContent = "";

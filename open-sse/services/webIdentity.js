@@ -74,38 +74,6 @@ function geminiHttpsGet(url, headers) {
 }
 
 const PROBES = {
-  async "deepseek-web"(credential) {
-    let token = String(credential || "").trim();
-    try {
-      const parsed = JSON.parse(token);
-      if (typeof parsed?.value === "string") token = parsed.value;
-    } catch { /* raw token */ }
-    if (!token) return REJECTED("Missing userToken");
-
-    const res = await request("https://chat.deepseek.com/api/v0/users/current", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "*/*",
-        Origin: "https://chat.deepseek.com",
-        Referer: "https://chat.deepseek.com/",
-        "X-Client-Bundle-Id": "com.deepseek.chat",
-        "X-Client-Platform": "web",
-        "X-Client-Version": "2.0.0",
-      },
-    });
-    if (!res.status) return UNKNOWN(res.error);
-    if (res.status === 401 || res.status === 403) return REJECTED("userToken is invalid or expired");
-    if (!res.ok) return UNKNOWN(`DeepSeek returned HTTP ${res.status}`);
-
-    let json = null;
-    try { json = JSON.parse(res.text); } catch { return UNKNOWN("DeepSeek returned invalid JSON"); }
-    // Auth failures arrive as HTTP 200 with application-level code 40003.
-    if (Number(json?.code) === 40003) return REJECTED("userToken is invalid or expired");
-    const biz = json?.data?.biz_data;
-    if (!biz?.token) return REJECTED("DeepSeek rejected the userToken");
-    return OK(biz.email || "");
-  },
-
   async "chatgpt-web"(credential) {
     const cookie = normalizeSessionCookieHeader(credential, "__Secure-next-auth.session-token");
     if (!cookie) return REJECTED("Missing session cookie");

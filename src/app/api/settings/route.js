@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import { applyOutboundProxyEnv } from "@/lib/network/outboundProxy";
 import { resetComboRotation } from "open-sse/services/combo.js";
+import { isDiscordWebhookUrl } from "@/sse/services/discordWebhook.js";
 import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
@@ -74,6 +75,19 @@ export async function PATCH(request) {
       if (!body.oidcClientSecret || !String(body.oidcClientSecret).trim()) {
         delete body.oidcClientSecret;
       }
+    }
+
+    // Reject an obviously malformed webhook so alerts never silently break
+    if (Object.prototype.hasOwnProperty.call(body, "discordWebhookUrl")) {
+      const raw = body.discordWebhookUrl;
+      const trimmed = typeof raw === "string" ? raw.trim() : "";
+      if (trimmed && !isDiscordWebhookUrl(trimmed)) {
+        return NextResponse.json(
+          { error: "Invalid webhook URL (must start with http:// or https://)" },
+          { status: 400 },
+        );
+      }
+      body.discordWebhookUrl = trimmed;
     }
 
     const settings = await updateSettings(body);

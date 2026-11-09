@@ -92,6 +92,13 @@ export const QUOTA_AUTOPING_CONFIG = {
   },
 };
 
+// Quota watcher: disable accounts whose quota is exhausted, notify, and
+// re-enable them once their usage reports available again.
+export const QUOTA_WATCH_CONFIG = {
+  tickIntervalMs: 600000,
+  startupDelayMs: 60000,
+};
+
 // Re-export from providers.js for backward compatibility
 export {
   FREE_PROVIDERS,

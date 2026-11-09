@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getProviderNodeById } from "@/models";
 import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider, isCustomEmbeddingProvider, AI_PROVIDERS } from "@/shared/constants/providers";
 import { getDefaultModel } from "open-sse/config/providerModels.js";
-import { resolveOllamaLocalHost, resolveXiaomiTokenplanBaseUrl, PROVIDERS } from "open-sse/config/providers.js";
+import { resolveOllamaLocalHost, PROVIDERS } from "open-sse/config/providers.js";
 import { openaiToCommandCodeRequest } from "open-sse/translator/request/openai-to-commandcode.js";
 import { buildCommandCodeHeaders } from "open-sse/shared/commandCodeHeaders.js";
 import { resolveQoderCredentials, resolveQoderModels } from "open-sse/services/qoderModels.js";
@@ -394,7 +394,6 @@ export async function POST(request) {
         case "chutes":
         case "runcrate":
         case "xiaomi-mimo":
-        case "xiaomi-tokenplan":
         case "nvidia": {
           const endpoints = {
             ...Object.fromEntries(
@@ -402,7 +401,6 @@ export async function POST(request) {
             ),
             // dynamic URLs (depend on providerSpecificData) — kept inline
             "ollama-local": `${resolveOllamaLocalHost({ providerSpecificData })}/api/tags`,
-            "xiaomi-tokenplan": `${resolveXiaomiTokenplanBaseUrl({ providerSpecificData })}/models`,
           };
           const headers = {};
           if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
@@ -410,9 +408,6 @@ export async function POST(request) {
           // xai returns 400 for bad key, 403 for valid-but-no-credit. Other providers use 401.
           if (provider === "xai") {
             isValid = res.status === 200 || res.status === 403;
-          } else if (provider === "xiaomi-tokenplan") {
-            // /models returns 403 for valid keys lacking list permission; only 401 means invalid
-            isValid = res.status !== 401;
           } else {
             isValid = res.ok;
           }

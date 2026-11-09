@@ -40,7 +40,6 @@ async function modelsWithCombo(providerId, modelId, combos) {
 describe("/v1/models combo limits", () => {
   it.each([
     ["ocg", "opencode-go", "mimo-v2.5"],
-    ["xmtp", "xiaomi-tokenplan", "mimo-v2.5"],
     ["ps", "poolside", "custom-model"],
     ["ds", "deepseek", "deepseek-chat"],
   ])("uses the real provider for a %s UI-alias seat", async (uiAlias, providerId, modelId) => {

@@ -13,6 +13,7 @@
  */
 
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
+import { tokenharborFreeTierResetMs } from "../accountFallback.js";
 
 // Groq-style duration strings ("1h35m", "2m59.56s", "7.66s") → milliseconds.
 function parseDurationMs(value) {
@@ -41,6 +42,10 @@ function resetAtFromMessage(message) {
 
 function pickFirstModel(models) {
   const list = Array.isArray(models) ? models : [];
+  // tokenharbor's reset window only shows on a ':free' model; paid models
+  // answer 402 balance_zero, which carries no reset time.
+  const free = list.find((m) => /:free$/i.test(m.id || ""));
+  if (free) return free.id;
   const chat = list.find((m) => (m.mode || "chat") === "chat");
   return (chat || list[0])?.id || null;
 }
@@ -97,14 +102,17 @@ async function getAggregatorUsage(provider, baseUrl, apiKey, proxyOptions = null
 
     const error = probe.body?.error || {};
     const message = error.message || "";
-    const resetAt = resetAtFromMessage(message);
+    const tokenharborResetMs = provider === "tokenharbor"
+      ? tokenharborFreeTierResetMs(probe.status, message, provider)
+      : null;
+    const resetAt = tokenharborResetMs ? new Date(tokenharborResetMs).toISOString() : resetAtFromMessage(message);
 
     // Quota drained with a stated reset → tracker row with countdown.
     if (resetAt) {
       return {
         plan: provider,
         quotas: {
-          "Daily quota": {
+          [provider === "tokenharbor" ? "Free allowance" : "Daily quota"]: {
             used: 1,
             total: 1,
             resetAt,

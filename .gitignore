@@ -78,6 +78,10 @@ open-sse.old/
 .graphifyignore
 graphify-out/*
 
+# local tool output
+.perch/
+.vitest/
+
 # Local-only working dirs (notes, vendored repos, scripts, skills)
 .claude/
 .docs/
