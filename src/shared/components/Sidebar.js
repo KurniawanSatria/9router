@@ -18,6 +18,8 @@ export default function Sidebar({ onClose }) {
   const [updateInfo, setUpdateInfo] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [dockerUpdating, setDockerUpdating] = useState(false);
+  const [dockerError, setDockerError] = useState(null);
   const [shutdownCountdown, setShutdownCountdown] = useState(0);
   const [enableTranslator, setEnableTranslator] = useState(false);
   const sidebarOrder = useSettingsStore((s) => s.settings?.sidebarOrder);
@@ -37,7 +39,7 @@ export default function Sidebar({ onClose }) {
     const timer = setTimeout(() => {
       fetch("/api/version")
         .then(res => res.json())
-        .then(data => { if (data.hasUpdate) setUpdateInfo(data); })
+        .then(data => { if (data.hasUpdate || data.docker) setUpdateInfo(data); })
         .catch(() => { });
     }, 2500);
     return () => clearTimeout(timer);
@@ -56,7 +58,45 @@ export default function Sidebar({ onClose }) {
   // Open manual update panel (no countdown yet — user must click Copy to trigger shutdown)
   const handleUpdate = () => {
     setShowUpdateModal(false);
-    setIsUpdating(true);
+    if (updateInfo?.docker) startDockerUpdate();
+    else setIsUpdating(true);
+  };
+
+  const startDockerUpdate = async () => {
+    setDockerUpdating(true);
+    setDockerError(null);
+    const previousBootId = updateInfo?.bootId;
+    try {
+      const res = await fetch("/api/version/update", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDockerUpdating(false);
+        setDockerError(data.message || `Update failed (HTTP ${res.status}).`);
+        return;
+      }
+    } catch { /* connection drops when the container restarts */ }
+
+    const startedAt = Date.now();
+    const timer = setInterval(async () => {
+      try {
+        const res = await fetch("/api/version", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.bootId && data.bootId !== previousBootId) {
+          clearInterval(timer);
+          globalThis.location.reload();
+        } else if (Date.now() - startedAt > 600000) {
+          clearInterval(timer);
+          setDockerUpdating(false);
+          setDockerError("Update is taking too long. Reload the page manually.");
+        }
+      } catch { /* container is restarting */ }
+    }, 3000);
+  };
+
+  const closeDockerPanel = () => {
+    setDockerUpdating(false);
+    setDockerError(null);
   };
 
   // Triggered by Copy button inside ManualUpdatePanel: copy + countdown + shutdown
@@ -178,6 +218,18 @@ export default function Sidebar({ onClose }) {
         </nav>
 
         <div className="px-6 py-4 border-t border-border-subtle">
+          {updateInfo && (
+            <button
+              type="button"
+              onClick={() => setShowUpdateModal(true)}
+              className="mb-3 flex w-full items-center gap-2 rounded-[8px] border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-medium text-primary transition-colors hover:bg-primary/20"
+            >
+              <span className="material-symbols-outlined text-[16px]">system_update_alt</span>
+              {updateInfo.docker
+                ? "Update image"
+                : `Update available${updateInfo.latestVersion ? ` · v${updateInfo.latestVersion}` : ""}`}
+            </button>
+          )}
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-subtle">Local gateway</p>
         </div>
 
@@ -190,16 +242,20 @@ export default function Sidebar({ onClose }) {
         onClose={() => setShowUpdateModal(false)}
         onConfirm={handleUpdate}
         title="Update Saturia Proxy"
-        message={`Show install command for v${updateInfo?.latestVersion || ""}? You can copy it and shutdown to install manually.`}
-        confirmText="Show Command"
+        message={updateInfo?.docker
+          ? "Pull the latest image and recreate the container? The dashboard reconnects automatically once it is back."
+          : `Show install command for v${updateInfo?.latestVersion || ""}? You can copy it and shutdown to install manually.`}
+        confirmText={updateInfo?.docker ? "Update Now" : "Show Command"}
         cancelText="Cancel"
         variant="primary"
       />
 
       {/* Disconnected / Updating Overlay */}
-      {(isDisconnected || isUpdating) && (
+      {(isDisconnected || isUpdating || dockerUpdating) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
-          {isUpdating ? (
+          {dockerUpdating ? (
+            <DockerUpdatePanel error={dockerError} onClose={closeDockerPanel} />
+          ) : isUpdating ? (
             <ManualUpdatePanel
               latestVersion={updateInfo?.latestVersion}
               installCmd={INSTALL_CMD}
@@ -229,6 +285,32 @@ export default function Sidebar({ onClose }) {
 
 Sidebar.propTypes = {
   onClose: PropTypes.func,
+};
+
+function DockerUpdatePanel({ error, onClose }) {
+  return (
+    <div className="w-full max-w-md rounded-xl bg-neutral-900/95 border border-white/10 p-6 text-white text-center">
+      <div className="flex items-center justify-center size-12 rounded-full bg-primary/20 text-primary mx-auto mb-4">
+        <span className={`material-symbols-outlined text-[26px] ${error ? "" : "animate-spin"}`}>
+          {error ? "error" : "progress_activity"}
+        </span>
+      </div>
+      <h2 className="text-lg font-semibold mb-2">{error ? "Update Failed" : "Updating Saturia Proxy"}</h2>
+      <p className="text-sm text-white/60 mb-5">
+        {error || "Pulling the latest image and recreating the container. The page reloads by itself when it is back."}
+      </p>
+      {error && (
+        <Button variant="secondary" fullWidth onClick={onClose}>
+          Close
+        </Button>
+      )}
+    </div>
+  );
+}
+
+DockerUpdatePanel.propTypes = {
+  error: PropTypes.string,
+  onClose: PropTypes.func.isRequired,
 };
 
 function ManualUpdatePanel({ latestVersion, installCmd, copied, onCopyAndShutdown, onCancel, countdown, isDisconnected }) {

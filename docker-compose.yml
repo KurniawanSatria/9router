@@ -1,6 +1,6 @@
 services:
   9router:
-    image: decolua/9router:latest
+    image: saturia/9router:latest
     container_name: 9router
     restart: always
     ports:
@@ -15,6 +15,10 @@ services:
       HOSTNAME: "0.0.0.0"
       NODE_ENV: production
       HEADROOM_URL: http://headroom:8787
+      WATCHTOWER_URL: http://watchtower:8080
+      WATCHTOWER_TOKEN: ${WATCHTOWER_TOKEN:-9router-local}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
     depends_on:
       - headroom
 
@@ -24,6 +28,18 @@ services:
     restart: always
     ports:
       - "127.0.0.1:8787:8787"
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: always
+    environment:
+      WATCHTOWER_HTTP_API_UPDATE: "true"
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_TOKEN:-9router-local}
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_CLEANUP: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   9router-data:

@@ -3,6 +3,7 @@ import pkg from "../../../../package.json" with { type: "json" };
 
 const NPM_PACKAGE_NAME = "9router";
 const VERSION_CACHE_TTL_MS = 3600000; // cache npm latest lookup for 1h
+const BOOT_ID = (globalThis.__bootId ??= crypto.randomUUID());
 
 // Survive hot reload; one cache per process
 const versionCache = (global.__npmVersionCache ??= { value: null, fetchedAt: 0 });
@@ -56,6 +57,7 @@ export async function GET() {
   const latestVersion = await getLatestVersionCached();
   const currentVersion = pkg.version;
   const hasUpdate = latestVersion ? compareVersions(latestVersion, currentVersion) > 0 : false;
+  const docker = Boolean(process.env.WATCHTOWER_URL);
 
-  return Response.json({ currentVersion, latestVersion, hasUpdate });
+  return Response.json({ currentVersion, latestVersion, hasUpdate, docker, bootId: BOOT_ID });
 }
