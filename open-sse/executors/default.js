@@ -69,9 +69,10 @@ const HEADER_HOOKS = {
   // Model API keys already work without it
   museHeaders: (h, c) => { if (c?.accessToken && !c?.apiKey) h["x-api-version"] = "1.0.0"; },
   // free-pi gates completions on the official client version and groups traces
-  // by a per-process session id. Version is captured at login from /client-version.
+  // by session id. A random id per request burns the 4 concurrent-session slots
+  // and then answers 409, so reuse one stable id per account.
   freepiHeaders: (h, c) => {
-    h["x-session-id"] = randomUUID();
+    h["x-session-id"] = c?.providerSpecificData?.sessionId || c?.providerSpecificData?.userId || randomUUID();
     h["x-client-version"] = c?.providerSpecificData?.clientVersion || "0.6.2";
   },
   clineHeaders: (h, c) => Object.assign(h, buildClineHeaders(c.apiKey || c.accessToken)),

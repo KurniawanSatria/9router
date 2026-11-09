@@ -81,6 +81,9 @@ export const ERROR_RULES = [
   // Intl gateway blocks affect the account/IP, so let the connection back off.
   { provider: "codebuddy-intl", text: "request illegal", backoff: true },
   { provider: "codebuddy-intl", text: "conversation id missing", backoff: true },
+  // free-pi allows 4 concurrent CLI sessions per account; rotate instead of
+  // failing the request on the caller.
+  { provider: "freepi", text: "concurrent_session", cooldownMs: COOLDOWN.long },
   { text: "no credentials",           cooldownMs: COOLDOWN.long },
   { text: "request not allowed",      cooldownMs: COOLDOWN.short },
   { text: "improperly formed request", cooldownMs: COOLDOWN.long },

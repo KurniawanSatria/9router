@@ -12,7 +12,7 @@ const { getExecutor } = await import("../../open-sse/executors/index.js");
 const { FILTERS } = await import("../../src/app/api/providers/suggested-models/filters.js");
 
 const ok = { status: 200, headers: { get: () => "" } };
-const credentials = (clientVersion) => ({ accessToken: "jwt", providerSpecificData: { clientVersion } });
+const credentials = (clientVersion) => ({ accessToken: "jwt", providerSpecificData: { clientVersion, userId: "user-1" } });
 const execute = () => getExecutor("freepi").execute({ model: "particle", body: {}, stream: false, credentials: credentials("0.6.2") });
 
 beforeEach(() => {
@@ -26,6 +26,13 @@ describe("freepi additions", () => {
     expect(upstreamFetch.mock.calls[0][1].headers["x-client-version"]).toBe("0.6.15");
     await execute();
     expect(versionFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses one stable session id per account", async () => {
+    await execute();
+    await execute();
+    const ids = upstreamFetch.mock.calls.map(([, init]) => init.headers["x-session-id"]);
+    expect(ids).toEqual(["user-1", "user-1"]);
   });
 
   it("strips the promo suffix from model names", () => {
