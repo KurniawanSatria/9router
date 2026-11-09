@@ -55,8 +55,8 @@ export default function Modal({
       <div
         className={cn(
           "relative w-full bg-surface",
-          "border border-border-subtle",
-          "rounded-[14px] shadow-[var(--shadow-elev)]",
+          "border border-border",
+          "rounded-[12px] shadow-[var(--shadow-elev)]",
           "fade-in",
           sizes[size],
           className
@@ -76,7 +76,7 @@ export default function Modal({
                       title="Close"
                       className="w-4 h-4 rounded-full bg-[#FF5F56] hover:brightness-90 transition-all cursor-pointer flex items-center justify-center group/dot"
                     >
-                      <span className="text-[9px] font-bold text-white opacity-0 group-hover/dot:opacity-100 transition-opacity leading-none">✕</span>
+                      <span className="material-symbols-outlined text-[10px] text-white opacity-0 group-hover/dot:opacity-100 transition-opacity leading-none">close</span>
                     </button>
                   </Tooltip>
                   <div className="w-4 h-4 rounded-full bg-[#3a3a3a]/20 dark:bg-white/15 cursor-not-allowed" />

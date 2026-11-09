@@ -153,10 +153,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-bg p-4 relative overflow-hidden">
       {/* Faint grid background */}
       <div className="landing-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-md">
+      <div className="page-enter relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Saturia</h1>
-          <p className="text-text-muted">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none" className="size-10" aria-hidden="true">
+            <rect width="32" height="32" rx="6" fill="#18181b" />
+            <text x="16" y="24" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="700" fill="white" textAnchor="middle">S</text>
+          </svg>
+          <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-text-main mb-1.5">Saturia</h1>
+          <p className="text-[13px] text-text-muted">
             {samlAvailable
               ? "Sign in with SAML 2.0 Single Sign-On"
               : oidcAvailable

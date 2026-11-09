@@ -48,7 +48,6 @@ function getColorClasses(remainingPercentage) {
       text: "text-green-600 dark:text-green-400",
       bg: "bg-green-500",
       bgLight: "bg-green-500/10",
-      emoji: "🟢",
     };
   }
 
@@ -57,7 +56,6 @@ function getColorClasses(remainingPercentage) {
       text: "text-yellow-600 dark:text-yellow-400",
       bg: "bg-yellow-500",
       bgLight: "bg-yellow-500/10",
-      emoji: "🟡",
     };
   }
 
@@ -65,7 +63,6 @@ function getColorClasses(remainingPercentage) {
     text: "text-red-600 dark:text-red-400",
     bg: "bg-red-500",
     bgLight: "bg-red-500/10",
-    emoji: "🔴",
   };
 }
 
@@ -153,7 +150,7 @@ export default function QuotaTable({
           const isUnlimited = quota.unlimited === true;
           const isCreditBalance = quota.isCreditBalance === true;
           const colors = isCreditBalance
-            ? { text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500", bgLight: "bg-blue-500/10", emoji: "💰" }
+            ? { text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500", bgLight: "bg-blue-500/10" }
             : getColorClasses(quota.colorPercentage ?? quota.remaining);
           // Qoder flags open-ended plans with `neverExpires` (its API reports a
           // year-9999 sentinel). Return "-"/"Never expires" rather than an empty
@@ -203,7 +200,16 @@ export default function QuotaTable({
             >
               {/* Name */}
               <div className="flex w-36 min-w-0 items-center gap-1.5">
-                <span className="text-[10px] shrink-0">{colors.emoji}</span>
+                {isCreditBalance ? (
+                  <span className="material-symbols-outlined shrink-0 text-[13px] text-blue-500">paid</span>
+                ) : (
+                  <span className="relative flex size-1.5 shrink-0">
+                    {(quota.colorPercentage ?? quota.remaining) > 70 && (
+                      <span className={`absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping ${colors.bg}`} />
+                    )}
+                    <span className={`relative inline-flex size-1.5 rounded-full ${colors.bg}`} />
+                  </span>
+                )}
                 <span className={`${nameText} font-medium text-text-primary truncate`}>
                   {quota.name}
                 </span>

@@ -60,7 +60,7 @@ export default function IFlowCookieModal({ isOpen, onSuccess, onClose }) {
       <div className="space-y-4">
         {success ? (
           <div className="text-center py-8">
-            <div className="text-6xl mb-4">✅</div>
+            <span className="material-symbols-outlined mb-4 text-[56px] text-success">check_circle</span>
             <p className="text-lg font-medium text-text-primary">Authentication Successful!</p>
             <p className="text-sm text-text-muted mt-2">Fresh API key obtained</p>
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Select from "@/shared/components/Select";
 import { FREE_PROVIDERS, AI_PROVIDERS } from "@/shared/constants/providers";
+import { prettyModel } from "@/shared/utils/modelName";
 
 // Keep providers without serviceKinds (default LLM) or with "llm" in serviceKinds
 function isLLMProvider(id) {
@@ -28,15 +29,6 @@ function timeAgo(timestamp) {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
-}
-
-const MODEL_LABELS = { deepseek: "DeepSeek", glm: "GLM", gpt: "GPT", oss: "OSS", mimo: "MiMo", ai: "AI", llm: "LLM" };
-const MODEL_SIZE = /^(?:\d+(?:\.\d+)?[bt]|a\d+b)$/i;
-
-function prettyModel(raw) {
-  const id = String(raw || "").replace(/:free$/i, "").split("/").pop().trim();
-  const words = id.split(/[-_]+/).filter((w) => w && !MODEL_SIZE.test(w));
-  return words.map((w) => MODEL_LABELS[w.toLowerCase()] || w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 // Auto-update time display every second without re-rendering parent
@@ -88,7 +80,7 @@ function RecentRequests({ requests = [] }) {
                         <span className={`relative inline-flex h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-error"}`} />
                       </span>
                     </td>
-                    <td className="py-1.5 font-mono truncate w-full max-w-0" title={r.model}>{prettyModel(r.model)}</td>
+                    <td className="py-1.5 font-medium truncate w-full max-w-0" title={r.model}>{prettyModel(r.model)}</td>
                     <td className="py-1.5 pr-5 text-right whitespace-nowrap">
                       <span className="text-primary">{fmt(r.promptTokens)}↑</span>
                       {" "}
@@ -468,13 +460,13 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
       {/* Period selector (hidden when controlled by parent) */}
       {!hidePeriodSelector && (
         <div className="flex w-full items-center gap-2 sm:w-auto sm:self-end">
-          <div className="grid flex-1 grid-cols-6 items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 sm:flex sm:flex-none">
+          <div className="grid flex-1 grid-cols-6 items-center gap-1 rounded-[9px] border border-border bg-bg-subtle p-0.5 sm:flex sm:flex-none">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 disabled={fetching}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${period === p.value ? "bg-primary text-white shadow-sm" : "text-text-muted hover:bg-bg-hover hover:text-text"}`}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${period === p.value ? "bg-surface text-text-main shadow-[var(--shadow-soft)]" : "text-text-muted hover:bg-bg-hover hover:text-text"}`}
               >
                 {p.label}
               </button>
@@ -525,16 +517,16 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
             className="w-full sm:w-auto"
             buttonClassName="min-w-[170px]"
           />
-          <div className="grid grid-cols-2 items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 sm:flex">
+          <div className="grid grid-cols-2 items-center gap-1 rounded-[9px] border border-border bg-bg-subtle p-0.5 sm:flex">
             <button
               onClick={() => setViewMode("costs")}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "costs" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "costs" ? "bg-surface text-text-main shadow-[var(--shadow-soft)]" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
             >
               Costs
             </button>
             <button
               onClick={() => setViewMode("tokens")}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "tokens" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "tokens" ? "bg-surface text-text-main shadow-[var(--shadow-soft)]" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
             >
               Tokens
             </button>

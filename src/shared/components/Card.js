@@ -26,8 +26,8 @@ export default function Card({
     <div
       className={cn(
         "bg-surface border border-border-subtle",
-        elev ? "rounded-[14px] shadow-[var(--shadow-elev)]" : "rounded-[14px] shadow-[var(--shadow-soft)]",
-        hover && "hover:shadow-[var(--shadow-warm)] hover:border-brand-500/30 transition-all cursor-pointer",
+        elev ? "rounded-[12px] shadow-[var(--shadow-elev)]" : "rounded-[12px] shadow-[var(--shadow-soft)]",
+        hover && "hover:shadow-[var(--shadow-warm)] hover:border-primary/30 transition-all cursor-pointer",
         paddings[padding],
         className
       )}
@@ -37,16 +37,16 @@ export default function Card({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="p-2 rounded-[10px] bg-bg text-text-muted">
-                <span className="material-symbols-outlined text-[20px]">{icon}</span>
+              <div className="flex items-center justify-center size-8 rounded-[7px] bg-bg-alt border border-border-subtle text-text-muted">
+                <span className="material-symbols-outlined text-[18px]">{icon}</span>
               </div>
             )}
             <div>
               {title && (
-                <h3 className="text-text-main font-semibold">{title}</h3>
+                <h3 className="text-[15px] font-semibold tracking-tight text-text-main">{title}</h3>
               )}
               {subtitle && (
-                <p className="text-sm text-text-muted">{subtitle}</p>
+                <p className="text-[13px] text-text-muted">{subtitle}</p>
               )}
             </div>
           </div>
@@ -62,8 +62,8 @@ Card.Section = function CardSection({ children, className, ...props }) {
   return (
     <div
       className={cn(
-        "p-4 rounded-[10px]",
-        "bg-bg border border-border-subtle",
+        "p-4 rounded-[8px]",
+        "bg-bg-alt border border-border-subtle",
         className
       )}
       {...props}

@@ -236,7 +236,7 @@ export default function WebLoginButton({ providerId, onConnected, size = "sm" })
               {phase === "success" ? (
                 <div className="flex items-center gap-2 text-sm font-medium text-green-400">
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                  ✓ {message || translate("Connection saved")}
+                  {message || translate("Connection saved")}
                 </div>
               ) : phase === "error" ? (
                 <div className="flex flex-col gap-1">

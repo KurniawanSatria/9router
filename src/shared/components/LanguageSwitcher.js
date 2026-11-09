@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { LOCALES, LOCALE_COOKIE, LOCALE_NAMES, normalizeLocale } from "@/i18n/config";
-import { LOCALE_FLAGS } from "@/shared/constants/locales";
 import { reloadTranslations } from "@/i18n/runtime";
 
 function getLocaleFromCookie() {
@@ -83,7 +82,6 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
         >
           <span className="material-symbols-outlined text-[20px]">language</span>
           <span className="text-sm font-medium">{LOCALE_NAMES[locale] || locale}</span>
-          <span className="text-lg">{LOCALE_FLAGS[locale] || "🌐"}</span>
         </button>
       )}
 
@@ -130,7 +128,7 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
                       } ${isPending ? "opacity-70 cursor-wait" : ""}`}
                       title={LOCALE_NAMES[item] || item}
                     >
-                      <span className="text-2xl">{LOCALE_FLAGS[item] || "🌐"}</span>
+                      <span className="flex size-8 items-center justify-center rounded-[7px] border border-border bg-bg-alt font-mono text-[11px] font-semibold uppercase tracking-wide text-text-muted">{item}</span>
                       {/* Fixed 2-line height so all cards are uniform */}
                       <span className="text-center leading-tight line-clamp-2 h-8 flex items-center">{LOCALE_NAMES[item] || item}</span>
                       {active && (

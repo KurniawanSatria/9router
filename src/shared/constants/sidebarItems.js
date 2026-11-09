@@ -1,12 +1,12 @@
 export const SIDEBAR_ITEMS = [
-  { key: "endpoint", href: "/dashboard/endpoint", label: "Endpoint & Key", icon: "api", group: "main" },
-  { key: "usage", href: "/dashboard/usage", label: "Usage", icon: "speed", group: "main" },
+  { key: "endpoint", href: "/dashboard/endpoint", label: "Home", icon: "home", group: "main" },
+  { key: "providers", href: "/dashboard/providers", label: "Providers", icon: "hub", group: "main" },
+  { key: "combos", href: "/dashboard/combos", label: "Combos", icon: "layers", group: "main" },
+  { key: "usage", href: "/dashboard/usage", label: "Usage", icon: "monitoring", group: "main" },
   { key: "quota", href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage", group: "main" },
-  { key: "providers", href: "/dashboard/providers", label: "Providers", icon: "dns", group: "main" },
-  { key: "combos", href: "/dashboard/combos", label: "Combo", icon: "layers", group: "main" },
-  { key: "systemone", href: "/dashboard/systemone", label: "System One", icon: "psychology", group: "main" },
-  { key: "proxy-pools", href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan", group: "system" },
+  { key: "systemone", href: "/dashboard/systemone", label: "System One", icon: "psychology", group: "system" },
   { key: "console-log", href: "/dashboard/console-log", label: "Console Log", icon: "terminal", group: "system" },
+  { key: "proxy-pools", href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan", group: "system" },
   { key: "translator", href: "/dashboard/translator", label: "Translator", icon: "translate", group: "system", needsTranslator: true },
 ];
 

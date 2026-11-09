@@ -88,9 +88,9 @@ const getPageInfo = (pathname) => {
     };
   if (pathname.includes("/endpoint"))
     return {
-      title: "Endpoint",
-      description: "API endpoint configuration",
-      icon: "api",
+      title: "Home",
+      description: "Overview, endpoint access and API keys",
+      icon: "home",
       breadcrumbs: [],
     };
   if (pathname.includes("/profile"))
@@ -116,9 +116,9 @@ const getPageInfo = (pathname) => {
     };
   if (pathname === "/dashboard")
     return {
-      title: "Endpoint",
-      description: "API endpoint configuration",
-      icon: "api",
+      title: "Home",
+      description: "Overview, endpoint access and API keys",
+      icon: "home",
       breadcrumbs: [],
     };
   return { title: "", description: "", breadcrumbs: [] };
@@ -171,7 +171,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
   };
 
   return (
-    <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
+    <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 py-3 border-b border-border-subtle bg-bg/75 backdrop-blur-xl z-20">
       {/* Mobile menu button */}
       <div className="flex items-center gap-3 lg:hidden shrink-0">
         {showMenuButton && (
@@ -218,7 +218,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                         fallbackText={crumb.label.slice(0, 2).toUpperCase()}
                       />
                     )}
-                    <h1 className="text-base lg:text-2xl font-semibold text-text-main tracking-tight truncate">
+                    <h1 className="text-base lg:text-[22px] font-semibold text-text-main tracking-[-0.02em] truncate">
                       {translate(crumb.label)}
                     </h1>
                   </div>
@@ -228,21 +228,23 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
           </div>
         ) : title ? (
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {icon && (
-                <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">
-                  {icon}
+                <span className="hidden sm:flex items-center justify-center size-8 rounded-[8px] border border-border-subtle bg-surface text-primary">
+                  <span className="material-symbols-outlined text-[18px]">{icon}</span>
                 </span>
               )}
-              <h1 className="text-base lg:text-2xl font-semibold tracking-tight truncate">
-                {translate(title)}
-              </h1>
+              <div className="min-w-0">
+                <h1 className="text-base lg:text-[24px] font-semibold tracking-[-0.02em] truncate leading-tight">
+                  {translate(title)}
+                </h1>
+                {description && (
+                  <p className="hidden lg:block text-[13px] text-text-muted truncate">
+                    {translate(description)}
+                  </p>
+                )}
+              </div>
             </div>
-            {description && (
-              <p className="hidden lg:block text-sm text-text-muted truncate">
-                {translate(description)}
-              </p>
-            )}
           </div>
         ) : null}
       </div>
@@ -288,7 +290,7 @@ function HeaderSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-8 pl-7 pr-7 rounded-lg border border-border bg-surface/60 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+        className="w-full h-8 pl-7 pr-7 rounded-[8px] border border-border bg-surface text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all"
       />
       {query && (
         <button

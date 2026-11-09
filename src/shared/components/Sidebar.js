@@ -51,6 +51,7 @@ export default function Sidebar({ onClose }) {
   };
 
   const visibleSidebarItems = sidebarItems.filter((item) => !item.needsTranslator || enableTranslator);
+  const systemStartIndex = visibleSidebarItems.findIndex((item) => item.group === "system");
 
   // Open manual update panel (no countdown yet — user must click Copy to trigger shutdown)
   const handleUpdate = () => {
@@ -86,37 +87,38 @@ export default function Sidebar({ onClose }) {
 
   return (
     <>
-      <aside className="flex w-72 flex-col border-r border-border-subtle bg-vibrancy backdrop-blur-xl transition-colors duration-300 min-h-full">
+      <aside className="flex w-[268px] flex-col border-r border-border bg-sidebar backdrop-blur-2xl transition-colors duration-300 min-h-full">
         {/* Traffic lights */}
-        <div className="flex items-center gap-2 px-6 pt-5 pb-2">
+        <div className="flex items-center gap-1.5 px-6 pt-5 pb-2 opacity-80">
           <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
           <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
           <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
         </div>
 
         {/* Logo */}
-        <div className="px-6 py-4 flex flex-col gap-2">
+        <div className="px-5 py-4 flex flex-col gap-2">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-9 rounded-[10px] bg-gradient-to-br from-brand-500 to-brand-700 shadow-[var(--shadow-warm)]">
-              <span className="material-symbols-outlined text-white text-[20px]">hub</span>
-            </div>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="size-8 shrink-0" aria-hidden="true">
+              <rect width="32" height="32" rx="6" fill="#18181b" />
+              <text x="16" y="24" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="700" fill="white" textAnchor="middle">S</text>
+            </svg>
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold tracking-tight text-text-main">
+              <h1 className="text-[15px] font-semibold tracking-tight text-text-main">
                 {APP_CONFIG.name}
               </h1>
-              <span className="text-xs text-text-muted">v{APP_CONFIG.version}</span>
+              <span className="font-mono text-[10px] tracking-wide text-text-subtle">v{APP_CONFIG.version}</span>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
           {visibleSidebarItems.map((item, idx) => {
-            const startsSystem = item.group === "system" && visibleSidebarItems[idx - 1]?.group !== "system";
+            const startsSystem = idx === systemStartIndex;
             return (
-              <div key={item.key} className={startsSystem ? "pt-3 mt-2" : ""}>
+              <div key={item.key} className={startsSystem ? "pt-4 mt-2" : ""}>
                 {startsSystem && (
-                  <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
+                  <p className="px-3 text-[10px] font-semibold text-text-subtle uppercase tracking-[0.16em] mb-2">
                     System
                   </p>
                 )}
@@ -124,16 +126,19 @@ export default function Sidebar({ onClose }) {
                   href={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                    "relative flex items-center gap-2.5 px-3 py-1.5 rounded-[8px] transition-colors group",
                     isActive(item.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                      ? "bg-surface text-text-main shadow-[var(--shadow-soft)]"
+                      : "text-text-muted hover:bg-surface/60 hover:text-text-main"
                   )}
                 >
+                  {isActive(item.href) && (
+                    <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-primary" />
+                  )}
                   <span
                     className={cn(
                       "material-symbols-outlined text-[18px]",
-                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                      isActive(item.href) ? "fill-1 text-primary" : "group-hover:text-text-main transition-colors"
                     )}
                   >
                     {item.icon}
@@ -145,21 +150,24 @@ export default function Sidebar({ onClose }) {
           })}
 
           {/* Settings (pinned) */}
-          <div className={visibleSidebarItems.length === 0 || visibleSidebarItems[visibleSidebarItems.length - 1].group !== "system" ? "pt-3 mt-2" : ""}>
+          <div className={visibleSidebarItems.length === 0 || visibleSidebarItems[visibleSidebarItems.length - 1].group !== "system" ? "pt-4 mt-2" : ""}>
             <Link
               href="/dashboard/profile"
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                "relative flex items-center gap-2.5 px-3 py-1.5 rounded-[8px] transition-colors group",
                 isActive("/dashboard/profile")
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                  ? "bg-surface text-text-main shadow-[var(--shadow-soft)]"
+                  : "text-text-muted hover:bg-surface/60 hover:text-text-main"
               )}
             >
+              {isActive("/dashboard/profile") && (
+                <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-primary" />
+              )}
               <span
                 className={cn(
                   "material-symbols-outlined text-[18px]",
-                  isActive("/dashboard/profile") ? "fill-1" : "group-hover:text-primary transition-colors"
+                  isActive("/dashboard/profile") ? "fill-1 text-primary" : "group-hover:text-text-main transition-colors"
                 )}
               >
                 settings
@@ -168,6 +176,10 @@ export default function Sidebar({ onClose }) {
             </Link>
           </div>
         </nav>
+
+        <div className="px-6 py-4 border-t border-border-subtle">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-subtle">Local gateway</p>
+        </div>
 
       </aside>
 
@@ -260,7 +272,7 @@ function ManualUpdatePanel({ latestVersion, installCmd, copied, onCopyAndShutdow
             Cancel
           </Button>
           <Button variant="primary" fullWidth onClick={onCopyAndShutdown} disabled={isCountingDown}>
-            {copied ? "✓ Copied — shutting down..." : isCountingDown ? `Shutting down in ${countdown}s` : "Copy & Shutdown"}
+            {copied ? "Copied — shutting down..." : isCountingDown ? `Shutting down in ${countdown}s` : "Copy & Shutdown"}
           </Button>
         </div>
       )}

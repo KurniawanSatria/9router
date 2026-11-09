@@ -7,9 +7,8 @@ import LanguageSwitcher from "@/shared/components/LanguageSwitcher";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
-import { LOCALE_COOKIE, normalizeLocale } from "@/i18n/config";
-import { LOCALE_FLAGS } from "@/shared/constants/locales";
-import { resolveSidebarItems } from "@/shared/constants/sidebarItems";
+import { LOCALE_COOKIE, LOCALE_NAMES, normalizeLocale } from "@/i18n/config";
+import { resolveSidebarItems, SIDEBAR_ITEMS } from "@/shared/constants/sidebarItems";
 import useSettingsStore from "@/store/settingsStore";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -866,6 +865,7 @@ export default function ProfilePage() {
   };
 
   const orderedSidebarItems = resolveSidebarItems(settings.sidebarOrder);
+  const isDefaultSidebarOrder = orderedSidebarItems.every((item, i) => item.key === SIDEBAR_ITEMS[i].key);
 
   const sidebarSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -904,42 +904,39 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-0">
-      <div className="flex flex-col gap-6">
+    <div className="mx-auto max-w-5xl px-4 sm:px-0">
+      <div className="flex flex-col gap-6 lg:block lg:columns-2 lg:gap-x-6 lg:[&>*]:mb-6 lg:[&>*]:break-inside-avoid">
         {/* Local Mode Info */}
-        <Card>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="size-10 sm:size-12 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-xl sm:text-2xl">computer</span>
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold">Local Mode</h2>
-                <p className="text-sm text-text-muted">Running on your machine</p>
-              </div>
-            </div>
-            <div className="inline-flex p-1 rounded-lg bg-black/5 dark:bg-white/5 w-full sm:w-auto">
+        <Card
+          id="local"
+          className="scroll-mt-6"
+          icon="computer"
+          title="Local Mode"
+          subtitle="Running on your machine"
+          action={
+            <div className="inline-flex p-0.5 rounded-[8px] bg-bg-alt border border-border-subtle">
               {["light", "dark", "system"].map((option) => (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setTheme(option)}
+                  title={option}
                   className={cn(
-                    "flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md font-medium transition-all flex-1 sm:flex-initial",
+                    "flex items-center justify-center rounded-[6px] px-2 py-1.5 transition-colors",
                     theme === option
-                      ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
+                      ? "bg-surface text-text-main shadow-[var(--shadow-soft)]"
                       : "text-text-muted hover:text-text-main"
                   )}
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     {option === "light" ? "light_mode" : option === "dark" ? "dark_mode" : "contrast"}
                   </span>
-                  <span className="capitalize text-xs sm:text-sm">{option}</span>
                 </button>
               ))}
             </div>
-          </div>
-          <div className="flex flex-col gap-3 pt-4 border-t border-border">
+          }
+        >
+          <div className="flex flex-col gap-3 pt-4 border-t border-border-subtle">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-bg border border-border gap-2">
               <div>
                 <p className="font-medium text-sm sm:text-base">Database Location</p>
@@ -982,16 +979,24 @@ export default function ProfilePage() {
         </Card>
 
         {/* Sidebar order */}
-        <Card>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[20px]">reorder</span>
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold">Sidebar order</h3>
-              <p className="text-xs text-text-muted">Reorder the navigation items. Settings stays pinned at the bottom.</p>
-            </div>
-          </div>
+        <Card
+          id="sidebar-order"
+          className="scroll-mt-6"
+          icon="reorder"
+          title="Sidebar order"
+          subtitle="Navigation items, Settings stays pinned"
+          action={
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="restart_alt"
+              disabled={isDefaultSidebarOrder}
+              onClick={() => saveSidebarOrder(SIDEBAR_ITEMS)}
+            >
+              Reset
+            </Button>
+          }
+        >
           <div className="flex flex-col gap-1 mt-3">
             <DndContext
               sensors={sidebarSensors}
@@ -1015,31 +1020,22 @@ export default function ProfilePage() {
         </Card>
 
         {/* Language */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[20px]">language</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Language</h3>
-          </div>
+        <Card id="language" className="scroll-mt-6" icon="language" title="Language">
           <button
             onClick={() => setLangOpen(true)}
             className="flex items-center justify-between w-full p-3 rounded-lg bg-bg border border-border hover:border-primary/50 transition-colors"
             data-i18n-skip="true"
           >
             <span className="text-sm text-text-muted">Display language</span>
-            <span className="text-2xl">{LOCALE_FLAGS[locale] || "🌐"}</span>
+            <span className="flex items-center gap-2 text-sm font-medium text-text-main">
+              {LOCALE_NAMES[locale] || locale}
+              <span className="material-symbols-outlined text-[18px] text-text-muted">expand_more</span>
+            </span>
           </button>
         </Card>
 
         {/* Security */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-              <span className="material-symbols-outlined text-[20px]">shield</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Security</h3>
-          </div>
+        <Card id="security" className="scroll-mt-6" icon="shield" title="Security">
           <div className="flex flex-col gap-4">
             <div className="flex items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -1115,18 +1111,18 @@ export default function ProfilePage() {
         </Card>
 
         {/* Single Sign-On (SSO) */}
-        <Card>
+        <Card id="sso" className="scroll-mt-6">
           <button
             type="button"
             onClick={() => setOidcExpanded((v) => !v)}
             className="w-full flex items-center gap-3 text-left"
           >
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">lock_open</span>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-[7px] border border-border-subtle bg-bg-alt text-text-muted">
+              <span className="material-symbols-outlined text-[18px]">lock_open</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold">Single Sign-On (SSO)</h3>
-              <p className="text-xs text-text-muted">
+              <h3 className="text-[15px] font-semibold tracking-tight text-text-main">Single Sign-On (SSO)</h3>
+              <p className="text-[13px] text-text-muted">
                 {settings.authMode === "sso" || settings.authMode === "oidc" || settings.authMode === "saml"
                   ? `${settings.ssoType === "saml" ? "SAML 2.0" : "OIDC"} SSO active`
                   : settings.authMode === "both"
@@ -1256,7 +1252,7 @@ export default function ProfilePage() {
                     {showSamlGuide && (
                       <div className="p-4 border-t border-border bg-surface/30 text-xs text-text-main flex flex-col gap-3">
                         <div className="p-2.5 rounded border border-primary/20 bg-primary/5 text-primary text-xs">
-                          <p className="font-semibold mb-1">🔑 Required Service Provider (SP) Values for your IdP Setup:</p>
+                          <p className="font-semibold mb-1 flex items-center gap-1.5"><span className="material-symbols-outlined text-[15px]">key</span>Required Service Provider (SP) Values for your IdP Setup:</p>
                           <ul className="list-disc pl-4 space-y-1 font-mono text-[11px]">
                             <li>
                               <b>Assertion Consumer Service (ACS) URL:</b>{" "}
@@ -1276,7 +1272,7 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                           <div className="p-3 rounded border border-border bg-bg/50 flex flex-col gap-1.5">
                             <p className="font-semibold text-text-main flex items-center gap-1.5">
-                              <span>☁️</span> AWS IAM Identity Center
+                              <span className="material-symbols-outlined text-[15px] text-primary">cloud</span> AWS IAM Identity Center
                             </p>
                             <ol className="list-decimal pl-4 text-text-muted space-y-1">
                               <li>Applications → <b>Add application</b> → Select <b>Add custom SAML 2.0 application</b>.</li>
@@ -1289,7 +1285,7 @@ export default function ProfilePage() {
 
                           <div className="p-3 rounded border border-border bg-bg/50 flex flex-col gap-1.5">
                             <p className="font-semibold text-text-main flex items-center gap-1.5">
-                              <span>🔷</span> Microsoft Entra ID (Azure AD)
+                              <span className="material-symbols-outlined text-[15px] text-primary">grid_view</span> Microsoft Entra ID (Azure AD)
                             </p>
                             <ol className="list-decimal pl-4 text-text-muted space-y-1">
                               <li>Enterprise Applications → <b>New application</b> → <b>Create your own application</b>.</li>
@@ -1302,7 +1298,7 @@ export default function ProfilePage() {
 
                           <div className="p-3 rounded border border-border bg-bg/50 flex flex-col gap-1.5">
                             <p className="font-semibold text-text-main flex items-center gap-1.5">
-                              <span>🟢</span> Okta / Auth0
+                              <span className="size-1.5 rounded-full bg-success" /> Okta / Auth0
                             </p>
                             <ol className="list-decimal pl-4 text-text-muted space-y-1">
                               <li>Applications → <b>Create App Integration</b> → Select <b>SAML 2.0</b>.</li>
@@ -1315,7 +1311,7 @@ export default function ProfilePage() {
 
                           <div className="p-3 rounded border border-border bg-bg/50 flex flex-col gap-1.5">
                             <p className="font-semibold text-text-main flex items-center gap-1.5">
-                              <span>🛡️</span> Keycloak / Authentik
+                              <span className="material-symbols-outlined text-[15px] text-primary">shield</span> Keycloak / Authentik
                             </p>
                             <ol className="list-decimal pl-4 text-text-muted space-y-1">
                               <li>Clients → <b>Create client</b> → Select <b>SAML</b>.</li>
@@ -1609,13 +1605,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Routing Preferences */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">route</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Routing Strategy</h3>
-          </div>
+        <Card id="routing" className="scroll-mt-6" icon="route" title="Routing Strategy">
           <div className="flex flex-col gap-4">
             <div className="flex items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -1700,14 +1690,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Network */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">wifi</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Network</h3>
-          </div>
-
+        <Card id="network" className="scroll-mt-6" icon="wifi" title="Network">
           <div className="flex flex-col gap-4">
             <div className="flex items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -1772,14 +1755,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Notifications / Webhook */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">notifications_active</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Notifications</h3>
-          </div>
-
+        <Card id="notifications" className="scroll-mt-6" icon="notifications_active" title="Notifications">
           <div className="flex flex-col gap-4">
             <div className="flex items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -1839,13 +1815,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Observability Settings */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">monitoring</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Observability</h3>
-          </div>
+        <Card id="observability" className="scroll-mt-6" icon="monitoring" title="Observability">
           <div className="flex items-start sm:items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm sm:text-base">Enable Observability</p>
@@ -1860,9 +1830,10 @@ export default function ProfilePage() {
             />
           </div>
         </Card>
+      </div>
 
-        {/* Account actions */}
-        <div className="flex flex-col sm:flex-row gap-2">
+      {/* Account actions */}
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Button
             variant="outline"
             fullWidth
@@ -1882,11 +1853,10 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* App Info */}
-        <div className="text-center text-xs sm:text-sm text-text-muted py-4">
-          <p>{APP_CONFIG.name} v{APP_CONFIG.version}</p>
-          <p className="mt-1">{isRemoteHost ? "Remote Mode" : "Local Mode - All data stored on your machine"}</p>
-        </div>
+      {/* App Info */}
+      <div className="py-4 text-center text-xs text-text-muted sm:text-sm">
+        <p>{APP_CONFIG.name} v{APP_CONFIG.version}</p>
+        <p className="mt-1">{isRemoteHost ? "Remote Mode" : "Local Mode - All data stored on your machine"}</p>
       </div>
 
       <LanguageSwitcher

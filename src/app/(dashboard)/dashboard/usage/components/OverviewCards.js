@@ -25,9 +25,9 @@ export default function OverviewCards({ stats }) {
     <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
       {STATS.map(({ key, label, tone }) => (
         <Card key={key} padding="none" className="flex min-w-0 flex-col gap-3 p-5">
-          <span className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted">{label}</span>
+          <span className="truncate text-[10.5px] font-semibold uppercase tracking-[0.11em] text-text-muted">{label}</span>
           <span
-            className={`truncate text-[28px] font-bold leading-none tabular-nums tracking-tight ${tone}`}
+            className={`truncate text-[30px] font-semibold leading-none tabular-nums tracking-[-0.03em] ${tone}`}
             title={fmt(stats[key])}
           >
             {fmtCompact(stats[key])}
