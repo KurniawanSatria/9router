@@ -21,6 +21,8 @@ import { getModelInfo } from "./model.js";
  * `getProviderCredentials`, so ordering and real routing can never disagree.
  */
 
+const unavailableNotified = new Set();
+
 function connectionProviderId(connection) {
   if (!connection?.provider) return null;
   return resolveProviderId(connection.provider);
@@ -132,8 +134,12 @@ export function getProviderAvailability(providerId, models = [], activeConnectio
     ? new Date(Math.min(...expiries)).toISOString()
     : null;
 
-  if (!available) {
+  if (available) {
+    unavailableNotified.delete(resolvedProviderId);
+  } else if (!unavailableNotified.has(resolvedProviderId)) {
+    unavailableNotified.add(resolvedProviderId);
     void notifyDiscordError({
+      key: `provider-unavailable:${resolvedProviderId}`,
       title: "⚠️ PROVIDER UNAVAILABLE",
       description: `All ${connections.length} account(s) are unavailable.`,
       fields: [

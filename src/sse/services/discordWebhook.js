@@ -2,7 +2,8 @@
  * Discord webhook notifier using Components V2 (flags: 32768).
  *
  * Used to surface provider/combo failures without spawning OpenCode. Sends are
- * throttled per title (60s) to stay under Discord rate limits and avoid spam.
+ * throttled per title (60s) or explicit `key` to stay under Discord rate limits
+ * and avoid spam.
  *
  * The destination webhook is configurable at runtime from Dashboard → Profile →
  * Notifications (persisted as `discordWebhookUrl` in settings). Resolution order:
@@ -133,7 +134,7 @@ async function postToDiscord(url, payload, timeoutMs = 8000) {
  * Fire-and-forget notifier used inside request paths. Never throws.
  * @returns {Promise<boolean>} whether a message was actually sent
  */
-export async function notifyDiscordError({ title, description, fields, footer } = {}) {
+export async function notifyDiscordError({ title, description, fields, footer, key } = {}) {
   try {
     const settings = await readSettingsSafely();
     if (!(await isNotifierEnabled(settings))) return false;
@@ -141,11 +142,11 @@ export async function notifyDiscordError({ title, description, fields, footer } 
     const { url } = await resolveWebhook({ settings });
     if (!url) return false;
 
-    const key = String(title || "error");
+    const throttleKey = String(key || title || "error");
     const now = Date.now();
-    const last = lastSent.get(key) || 0;
+    const last = lastSent.get(throttleKey) || 0;
     if (now - last < THROTTLE_MS) return false;
-    lastSent.set(key, now);
+    lastSent.set(throttleKey, now);
 
     await postToDiscord(url, buildPayload({ title, description, fields, footer }));
     return true;

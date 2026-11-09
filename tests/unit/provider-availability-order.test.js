@@ -5,6 +5,13 @@ const mocks = vi.hoisted(() => ({
   getComboByName: vi.fn(),
 }));
 
+const webhook = vi.hoisted(() => ({ notifyDiscordError: vi.fn(async () => true) }));
+
+vi.mock("@/sse/services/discordWebhook.js", () => ({
+  notifyDiscordError: webhook.notifyDiscordError,
+  formatDiscordTimestamp: () => "soon",
+}));
+
 vi.mock("@/lib/localDb", () => ({
   getProviderConnections: mocks.getProviderConnections,
   getModelAliases: vi.fn(async () => ({})),
@@ -93,6 +100,31 @@ describe("provider availability ordering", () => {
     const ordered = await reorderModelsByProviderAvailability(["p1/a", "p2/b"], { log });
 
     expect(ordered).toEqual(["p2/b", "p1/a"]);
+  });
+
+  it("notifies a provider outage once, and again after it recovers", async () => {
+    const models = ["alertp/a", "p2-ok/b"];
+    mocks.getProviderConnections.mockResolvedValue([
+      connection("alertp-a", "alertp", { modelLock___all: FUTURE }),
+      connection("p2-ok", "p2-ok"),
+    ]);
+
+    await reorderModelsByProviderAvailability(models, { log });
+    await reorderModelsByProviderAvailability(models, { log });
+    expect(webhook.notifyDiscordError).toHaveBeenCalledTimes(1);
+
+    mocks.getProviderConnections.mockResolvedValue([
+      connection("alertp-a", "alertp"),
+      connection("p2-ok", "p2-ok"),
+    ]);
+    await reorderModelsByProviderAvailability(models, { log });
+
+    mocks.getProviderConnections.mockResolvedValue([
+      connection("alertp-a", "alertp", { modelLock___all: FUTURE }),
+      connection("p2-ok", "p2-ok"),
+    ]);
+    await reorderModelsByProviderAvailability(models, { log });
+    expect(webhook.notifyDiscordError).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the original relative order inside both groups", async () => {
