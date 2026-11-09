@@ -318,7 +318,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
           : (provider === "minimax-code" || provider === "minimax-code-global")
           ? { _minimaxPollByUser: data._minimaxPollByUser }
           : provider === "freepi"
-          ? { _clientVersion: data._clientVersion }
+          ? { _clientVersion: data._clientVersion, _pollSecret: data._pollSecret }
           : null;
         startPolling(
           // MiniMax's device-code variant returns no device_code: the token
