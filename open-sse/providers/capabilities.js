@@ -814,7 +814,26 @@ function isCommandCodeTextOnly(model) {
   }
   return false;
 }
+
+const PROVIDER_LIMITS = {
+  freepi: { contextWindow: 200000, maxOutput: 8192 },
+};
+
 export function getCapabilitiesForModel(provider, model) {
+  return clampProviderLimits(resolveCapabilities(provider, model), provider);
+}
+
+function clampProviderLimits(caps, provider) {
+  const limits = PROVIDER_LIMITS[provider];
+  if (!limits) return caps;
+  return {
+    ...caps,
+    contextWindow: Math.min(caps.contextWindow, limits.contextWindow),
+    maxOutput: Math.min(caps.maxOutput, limits.maxOutput),
+  };
+}
+
+function resolveCapabilities(provider, model) {
   if (!model) return { ...DEFAULT_CAPABILITIES };
 
   // Canonical exact lookup strips vendor prefix: "anthropic/claude-opus-4.7" -> "claude-opus-4.7".
