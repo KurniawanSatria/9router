@@ -102,6 +102,7 @@ export default function UsageTable({
   onToggleSort,
   viewMode,
   storageKey,
+  renderGroupLabel,
   renderDetailCells,
   renderSummaryCells,
   emptyMessage,
@@ -201,7 +202,7 @@ export default function UsageTable({
                         chevron_right
                       </span>
                       <span className={`min-w-0 truncate font-medium transition-colors ${group.summary.pending > 0 ? "text-primary" : ""}`} title={group.groupKey}>
-                        {group.groupKey}
+                        {renderGroupLabel ? renderGroupLabel(group) : group.groupKey}
                       </span>
                     </div>
                   </td>
@@ -248,6 +249,7 @@ UsageTable.propTypes = {
   onToggleSort: PropTypes.func.isRequired,
   viewMode: PropTypes.string.isRequired,
   storageKey: PropTypes.string.isRequired,
+  renderGroupLabel: PropTypes.func,
   renderDetailCells: PropTypes.func.isRequired,
   renderSummaryCells: PropTypes.func.isRequired,
   emptyMessage: PropTypes.string.isRequired,
