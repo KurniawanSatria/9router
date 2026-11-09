@@ -323,6 +323,10 @@ export function extractUsage(chunk) {
 export function mergeUsage(prev, next) {
   if (!prev) return next || null;
   if (!next) return prev;
+  // A real usage trailer (e.g. NVIDIA's `choices: []` final chunk) arrives after
+  // the finish chunk's placeholder estimate. Real counts must win, not Math.max
+  // against the estimate's input buffer.
+  if (prev.estimated && !next.estimated) return { ...next };
   const merged = { ...prev };
   for (const [k, v] of Object.entries(next)) {
     // typeof NaN === "number" — guard with Number.isFinite so one malformed
