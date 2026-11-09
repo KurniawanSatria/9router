@@ -290,24 +290,14 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
       });
   }, [period]);
 
-  // SSE connection - real-time updates for activeRequests + recentRequests only
+  // SSE connection - real-time stats for the selected period
   useEffect(() => {
-    const es = new EventSource("/api/usage/stream");
+    const es = new EventSource(`/api/usage/stream?period=${period}`);
 
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        // Always merge only real-time fields, never overwrite full stats from REST
-        setStats((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            activeRequests: data.activeRequests,
-            recentRequests: data.recentRequests,
-            errorProvider: data.errorProvider,
-            pending: data.pending,
-          };
-        });
+        setStats((prev) => ({ ...prev, ...data }));
         if (hasLoadedStats.current) setLoading(false);
       } catch (err) {
         console.error("[SSE CLIENT] parse error:", err);
@@ -317,7 +307,7 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
     es.onerror = () => setLoading(false);
 
     return () => es.close();
-  }, []);
+  }, [period]);
 
   const toggleSort = useCallback((tableType, field) => {
     const params = new URLSearchParams(searchParams.toString());
