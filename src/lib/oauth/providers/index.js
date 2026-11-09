@@ -11,6 +11,7 @@ import gitlab from "./gitlab.js";
 import codebuddyIntl from "./codebuddy-intl.js";
 import zed from "./zed.js";
 import freepi from "./freepi.js";
+import nous from "./nous.js";
 
 // Provider configurations
 const PROVIDERS = {
@@ -21,6 +22,7 @@ const PROVIDERS = {
   "codebuddy-intl": codebuddyIntl,
   zed,
   freepi,
+  nous,
 };
 
 export { PROVIDERS };

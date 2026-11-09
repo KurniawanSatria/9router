@@ -72,6 +72,7 @@ import p73 from "./zed.js";
 import p74 from "./zro.js";
 import p75 from "./beatapi.js";
 import p76 from "./freepi.js";
+import p77 from "./nous.js";
 
 export default [
   p0,
@@ -147,4 +148,5 @@ export default [
   p74,
   p75,
   p76,
+  p77,
 ];
