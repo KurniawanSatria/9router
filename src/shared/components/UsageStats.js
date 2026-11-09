@@ -30,6 +30,15 @@ function timeAgo(timestamp) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+const MODEL_LABELS = { deepseek: "DeepSeek", glm: "GLM", gpt: "GPT", oss: "OSS", mimo: "MiMo", ai: "AI", llm: "LLM" };
+const MODEL_SIZE = /^(?:\d+(?:\.\d+)?[bt]|a\d+b)$/i;
+
+function prettyModel(raw) {
+  const id = String(raw || "").replace(/:free$/i, "").split("/").pop().trim();
+  const words = id.split(/[-_]+/).filter((w) => w && !MODEL_SIZE.test(w));
+  return words.map((w) => MODEL_LABELS[w.toLowerCase()] || w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
 // Auto-update time display every second without re-rendering parent
 function TimeAgo({ timestamp }) {
   const [, setTick] = useState(0);
@@ -79,7 +88,7 @@ function RecentRequests({ requests = [] }) {
                         <span className={`relative inline-flex h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-error"}`} />
                       </span>
                     </td>
-                    <td className="py-1.5 font-mono truncate w-full max-w-0" title={r.model}>{r.model}</td>
+                    <td className="py-1.5 font-mono truncate w-full max-w-0" title={r.model}>{prettyModel(r.model)}</td>
                     <td className="py-1.5 pr-5 text-right whitespace-nowrap">
                       <span className="text-primary">{fmt(r.promptTokens)}↑</span>
                       {" "}
