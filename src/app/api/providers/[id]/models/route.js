@@ -638,7 +638,7 @@ export async function GET(request, { params }) {
           );
         }
         const data = await res.json();
-        const models = data.data || data.models || [];
+        const models = data.data || data.models || getModelsByProviderId(connection.provider);
         return NextResponse.json({
           provider: connection.provider,
           connectionId: connection.id,

@@ -1,6 +1,7 @@
 export default {
   id: "freepi",
   priority: 86,
+  hasFree: true,
   alias: "fp",
   uiAlias: "fp",
   display: {

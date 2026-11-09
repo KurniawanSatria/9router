@@ -78,6 +78,27 @@ const HEADER_HOOKS = {
   kilocodeOrg: (h, c) => { if (c.providerSpecificData?.orgId) h["X-Kilocode-OrganizationID"] = c.providerSpecificData.orgId; },
 };
 
+// free-pi rejects outdated clients, so the version captured at login goes stale
+// when freepi raises its minimum. Refetch it through a short-lived cache.
+const FREEPI_VERSION_TTL_MS = 10 * 60 * 1000;
+let freepiVersionCache = { version: null, expiresAt: 0 };
+
+export async function latestFreepiClientVersion() {
+  if (Date.now() < freepiVersionCache.expiresAt) return freepiVersionCache.version;
+  const config = PROVIDER_OAUTH.freepi;
+  if (!config?.baseUrl || !config?.clientVersionPath) return null;
+  try {
+    const res = await fetch(`${config.baseUrl}${config.clientVersionPath}`, { signal: AbortSignal.timeout(3000) });
+    const data = res.ok ? await res.json() : null;
+    const version = typeof data?.latest === "string" ? data.latest : null;
+    freepiVersionCache = { version, expiresAt: Date.now() + FREEPI_VERSION_TTL_MS };
+    return version;
+  } catch {
+    freepiVersionCache = { version: null, expiresAt: Date.now() + 60_000 };
+    return null;
+  }
+}
+
 // Config-driven OAuth refresh grants — derived from registry oauth.refresh.
 const REFRESH_GRANTS = Object.fromEntries(
   Object.entries(PROVIDER_OAUTH)
@@ -105,6 +126,19 @@ const COMPAT_FALLBACK_CONFIG = { format: "openai", baseUrl: OPENAI_COMPAT_BASE }
 export class DefaultExecutor extends BaseExecutor {
   constructor(provider) {
     super(provider, PROVIDERS[provider] || PROVIDERS.openai || COMPAT_FALLBACK_CONFIG);
+  }
+
+  async execute(options) {
+    if (this.provider === "freepi" && options?.credentials) {
+      const latest = await latestFreepiClientVersion();
+      if (latest) {
+        options.credentials.providerSpecificData = {
+          ...options.credentials.providerSpecificData,
+          clientVersion: latest,
+        };
+      }
+    }
+    return super.execute(options);
   }
 
   transformRequest(model, body, stream, credentials) {
