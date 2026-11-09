@@ -1,7 +1,7 @@
 import { getSettings, getProviderConnections, updateProviderConnection } from "@/lib/localDb";
 import { getUsageForProvider } from "open-sse/services/usage.js";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
-import { notifyDiscordError } from "@/sse/services/discordWebhook.js";
+import { notifyDiscordError, formatDiscordTimestamp } from "@/sse/services/discordWebhook.js";
 import { QUOTA_WATCH_CONFIG } from "@/shared/constants/config";
 
 const g = (global.__quotaWatch ??= { timer: null, startupTimer: null, running: false });
@@ -70,8 +70,14 @@ async function checkConnection(connection, autoDisabled, deps) {
       testStatus: "active",
     });
     await deps.notifyDiscordError({
-      title: `Quota available: ${connection.provider} (${label})`,
-      description: `Account re-enabled.\nProvider: ${connection.provider}\nAccount: ${label}`,
+      title: "✅ QUOTA AVAILABLE",
+      description: "Your account has been re-enabled.",
+      fields: [
+        { name: "Provider", value: `\`${connection.provider}\`` },
+        { name: "Account", value: `\`${label}\`` },
+        { name: "Status", value: "🟢 Enabled" },
+      ],
+      footer: "_The account is available for requests again._",
     });
     return;
   }
@@ -83,8 +89,16 @@ async function checkConnection(connection, autoDisabled, deps) {
     quotaAutoResetAt: exhaustion.resetAt,
   });
   await deps.notifyDiscordError({
-    title: `Quota exhausted: ${connection.provider} (${label})`,
-    description: `Account disabled.\nProvider: ${connection.provider}\nAccount: ${label}\nReset: ${exhaustion.resetAt || "unknown"}`,
+    title: "⚠️ QUOTA EXHAUSTED",
+    description: "Your account has been temporarily disabled due to quota exhaustion.",
+    fields: [
+      { name: "Provider", value: `\`${connection.provider}\`` },
+      { name: "Account", value: `\`${label}\`` },
+      { name: "Status", value: "🔴 Disabled" },
+      { name: "Quota Reset", value: formatDiscordTimestamp(exhaustion.resetAt, "F") },
+      { name: "Time Remaining", value: formatDiscordTimestamp(exhaustion.resetAt, "R") },
+    ],
+    footer: "_The account will be available again after the quota resets._",
   });
 }
 

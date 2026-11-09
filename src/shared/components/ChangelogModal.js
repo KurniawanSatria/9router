@@ -7,14 +7,12 @@ import { GITHUB_CONFIG } from "@/shared/constants/config";
 
 export default function ChangelogModal({ isOpen, onClose }) {
   const [html, setHtml] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const loading = !html && !error;
   const modalRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen || html) return;
-    setLoading(true);
-    setError("");
     Promise.all([
       fetch(GITHUB_CONFIG.changelogUrl).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -24,10 +22,10 @@ export default function ChangelogModal({ isOpen, onClose }) {
     ])
       .then(([md, { marked }]) => {
         marked.setOptions({ gfm: true, breaks: true });
+        setError("");
         setHtml(marked.parse(md));
       })
-      .catch((err) => setError(err.message || "Failed to load"))
-      .finally(() => setLoading(false));
+      .catch((err) => setError(err.message || "Failed to load"));
   }, [isOpen, html]);
 
   useEffect(() => {

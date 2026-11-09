@@ -162,7 +162,12 @@ export async function handleChat(request, clientRawRequest = null) {
           })
         : null,
       reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
-      notifyError: (info) => notifyDiscordError({ title: `Combo ${modelStr} failed`, description: info?.message, color: 0xed4245 }),
+      notifyError: (info) => notifyDiscordError({
+        title: "⚠️ COMBO FAILED",
+        description: info?.message,
+        fields: [{ name: "Combo", value: `\`${modelStr}\`` }],
+        footer: "_Every model in the combo failed this request._",
+      }),
     });
   }
 
@@ -183,7 +188,12 @@ export async function handleChat(request, clientRawRequest = null) {
       comboName: modelStr,
       comboStrategy: getActiveAdapterStrategy(requiredCapabilities, settings),
       reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
-      notifyError: (info) => notifyDiscordError({ title: `Combo ${modelStr} failed`, description: info?.message, color: 0xed4245 }),
+      notifyError: (info) => notifyDiscordError({
+        title: "⚠️ COMBO FAILED",
+        description: info?.message,
+        fields: [{ name: "Combo", value: `\`${modelStr}\`` }],
+        footer: "_Every model in the combo failed this request._",
+      }),
     });
   }
 
@@ -261,7 +271,12 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
             })
           : null,
         reorderModels: (m) => reorderModelsByProviderAvailability(m, { log, label: modelStr }),
-      notifyError: (info) => notifyDiscordError({ title: `Combo ${modelStr} failed`, description: info?.message, color: 0xed4245 }),
+      notifyError: (info) => notifyDiscordError({
+        title: "⚠️ COMBO FAILED",
+        description: info?.message,
+        fields: [{ name: "Combo", value: `\`${modelStr}\`` }],
+        footer: "_Every model in the combo failed this request._",
+      }),
       });
     }
     log.warn("CHAT", "Invalid model format", { model: modelStr });

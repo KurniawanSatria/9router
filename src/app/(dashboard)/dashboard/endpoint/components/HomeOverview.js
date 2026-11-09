@@ -56,17 +56,40 @@ function InfoTile({ icon, label, value, title }) {
 export default function HomeOverview() {
   const [info, setInfo] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState(null);
+  const [now, setNow] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    fetch("/api/system/info")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("failed"))))
-      .then((data) => alive && setInfo(data))
-      .catch(() => alive && setFailed(true));
+    const load = async () => {
+      try {
+        const res = await fetch("/api/system/info");
+        if (!res.ok) throw new Error("failed");
+        const data = await res.json();
+        if (!alive) return;
+        setInfo(data);
+        setUpdatedAt(Date.now());
+        setNow(Date.now());
+        setFailed(false);
+      } catch {
+        if (alive) setFailed(true);
+      }
+    };
+    load();
+    const poll = setInterval(() => {
+      if (!document.hidden) load();
+    }, 10000);
+    const tick = setInterval(() => {
+      if (!document.hidden) setNow(Date.now());
+    }, 1000);
     return () => {
       alive = false;
+      clearInterval(poll);
+      clearInterval(tick);
     };
   }, []);
+
+  const updatedLabel = updatedAt && now ? `updated ${Math.max(0, Math.round((now - updatedAt) / 1000))}s ago` : null;
 
   const memoryPercent = info ? Math.round((info.memory.used / info.memory.total) * 100) : 0;
 
@@ -127,6 +150,7 @@ export default function HomeOverview() {
               <span>System online</span>
               {info && <span className="font-mono text-text-muted">v{info.app.version}</span>}
               {info && <span className="text-text-muted">· {formatUptime(info.app.uptime)} uptime</span>}
+              {updatedLabel && <span className="normal-case tracking-normal text-text-subtle">· {updatedLabel}</span>}
             </div>
             <h1 className="text-[24px] font-semibold tracking-tight text-text-main">Saturia Proxy</h1>
             <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-text-muted">

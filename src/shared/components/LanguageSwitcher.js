@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { LOCALES, LOCALE_COOKIE, LOCALE_NAMES, normalizeLocale } from "@/i18n/config";
 import { reloadTranslations } from "@/i18n/runtime";
+import { useClientValue } from "@/shared/hooks/useClientValue";
 
 function getLocaleFromCookie() {
   if (typeof document === "undefined") return "en";
@@ -15,7 +16,9 @@ function getLocaleFromCookie() {
 }
 
 export default function LanguageSwitcher({ className = "", isOpen: controlledOpen, onClose, hideTrigger = false }) {
-  const [locale, setLocale] = useState("en");
+  const cookieLocale = useClientValue(getLocaleFromCookie, "en");
+  const [overrideLocale, setOverrideLocale] = useState(null);
+  const locale = overrideLocale ?? cookieLocale;
   const [isPending, setIsPending] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const modalRef = useRef(null);
@@ -29,10 +32,6 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
       setInternalOpen(value);
     }
   };
-
-  useEffect(() => {
-    setLocale(getLocaleFromCookie());
-  }, []);
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -60,7 +59,7 @@ export default function LanguageSwitcher({ className = "", isOpen: controlledOpe
       
       // Reload translations without full page reload
       await reloadTranslations();
-      setLocale(nextLocale);
+      setOverrideLocale(nextLocale);
       setIsOpen(false, nextLocale);
     } catch (err) {
       console.error("Failed to set locale:", err);

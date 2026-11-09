@@ -11,6 +11,8 @@
  *   3. DEFAULT_WEBHOOK_URL         (built-in fallback)
  */
 
+import os from "node:os";
+
 const DEFAULT_WEBHOOK_URL =
   "https://discord.com/api/webhooks/1568897847724613682/Fh80Y5erfX7j_s7Ybtl5FLh1Wxd5lUdDSS3gJfcvw7XxxJI-QQKDc5WrLPi-vKwhCEhC";
 
@@ -78,14 +80,26 @@ async function isNotifierEnabled(settingsOverride) {
   return settings.discordWebhookEnabled !== false;
 }
 
-function buildPayload({ title, description, fields }) {
-  const components = [{ type: 10, content: `### ${title || "Error"}` }];
-  if (description) components.push({ type: 10, content: String(description).slice(0, 3800) });
-  if (Array.isArray(fields)) {
-    for (const f of fields) {
-      components.push({ type: 10, content: `**${f.name}**: ${f.value}` });
-    }
-  }
+export function formatDiscordTimestamp(value, style = "F") {
+  if (!value) return "unknown";
+  const ms = typeof value === "number" ? value : Date.parse(value);
+  if (!Number.isFinite(ms)) return String(value);
+  return `<t:${Math.floor(ms / 1000)}:${style}>`;
+}
+
+function buildPayload({ title, description, fields, footer }) {
+  const header = [
+    `**${title || "Error"}**`,
+    description && `-# ${String(description).slice(0, 1500)}`,
+  ].filter(Boolean).join("\n");
+  const body = (Array.isArray(fields) ? fields : [])
+    .filter((f) => f && f.name)
+    .map((f) => `**${f.name}:** ${f.value ?? "unknown"}`)
+    .join("\n");
+
+  const components = [{ type: 10, content: header }];
+  if (body) components.push({ type: 14 }, { type: 10, content: body.slice(0, 3500) });
+  if (footer) components.push({ type: 14 }, { type: 10, content: `-# ${footer}` });
 
   return {
     flags: 32768,
@@ -119,7 +133,7 @@ async function postToDiscord(url, payload, timeoutMs = 8000) {
  * Fire-and-forget notifier used inside request paths. Never throws.
  * @returns {Promise<boolean>} whether a message was actually sent
  */
-export async function notifyDiscordError({ title, description, color = 0xed4245, fields } = {}) {
+export async function notifyDiscordError({ title, description, fields, footer } = {}) {
   try {
     const settings = await readSettingsSafely();
     if (!(await isNotifierEnabled(settings))) return false;
@@ -133,7 +147,7 @@ export async function notifyDiscordError({ title, description, color = 0xed4245,
     if (now - last < THROTTLE_MS) return false;
     lastSent.set(key, now);
 
-    await postToDiscord(url, buildPayload({ title, description, fields }));
+    await postToDiscord(url, buildPayload({ title, description, fields, footer }));
     return true;
   } catch {
     // best effort; never throw into request path
@@ -159,9 +173,10 @@ export async function sendDiscordTestMessage({ url, title = "9Router webhook tes
         title,
         description: `Webhook is reachable. Source: **${resolved.source}**.`,
         fields: [
-          { name: "Time", value: new Date().toISOString() },
-          { name: "Host", value: process.env.HOSTNAME || "unknown" },
+          { name: "Time", value: formatDiscordTimestamp(Date.now(), "F") },
+          { name: "Host", value: os.hostname() },
         ],
+        footer: "_Test message completed successfully._",
       }),
     );
     return { ok: true, source: resolved.source };

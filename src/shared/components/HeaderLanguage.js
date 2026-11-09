@@ -1,25 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { LOCALE_COOKIE, normalizeLocale } from "@/i18n/config";
+import { useState } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
-
-function getLocaleFromCookie() {
-  if (typeof document === "undefined") return "en";
-  const cookie = document.cookie
-    .split(";")
-    .find((c) => c.trim().startsWith(`${LOCALE_COOKIE}=`));
-  const value = cookie ? decodeURIComponent(cookie.split("=")[1]) : "en";
-  return normalizeLocale(value);
-}
 
 export default function HeaderLanguage() {
   const [open, setOpen] = useState(false);
-  const [locale, setLocale] = useState("en");
-
-  useEffect(() => {
-    setLocale(getLocaleFromCookie());
-  }, [open]);
 
   return (
     <>
@@ -27,6 +12,7 @@ export default function HeaderLanguage() {
         onClick={() => setOpen(true)}
         className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
         title="Language"
+        aria-label="Language"
         data-i18n-skip="true"
       >
         <span className="material-symbols-outlined text-[20px]">language</span>
@@ -35,10 +21,7 @@ export default function HeaderLanguage() {
       <LanguageSwitcher
         hideTrigger
         isOpen={open}
-        onClose={(next) => {
-          setOpen(false);
-          setLocale(next);
-        }}
+        onClose={() => setOpen(false)}
       />
     </>
   );

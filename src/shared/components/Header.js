@@ -163,7 +163,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
-        window.location.assign("/login");
+        window.location.assign(`${window.location.origin}/login`);
       }
     } catch (err) {
       console.error("Failed to logout:", err);
@@ -177,6 +177,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
         {showMenuButton && (
           <button
             onClick={onMenuClick}
+            aria-label="Open navigation"
             className="text-text-main hover:text-primary transition-colors"
           >
             <span className="material-symbols-outlined">menu</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Input, Button, Badge } from "@/shared/components";
 
@@ -20,21 +20,24 @@ export default function AddCustomEmbeddingModal({ isOpen, onClose, onCreated, on
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setValidationResult(null);
-    setCheckKey("");
-    setCheckModelId("");
-    if (isEdit) {
-      setFormData({
-        name: node.name || "",
-        prefix: node.prefix || "",
-        baseUrl: node.baseUrl || DEFAULT_BASE_URL,
-      });
-    } else {
-      setFormData({ name: "", prefix: "", baseUrl: DEFAULT_BASE_URL });
+  const [wasOpen, setWasOpen] = useState(false);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) {
+      setValidationResult(null);
+      setCheckKey("");
+      setCheckModelId("");
+      if (isEdit) {
+        setFormData({
+          name: node.name || "",
+          prefix: node.prefix || "",
+          baseUrl: node.baseUrl || DEFAULT_BASE_URL,
+        });
+      } else {
+        setFormData({ name: "", prefix: "", baseUrl: DEFAULT_BASE_URL });
+      }
     }
-  }, [isOpen, isEdit, node]);
+  }
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim()) return;

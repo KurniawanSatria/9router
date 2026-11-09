@@ -55,7 +55,7 @@ export default function CombosPage() {
   // Drop stale selection when the combo list changes (delete / refresh).
   useEffect(() => {
     const alive = new Set(combos.map((c) => c.id));
-    setSelectedIds((prev) => prev.filter((id) => alive.has(id)));
+    queueMicrotask(() => setSelectedIds((prev) => prev.filter((id) => alive.has(id))));
   }, [combos]);
 
   const selectedCombos = combos.filter((c) => selectedIds.includes(c.id));
@@ -941,7 +941,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
   };
 
   useEffect(() => {
-    if (isOpen) fetchModalData();
+    if (isOpen) queueMicrotask(fetchModalData);
   }, [isOpen]);
 
   const validateName = (value) => {

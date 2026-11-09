@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button } from "@/shared/components";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { isAnthropicCompatibleProvider, isOpenAICompatibleProvider } from "@/shared/constants/providers";
+import { useClientValue } from "@/shared/hooks/useClientValue";
 
 const STORAGE_KEYS = {
   sessions: "basic-chat.sessions",
@@ -197,24 +198,19 @@ export default function BasicChatPageClient() {
   const [isSending, setIsSending] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState("");
   const [streamingText, setStreamingText] = useState("");
-  const [isHydrated, setIsHydrated] = useState(false);
+  const isHydrated = useClientValue(() => true, false);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const fileInputRef = useRef(null);
   const abortRef = useRef(null);
-  const initializedRef = useRef(false);
+  const [initialized, setInitialized] = useState(false);
   const modelMenuRef = useRef(null);
   const historyMenuRef = useRef(null);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadData() {
-      setLoadingData(true);
       setLoadError("");
 
       try {
@@ -375,9 +371,8 @@ export default function BasicChatPageClient() {
     }
   }, [isHydrated, sessions, activeSessionId, activeProviderId, draft]);
 
-  useEffect(() => {
-    if (!isHydrated || loadingData || initializedRef.current) return;
-    if (providerGroups.length === 0) return;
+  if (isHydrated && !loadingData && !initialized && providerGroups.length > 0) {
+    setInitialized(true);
 
     const savedProvider = providerGroups.find((group) => group.providerId === activeProviderId) || providerGroups[0];
     const savedModel = activeModelId && modelIndex.has(activeModelId)
@@ -389,31 +384,27 @@ export default function BasicChatPageClient() {
       const sessionModel = session?.modelId && modelIndex.has(session.modelId)
         ? modelIndex.get(session.modelId)
         : savedModel;
-      initializedRef.current = true;
       setActiveSessionId(session.id);
       setActiveProviderId(sessionModel?.providerId || savedProvider.providerId);
       setActiveModelId(sessionModel?.id || savedModel.id);
-      return;
+    } else {
+      const session = {
+        id: createId(),
+        title: "New chat",
+        providerId: savedProvider.providerId,
+        providerName: savedProvider.providerName,
+        modelId: savedModel.id,
+        modelName: savedModel.name,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages: [],
+      };
+      setSessions([session]);
+      setActiveSessionId(session.id);
+      setActiveProviderId(savedProvider.providerId);
+      setActiveModelId(savedModel.id);
     }
-
-    const session = {
-      id: createId(),
-      title: "New chat",
-      providerId: savedProvider.providerId,
-      providerName: savedProvider.providerName,
-      modelId: savedModel.id,
-      modelName: savedModel.name,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: [],
-    };
-
-    initializedRef.current = true;
-    setSessions([session]);
-    setActiveSessionId(session.id);
-    setActiveProviderId(savedProvider.providerId);
-    setActiveModelId(savedModel.id);
-  }, [isHydrated, loadingData, providerGroups, modelIndex, sessions, activeSessionId, activeProviderId, activeModelId]);
+  }
 
   const updateSession = (sessionId, updater) => {
     setSessions((prev) => prev.map((session) => (session.id === sessionId ? updater(cloneSession(session)) : session)));
@@ -944,11 +935,11 @@ export default function BasicChatPageClient() {
 
                   <div className="flex items-center gap-2">
                     {isSending ? (
-                      <button type="button" onClick={handleStop} className="p-2 text-white bg-white/10 hover:bg-white/20 transition rounded-full h-8 w-8 flex items-center justify-center">
+                      <button type="button" onClick={handleStop} aria-label="Stop generating" className="p-2 text-white bg-white/10 hover:bg-white/20 transition rounded-full h-8 w-8 flex items-center justify-center">
                         <span className="material-symbols-outlined text-[16px]">stop</span>
                       </button>
                     ) : null}
-                    <button onClick={sendMessage} disabled={!canSend} className={`h-8 w-8 rounded-full flex items-center justify-center transition ${canSend ? 'bg-white text-black hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'}`}>
+                    <button onClick={sendMessage} disabled={!canSend} aria-label="Send message" className={`h-8 w-8 rounded-full flex items-center justify-center transition ${canSend ? 'bg-white text-black hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'}`}>
                       <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
                     </button>
                   </div>

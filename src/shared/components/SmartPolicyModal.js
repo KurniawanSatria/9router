@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Modal from "./Modal";
 import Button from "./Button";
 import Badge from "./Badge";
@@ -18,7 +18,9 @@ export default function SmartPolicyModal({
   const [selectedPolicy, setSelectedPolicy] = useState("smart");
   const [threshold, setThreshold] = useState(80);
 
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(false);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
     if (isOpen) {
       let initialPolicy = currentPolicy || "smart";
       if (initialPolicy.startsWith("smart-switch")) {
@@ -28,7 +30,7 @@ export default function SmartPolicyModal({
       const parsedThresh = Math.round((currentThreshold || 0.8) * (currentThreshold <= 1 ? 100 : 1));
       setThreshold(parsedThresh || 80);
     }
-  }, [isOpen, currentPolicy, currentThreshold]);
+  }
 
   const handleSave = () => {
     const finalThreshold = selectedPolicy === "custom"

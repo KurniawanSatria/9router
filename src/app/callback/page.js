@@ -77,7 +77,7 @@ function CallbackContent() {
       return;
     }
 
-    setStatus("success");
+    queueMicrotask(() => setStatus("success"));
     setTimeout(() => {
       window.close();
       setTimeout(() => setStatus("done"), 500);

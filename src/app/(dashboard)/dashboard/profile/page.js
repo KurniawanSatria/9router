@@ -5,6 +5,7 @@ import { Card, Button, Toggle, Input } from "@/shared/components";
 import Modal, { ConfirmModal } from "@/shared/components/Modal";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher";
 import { useTheme } from "@/shared/hooks/useTheme";
+import { useClientValue } from "@/shared/hooks/useClientValue";
 import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
 import { LOCALE_COOKIE, LOCALE_NAMES, normalizeLocale } from "@/i18n/config";
@@ -90,11 +91,10 @@ export default function ProfilePage() {
   const [webhookLoading, setWebhookLoading] = useState(false);
   const [webhookTestLoading, setWebhookTestLoading] = useState(false);
 
-  const [isRemoteHost, setIsRemoteHost] = useState(false);
-  useEffect(() => {
-    if (typeof window !== "undefined")
-      setIsRemoteHost(!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
-  }, []);
+  const isRemoteHost = useClientValue(
+    () => !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname),
+    false,
+  );
 
   useEffect(() => {
     fetch("/api/settings")
@@ -857,7 +857,7 @@ export default function ProfilePage() {
   const handleLogout = async () => {    try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
-        window.location.assign("/login");
+        window.location.assign(`${window.location.origin}/login`);
       }
     } catch (err) {
       console.error("Failed to logout:", err);

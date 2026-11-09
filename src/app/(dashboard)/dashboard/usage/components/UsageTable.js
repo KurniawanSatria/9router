@@ -110,12 +110,14 @@ export default function UsageTable({
 
   // Load expanded state from localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) setExpanded(new Set(JSON.parse(saved)));
-    } catch (e) {
-      console.error(`Failed to load ${storageKey}:`, e);
-    }
+    queueMicrotask(() => {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) setExpanded(new Set(JSON.parse(saved)));
+      } catch (e) {
+        console.error(`Failed to load ${storageKey}:`, e);
+      }
+    });
   }, [storageKey]);
 
   // Save expanded state to localStorage
