@@ -1,4 +1,5 @@
 const CDN = "https://cdn.jsdelivr.net/gh/glincker/thesvg@v0.6.0/public/icons";
+const LOCAL_ICONS = { zhipu: "/providers/zhipu.svg", stepfun: "/providers/stepfun.webp" };
 
 const FAMILIES = [
   ["anthropic", /claude|fable|opus|sonnet|haiku/i],
@@ -10,6 +11,7 @@ const FAMILIES = [
   ["zhipu", /glm|zhipu|chatglm/i],
   ["mistral", /mistral|mixtral|codestral|magistral|devstral/i],
   ["minimax", /minimax/i],
+  ["stepfun", /stepfun|step-\d/i],
   ["xiaomi-mimo", /mimo|xiaomi/i],
   ["alibaba-cloud", /qwen|qwq|alibaba/i],
   ["meta", /llama/i],
@@ -43,5 +45,6 @@ export function resolveModelBrand(modelId) {
 export function getBrandIconUrl(modelId, variant = "default") {
   const slug = resolveModelBrand(modelId);
   if (!slug) return null;
+  if (variant === "default" && LOCAL_ICONS[slug]) return LOCAL_ICONS[slug];
   return `${CDN}/${slug}/${variant}.svg`;
 }

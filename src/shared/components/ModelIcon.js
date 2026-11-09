@@ -13,6 +13,7 @@ const BRAND_LABELS = {
   zhipu: "Zhipu GLM",
   mistral: "Mistral",
   minimax: "MiniMax",
+  stepfun: "StepFun",
   "xiaomi-mimo": "Xiaomi MiMo",
   "alibaba-cloud": "Alibaba Qwen",
   meta: "Meta Llama",
