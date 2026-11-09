@@ -145,9 +145,13 @@ export class DefaultExecutor extends BaseExecutor {
   }
 
   transformRequest(model, body, stream, credentials) {
-    const transformed = this.applyJsonSchemaFallback(this.applyNousAttribution(model, body, stream, credentials));
+    let transformed = this.applyJsonSchemaFallback(this.applyNousAttribution(model, body, stream, credentials));
 
     if (transformed && typeof transformed === "object") {
+      if (stream !== true && transformed.stream_options !== undefined && transformed.stream !== true) {
+        if (transformed === body) transformed = { ...transformed };
+        delete transformed.stream_options;
+      }
       // quirk: some openai-compatible providers reject Anthropic's client_metadata field
       if (this.config.quirks?.dropClientMetadata) {
         delete transformed.client_metadata;

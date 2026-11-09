@@ -18,6 +18,7 @@ function mockFetchOnce(payload, { ok = true, status = 200 } = {}) {
     text: () => Promise.resolve(JSON.stringify(payload)),
   });
   global.fetch = fn;
+  vi.doMock("undici", async () => ({ ...(await vi.importActual("undici")), fetch: fn }));
   return fn;
 }
 
