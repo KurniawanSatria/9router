@@ -7,25 +7,22 @@ import { formatResetTime } from "./utils";
 const getColorClasses = (remainingPercentage) => {
   if (remainingPercentage > 70) {
     return {
-      text: "text-green-500",
-      bg: "bg-green-500",
-      bgLight: "bg-green-500/10"
+      text: "text-success-500",
+      bg: "bg-success-500"
     };
   }
-  
+
   if (remainingPercentage >= 30) {
     return {
-      text: "text-yellow-500",
-      bg: "bg-yellow-500",
-      bgLight: "bg-yellow-500/10"
+      text: "text-warning-500",
+      bg: "bg-warning-500"
     };
   }
-  
+
   // 0-29% including 0% (out of quota) - show red
   return {
-    text: "text-red-500",
-    bg: "bg-red-500",
-    bgLight: "bg-red-500/10"
+    text: "text-error-500",
+    bg: "bg-error-500"
   };
 };
 
@@ -102,16 +99,16 @@ export default function QuotaProgressBar({
 
       {/* Progress bar */}
       {!unlimited && (
-        <div className={cn("h-2 rounded-full overflow-hidden", colors.bgLight)}>
+        <div className="h-2 rounded-full overflow-hidden bg-primary-500/10">
           <div
-            className={cn("h-full transition-all duration-300", colors.bg)}
+            className="h-full rounded-full bg-primary-500 transition-all duration-300"
             style={{ width: `${Math.min(remaining, 100)}%` }}
           />
         </div>
       )}
 
       {/* Usage details and countdown */}
-      <div className="flex items-center justify-between text-xs text-text-muted">
+      <div className="flex items-center justify-between text-xs text-text-tertiary">
         <span>
           {used.toLocaleString()} / {total.toLocaleString()} requests
         </span>
@@ -125,7 +122,7 @@ export default function QuotaProgressBar({
 
       {/* Reset time display */}
       {resetDisplay && (
-        <div className="text-xs text-text-muted/70">
+        <div className="text-xs text-text-tertiary">
           {resetWord} at {resetDisplay}
         </div>
       )}

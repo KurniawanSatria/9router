@@ -1,11 +1,14 @@
+
 "use client";
+
+import Icon from "@/shared/components/Icon";
 
 /** Inline tooltip, Claude Code CLI style */
 export default function Tooltip({ text }) {
   return (
     <span className="relative group inline-flex items-center">
-      <span className="material-symbols-outlined text-[14px] text-text-muted cursor-help">help</span>
-      <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 z-50 w-64 rounded bg-gray-900 dark:bg-gray-800 text-white text-xs px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+      <Icon name="help" className="size-3.5 text-text-tertiary cursor-help" />
+      <span className="pointer-events-none absolute left-5 top-1/2 z-50 w-64 -translate-y-1/2 rounded-lg border border-card-border bg-card-background px-2.5 py-1.5 text-xs text-text-primary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
         {text}
       </span>
     </span>

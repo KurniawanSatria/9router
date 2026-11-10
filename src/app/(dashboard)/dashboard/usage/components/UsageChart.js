@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import Card from "@/shared/components/Card";
+import { Card } from "@/shared/tailgrids/core/card";
+import Select from "@/shared/components/Select";
 
 const fmtTokens = (n) => {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -29,9 +30,9 @@ const VIEW_MODES = [
 ];
 
 const VIEW_CONFIG = {
-  tokens:   { dataKey: "tokens",   color: "#2f8f7e", strokeVar: "var(--chart-tokens)",   gradId: "gradTokens",   formatter: fmtTokens,   label: "Tokens" },
-  requests: { dataKey: "requests", color: "#c74a24", strokeVar: "var(--chart-requests)", gradId: "gradRequests", formatter: fmtRequests, label: "Requests" },
-  cost:     { dataKey: "cost",     color: "#b8862b", strokeVar: "var(--chart-cost)",     gradId: "gradCost",     formatter: fmtCost,     label: "Cost" },
+  tokens:   { dataKey: "tokens",   color: "var(--chart-tokens)",   formatter: fmtTokens,   label: "Tokens" },
+  requests: { dataKey: "requests", color: "var(--chart-requests)", formatter: fmtRequests, label: "Requests" },
+  cost:     { dataKey: "cost",     color: "var(--chart-cost)",     formatter: fmtCost,     label: "Cost" },
 };
 
 export default function UsageChart({ period = "7d" }) {
@@ -58,63 +59,57 @@ export default function UsageChart({ period = "7d" }) {
     queueMicrotask(fetchData);
   }, [fetchData]);
 
+  const chartData = useMemo(() => {
+    if (period !== "7d") return data;
+    return data.map((d, i) => ({
+      ...d,
+      dayLabel: new Date(Date.now() - (data.length - 1 - i) * 86400000).toLocaleDateString("en-US", { weekday: "short" }),
+    }));
+  }, [data, period]);
+
   const cfg = VIEW_CONFIG[viewMode];
-  const hasData = data.some((d) => (d[cfg.dataKey] || 0) > 0);
+  const hasData = chartData.some((d) => (d[cfg.dataKey] || 0) > 0);
 
   return (
-    <Card className="flex min-w-0 flex-col gap-3 p-3 sm:p-4">
-      <div
-        className="grid w-full items-center gap-1 rounded-[9px] border border-border bg-bg-subtle p-0.5 sm:w-auto sm:self-start"
-        style={{ gridTemplateColumns: `repeat(${VIEW_MODES.length}, minmax(0, 1fr))` }}
-      >
-        {VIEW_MODES.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => setViewMode(m.value)}
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === m.value ? "bg-surface text-text-main shadow-[var(--shadow-soft)]" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
-          >
-            {m.label}
-          </button>
-        ))}
+    <Card className="flex min-w-0 flex-col gap-5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-base font-semibold text-text-primary">
+          {period === "7d" ? "Weekly AI Activity" : "Usage Activity"}
+        </span>
+        <Select
+          size="sm"
+          value={viewMode}
+          onChange={setViewMode}
+          options={VIEW_MODES}
+          ariaLabel="Chart metric"
+          buttonClassName="min-w-[110px]"
+        />
       </div>
 
       {loading ? (
-        <div className="h-48 flex items-center justify-center text-text-muted text-sm">Loading...</div>
+        <div className="flex min-h-[180px] items-center justify-center text-sm text-text-secondary">Loading...</div>
       ) : !hasData ? (
-        <div className="h-48 flex items-center justify-center text-text-muted text-sm">No data for this period</div>
+        <div className="flex min-h-[180px] items-center justify-center text-sm text-text-secondary">No data for this period</div>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="gradTokens" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--chart-tokens)" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="var(--chart-tokens)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gradRequests" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--chart-requests)" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="var(--chart-requests)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gradCost" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--chart-cost)" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="var(--chart-cost)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} />
+          <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.12} vertical={false} />
             <XAxis
-              dataKey="label"
-              tick={{ fontSize: 10, fill: "currentColor", fillOpacity: 0.5 }}
+              dataKey={period === "7d" ? "dayLabel" : "label"}
+              tick={{ fontSize: 11, fill: "currentColor", fillOpacity: 0.5 }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fontSize: 10, fill: "currentColor", fillOpacity: 0.5 }}
+              tick={{ fontSize: 11, fill: "currentColor", fillOpacity: 0.5 }}
               tickLine={false}
               axisLine={false}
               tickFormatter={cfg.formatter}
-              width={50}
+              width={48}
             />
             <Tooltip
+              cursor={{ fill: "currentColor", fillOpacity: 0.04 }}
               contentStyle={{
                 backgroundColor: "var(--color-bg)",
                 border: "1px solid var(--color-border)",
@@ -123,16 +118,8 @@ export default function UsageChart({ period = "7d" }) {
               }}
               formatter={(value) => [cfg.formatter(value), cfg.label]}
             />
-            <Area
-              type="monotone"
-              dataKey={cfg.dataKey}
-              stroke={cfg.strokeVar}
-              strokeWidth={2}
-              fill={`url(#${cfg.gradId})`}
-              dot={false}
-              activeDot={{ r: 4 }}
-            />
-          </AreaChart>
+            <Bar dataKey={cfg.dataKey} fill={cfg.color} fillOpacity={0.85} radius={[5, 5, 0, 0]} activeBar={false} maxBarSize={26} />
+          </BarChart>
         </ResponsiveContainer>
       )}
     </Card>

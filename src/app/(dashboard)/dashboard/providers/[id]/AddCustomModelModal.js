@@ -4,6 +4,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Modal, Select, Toggle } from "@/shared/components";
 import { CAPACITY_META, STT_TRANSPORT_META, STT_TRANSPORTS } from "@/shared/constants/models";
+import Icon from "@/shared/components/Icon";
 
 const defaultCaps = () => Object.fromEntries(Object.keys(CAPACITY_META).map((key) => [key, false]));
 
@@ -77,7 +78,7 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
               onChange={(e) => { setModelId(e.target.value); setTestStatus(null); setTestError(""); }}
               onKeyDown={handleKeyDown}
               placeholder="e.g. claude-opus-4-5"
-              className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+              className="h-10 flex-1 rounded-lg border border-input-border bg-card-background px-3 text-sm focus:outline-none focus:border-primary-500"
               autoFocus
             />
             <Button
@@ -90,8 +91,8 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
               {testStatus === "testing" ? "Testing..." : "Test"}
             </Button>
           </div>
-          <p className="text-xs text-text-muted mt-1">
-            Sent to provider as: <code className="font-mono bg-sidebar px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
+          <p className="text-xs text-text-secondary mt-1">
+            Sent to provider as: <code className="font-mono bg-background-soft-50 px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
           </p>
         </div>
 
@@ -139,14 +140,14 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
 
         {/* Test result */}
         {testStatus === "ok" && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
-            <span className="material-symbols-outlined text-base">check_circle</span>
+          <div className="flex items-center gap-2 text-sm text-success-500">
+            <Icon name="check_circle" className="size-4" />
             Model is reachable
           </div>
         )}
         {testStatus === "error" && (
-          <div className="flex items-start gap-2 text-sm text-red-500">
-            <span className="material-symbols-outlined text-base shrink-0">cancel</span>
+          <div className="flex items-start gap-2 text-sm text-error-500">
+            <Icon name="cancel" className="size-4 shrink-0" />
             <span>{testError || "Model not reachable"}</span>
           </div>
         )}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import ChangelogModal from "./ChangelogModal";
 import { ConfirmModal } from "./Modal";
+import Icon from "@/shared/components/Icon";
 
 function MenuItem({ icon, label, onClick, trailing, danger }) {
   return (
@@ -11,13 +12,11 @@ function MenuItem({ icon, label, onClick, trailing, danger }) {
       onClick={onClick}
       className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
         danger
-          ? "text-red-500 hover:bg-red-500/10"
-          : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+          ? "text-error-500 hover:bg-error-500/10"
+          : "text-text-primary hover:bg-background-gray-primary"
       }`}
     >
-      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>
-        {icon}
-      </span>
+      <Icon name={icon} className={` size-5 ${danger ? "" : "text-text-tertiary"}`} />
       <span className="flex-1 text-left">{label}</span>
       {trailing && <span className="text-base">{trailing}</span>}
     </button>
@@ -69,14 +68,14 @@ export default function HeaderMenu({ onLogout }) {
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setIsOpen((v) => !v)}
-          className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+          className="flex items-center justify-center p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-gray-primary transition-all"
           title="Menu"
         >
-          <span className="material-symbols-outlined">grid_view</span>
+          <Icon name="grid_view" />
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
+          <div className="absolute right-0 top-full mt-2 w-60 bg-card-background border border-card-border rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
             <MenuItem
               icon="history"
               label="Change Log"

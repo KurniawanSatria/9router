@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Card from "./Card";
+import { Card } from "@/shared/tailgrids/core/card";
+import { Toggle } from "@/shared/tailgrids/core/toggle";
 
 export default function RequestLogger() {
   const [logs, setLogs] = useState([]);
@@ -38,46 +39,36 @@ export default function RequestLogger() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Request Logs</h2>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-text-muted flex items-center gap-2 cursor-pointer">
-            <span>Auto Refresh (3s)</span>
-            <div
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${autoRefresh ? "bg-primary" : "bg-bg-subtle border border-border"
-                }`}
-            >
-              <span
-                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${autoRefresh ? "translate-x-5" : "translate-x-1"
-                  }`}
-              />
-            </div>
-          </label>
-        </div>
+        <h2 className="text-base font-semibold text-text-primary">Request Logs</h2>
+        <Toggle
+          checked={autoRefresh}
+          onChange={(e) => setAutoRefresh(e.target.checked)}
+          label="Auto Refresh (3s)"
+        />
       </div>
 
-      <Card className="overflow-hidden bg-black/5 dark:bg-black/20">
-        <div className="p-0 overflow-x-auto max-h-[600px] overflow-y-auto font-mono text-xs">
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto font-mono text-xs">
           {loading && logs.length === 0 ? (
-            <div className="p-8 text-center text-text-muted">Loading logs...</div>
+            <div className="p-8 text-center text-sm text-text-secondary">Loading logs...</div>
           ) : logs.length === 0 ? (
-            <div className="p-8 text-center text-text-muted">No logs recorded yet.</div>
+            <div className="p-8 text-center text-sm text-text-secondary">No logs recorded yet.</div>
           ) : (
             <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead className="sticky top-0 bg-bg-subtle border-b border-border z-10">
-                <tr>
-                  <th className="px-3 py-2 border-r border-border">DateTime</th>
-                  <th className="px-3 py-2 border-r border-border">Model</th>
-                  <th className="px-3 py-2 border-r border-border">Provider</th>
-                  <th className="px-3 py-2 border-r border-border">Account</th>
-                  <th className="px-3 py-2 border-r border-border">In</th>
-                  <th className="px-3 py-2 border-r border-border">Out</th>
-                  <th className="px-3 py-2">Status</th>
+              <thead className="sticky top-0 z-10 bg-card-background">
+                <tr className="border-b border-card-border">
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">DateTime</th>
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">Model</th>
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">Provider</th>
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">Account</th>
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">In</th>
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">Out</th>
+                  <th className="px-4 py-3 text-xs uppercase text-text-tertiary font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
+              <tbody>
                 {logs.map((log, i) => {
                   const parts = log.split(" | ");
                   if (parts.length < 7) return null;
@@ -86,23 +77,24 @@ export default function RequestLogger() {
                   const isPending = status.includes("PENDING");
                   const isFailed = status.includes("FAILED");
                   const isSuccess = status.includes("OK");
+                  const isLast = i === logs.length - 1;
 
                   return (
-                    <tr key={i} className={`hover:bg-primary/5 transition-colors ${isPending ? 'bg-primary/5' : ''}`}>
-                      <td className="px-3 py-1.5 border-r border-border text-text-muted">{parts[0]}</td>
-                      <td className="px-3 py-1.5 border-r border-border font-medium">{parts[1]}</td>
-                      <td className="px-3 py-1.5 border-r border-border">
-                        <span className="px-1.5 py-0.5 rounded bg-bg-subtle border border-border text-[10px] uppercase font-bold">
+                    <tr
+                      key={i}
+                      className={`hover:bg-background-gray-primary transition-colors ${!isLast ? "border-b border-card-border" : ""} ${isPending ? "bg-primary-500/5" : ""}`}
+                    >
+                      <td className="px-4 py-3 text-text-tertiary">{parts[0]}</td>
+                      <td className="px-4 py-3 font-medium text-text-primary">{parts[1]}</td>
+                      <td className="px-4 py-3">
+                        <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-primary-500/10 text-primary-500">
                           {parts[2]}
                         </span>
                       </td>
-                      <td className="px-3 py-1.5 border-r border-border truncate max-w-[150px]" title={parts[3]}>{parts[3]}</td>
-                      <td className="px-3 py-1.5 border-r border-border text-right text-primary">{parts[4]}</td>
-                      <td className="px-3 py-1.5 border-r border-border text-right text-success">{parts[5]}</td>
-                      <td className={`px-3 py-1.5 font-bold ${isSuccess ? 'text-success' :
-                          isFailed ? 'text-error' :
-                            'text-primary animate-pulse'
-                        }`}>
+                      <td className="px-4 py-3 truncate max-w-[150px] text-text-secondary" title={parts[3]}>{parts[3]}</td>
+                      <td className="px-4 py-3 text-right text-primary-500">{parts[4]}</td>
+                      <td className="px-4 py-3 text-right text-success-500">{parts[5]}</td>
+                      <td className={`px-4 py-3 font-semibold ${isSuccess ? "text-success-500" : isFailed ? "text-error-500" : "text-primary-500 animate-pulse"}`}>
                         {status}
                       </td>
                     </tr>
@@ -113,7 +105,7 @@ export default function RequestLogger() {
           )}
         </div>
       </Card>
-      <div className="text-[10px] text-text-muted italic">
+      <div className="text-[10px] text-text-tertiary italic">
         Logs are loaded from the request history database.
       </div>
     </div>

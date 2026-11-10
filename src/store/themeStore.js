@@ -31,7 +31,7 @@ function applyAccent(accent) {
   const root = document.documentElement;
   root.classList.add("dark");
 
-  if (accent && accent !== THEME_CONFIG.defaultAccent) {
+  if (accent) {
     root.dataset.accent = accent;
   } else {
     root.removeAttribute("data-accent");

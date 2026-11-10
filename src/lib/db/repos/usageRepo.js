@@ -281,11 +281,12 @@ export async function saveRequestUsage(entry) {
       }
 
       db.run(
-        `INSERT INTO usageHistory(timestamp, provider, model, connectionId, apiKey, endpoint, promptTokens, completionTokens, cost, status, tokens, meta) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO usageHistory(timestamp, provider, model, connectionId, apiKey, endpoint, promptTokens, completionTokens, cost, status, latencyMs, tokens, meta) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           entry.timestamp, entry.provider || null, entry.model || null,
           entry.connectionId || null, entry.apiKey || null, entry.endpoint || null,
           promptTokens, completionTokens, entry.cost || 0, entry.status || "ok",
+          entry.latencyMs || null,
           stringifyJson(tokens), stringifyJson({}),
         ]
       );
@@ -312,6 +313,24 @@ export async function saveRequestUsage(entry) {
     }
   } catch (e) {
     console.error("Failed to save usage stats:", e);
+  }
+}
+
+export async function saveRequestFailure(entry = {}) {
+  try {
+    const db = await getAdapter();
+    db.run(
+      `INSERT INTO usageHistory(timestamp, provider, model, connectionId, apiKey, endpoint, promptTokens, completionTokens, cost, status, latencyMs, tokens, meta) VALUES(?, ?, ?, ?, ?, ?, 0, 0, 0, ?, ?, '{}', '{}')`,
+      [
+        entry.timestamp || new Date().toISOString(),
+        entry.provider || null, entry.model || null,
+        entry.connectionId || null, entry.apiKey || null, entry.endpoint || null,
+        entry.status || "error", entry.latencyMs || null,
+      ]
+    );
+    scheduleStatsEvent("update", 250);
+  } catch (e) {
+    console.error("Failed to save request failure:", e);
   }
 }
 
@@ -405,7 +424,50 @@ export async function getUsageStats(period = "all") {
     activeRequests: [],
     recentRequests,
     errorProvider: (Date.now() - lastErrorProvider.ts < 10000) ? lastErrorProvider.provider : "",
+    latency: { avgMs: null, prevAvgMs: null },
+    success: { rate: null, prevRate: null },
+    previous: { totalRequests: 0, totalPromptTokens: 0 },
   };
+
+  // Latency + success rate come straight from usageHistory, which keeps every
+  // request (failures included) with its measured latency. usageDaily only
+  // aggregates successful usage, so it can't answer these two.
+  const periodDays = { today: 1, "24h": 1, "7d": 7, "30d": 30, "60d": 60 };
+  if (period in periodDays) {
+    const now = Date.now();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const span = periodDays[period] * 86400000;
+    const start = period === "today" ? todayStart.getTime() : now - span;
+    const prevStart = start - span;
+    const prevEnd = now - span;
+
+    const summarise = (from, to) => {
+      const row = db.get(
+        `SELECT COUNT(*) AS total,
+                SUM(CASE WHEN status IS NULL OR status IN ('success','ok') THEN 1 ELSE 0 END) AS ok,
+                AVG(CASE WHEN latencyMs > 0 THEN latencyMs END) AS avgLatency,
+                SUM(promptTokens) AS promptTokens
+         FROM usageHistory WHERE timestamp >= ? AND timestamp <= ?`,
+        [new Date(from).toISOString(), new Date(to).toISOString()]
+      );
+      return {
+        total: row?.total || 0,
+        ok: row?.ok || 0,
+        avgLatency: row?.avgLatency ?? null,
+        promptTokens: row?.promptTokens || 0,
+      };
+    };
+
+    const cur = summarise(start, now);
+    const prev = summarise(prevStart, prevEnd);
+    stats.latency = { avgMs: cur.avgLatency, prevAvgMs: prev.avgLatency };
+    stats.success = {
+      rate: cur.total ? (cur.ok / cur.total) * 100 : null,
+      prevRate: prev.total ? (prev.ok / prev.total) * 100 : null,
+    };
+    stats.previous = { totalRequests: prev.total, totalPromptTokens: prev.promptTokens };
+  }
 
   // Active requests
   for (const [connectionId, models] of Object.entries(pendingRequests.byAccount)) {

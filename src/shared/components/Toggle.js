@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/shared/utils/cn";
+import { cnx } from "@/shared/utils/cn";
 
 export default function Toggle({
   checked = false,
@@ -23,9 +23,9 @@ export default function Toggle({
 
   return (
     <div
-      className={cn(
+      className={cnx(
         "flex items-center gap-3",
-        disabled && "opacity-50 cursor-not-allowed",
+        disabled && "cursor-not-allowed",
         className
       )}
     >
@@ -35,17 +35,17 @@ export default function Toggle({
         aria-checked={checked}
         disabled={disabled}
         onClick={handleClick}
-        className={cn(
+        className={cnx(
           "relative inline-flex shrink-0 cursor-pointer rounded-full",
           "transition-colors duration-200 ease-in-out",
-          "focus:outline-none focus:ring-2 focus:ring-brand-500/30",
-          checked ? "bg-brand-500" : "bg-surface-3",
+          "focus:outline-none focus:ring-2 focus:ring-primary-500/30",
+          checked ? "bg-primary-500" : "bg-toggle-default-background",
           sizes[size].track,
-          disabled && "cursor-not-allowed"
+          disabled && "cursor-not-allowed disabled:bg-toggle-disabled-background"
         )}
       >
         <span
-          className={cn(
+          className={cnx(
             "pointer-events-none inline-block rounded-full bg-white shadow-sm",
             "transform transition duration-200 ease-in-out",
             checked ? sizes[size].translate : "translate-x-0.5",
@@ -57,10 +57,10 @@ export default function Toggle({
       {(label || description) && (
         <div className="flex flex-col">
           {label && (
-            <span className="text-sm font-medium text-text-main">{label}</span>
+            <span className="text-sm font-medium text-text-primary">{label}</span>
           )}
           {description && (
-            <span className="text-xs text-text-muted">{description}</span>
+            <span className="text-xs text-text-tertiary">{description}</span>
           )}
         </div>
       )}

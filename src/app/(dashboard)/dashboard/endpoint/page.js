@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import { getMachineId } from "@/shared/utils/machine";
+import EndpointPageClient from "./EndpointPageClient";
 
-export default function EndpointPage() {
-  redirect("/dashboard");
+export default async function EndpointPage() {
+  const machineId = await getMachineId();
+  return <EndpointPageClient machineId={machineId} />;
 }

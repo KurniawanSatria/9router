@@ -12,7 +12,7 @@ const FAMILIES = [
   ["mistral", /mistral|mixtral|codestral|magistral|devstral/i],
   ["minimax", /minimax/i],
   ["stepfun", /stepfun|step-\d/i],
-  ["xiaomi-mimo", /mimo|xiaomi/i],
+  ["xiaomi", /mimo|xiaomi/i],
   ["alibaba-cloud", /qwen|qwq|alibaba/i],
   ["meta", /llama/i],
   ["nvidia", /nemotron|nvidia/i],

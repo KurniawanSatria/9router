@@ -98,14 +98,14 @@ export default function AddCustomEmbeddingModal({ isOpen, onClose, onCreated, on
       return (
         <>
           <Badge variant="success">Valid</Badge>
-          {dimensions && <span className="text-sm text-text-muted">{dimensions} dims</span>}
+          {dimensions && <span className="text-sm text-text-secondary">{dimensions} dims</span>}
         </>
       );
     }
     return (
       <div className="flex flex-col gap-1">
         <Badge variant="error">Invalid</Badge>
-        {error && <span className="text-sm text-red-500">{error}</span>}
+        {error && <span className="text-sm text-error-500">{error}</span>}
       </div>
     );
   };

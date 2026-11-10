@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import Card from "./Card";
+import { Card } from "@/shared/tailgrids/core/card";
+import { Badge } from "@/shared/tailgrids/core/badge";
 import Select from "./Select";
-import Badge from "./Badge";
+import Icon from "@/shared/components/Icon";
 
 const NONE_PROXY_POOL_VALUE = "__none__";
 const STRATEGIES = [
@@ -78,15 +79,17 @@ export default function NoAuthProxyCard({ providerId }) {
 
   return (
     <Card>
-      <div className="flex items-center gap-3 mb-4">
-        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-green-500/10 text-green-500">
-          <span className="material-symbols-outlined text-[20px]">lock_open</span>
+      <div className="mb-4 flex items-center gap-3">
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-500/10 text-success-500">
+          <Icon name="lock_open" className="size-5" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium">No authentication required</p>
-          <p className="text-xs text-text-muted">This provider is ready to use. Optionally route requests through a proxy pool to bypass IP-based limits.</p>
+          <p className="text-sm font-semibold text-text-primary">No authentication required</p>
+          <p className="text-xs text-text-secondary">This provider is ready to use. Optionally route requests through a proxy pool to bypass IP-based limits.</p>
         </div>
-        {savedFlash && <Badge variant="success" size="sm">Saved</Badge>}
+        {savedFlash && (
+          <Badge color="success" size="sm">Saved</Badge>
+        )}
       </div>
 
       <Select
@@ -101,7 +104,7 @@ export default function NoAuthProxyCard({ providerId }) {
         hint={isRotation ? "Pool selector is ignored when rotation is active — all active pools are used." : undefined}
       />
 
-      <div className="flex flex-col gap-2 mt-4">
+      <div className="mt-4 flex flex-col gap-2">
         <Select
           label="Rotation Strategy"
           value={rotateStrategy}
@@ -114,7 +117,7 @@ export default function NoAuthProxyCard({ providerId }) {
           }))}
           buttonClassName="w-full"
         />
-        <p className="text-xs text-text-muted">
+        <p className="text-xs text-text-secondary">
           {!canRotate
             ? `Need at least 2 active proxy pools for rotation.`
             : isRotation

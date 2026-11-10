@@ -9,6 +9,7 @@ import {
 } from "../services/auth.js";
 import { handleAntigravityQuotaError, clearAntigravityStrikes } from "../services/antigravityQuota.js";
 import { getSettings } from "@/lib/localDb";
+import { saveRequestFailure } from "@/lib/usageDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
@@ -34,6 +35,31 @@ import { notifyDiscordError } from "../services/discordWebhook.js";
  * Format detection and translation handled by translator
  */
 export async function handleChat(request, clientRawRequest = null) {
+  const started = Date.now();
+  let response;
+  try {
+    response = await handleChatInternal(request, clientRawRequest);
+  } catch (err) {
+    saveRequestFailure({
+      endpoint: clientRawRequest?.endpoint || new URL(request.url).pathname,
+      status: "error",
+      latencyMs: Date.now() - started,
+    }).catch(() => {});
+    throw err;
+  }
+  // Failures never reach saveUsageStats (which only runs on token usage), so
+  // they are recorded here to make the success rate real.
+  if (response?.status >= 400) {
+    saveRequestFailure({
+      endpoint: clientRawRequest?.endpoint || new URL(request.url).pathname,
+      status: "error",
+      latencyMs: Date.now() - started,
+    }).catch(() => {});
+  }
+  return response;
+}
+
+async function handleChatInternal(request, clientRawRequest = null) {
   let body;
   try {
     body = await request.json();

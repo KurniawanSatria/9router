@@ -5,30 +5,29 @@ import PropTypes from "prop-types";
 import { Button } from "@/shared/components";
 import ModelIcon from "@/shared/components/ModelIcon";
 import { getProviderCustomModelRows } from "@/shared/utils/providerCustomModels";
+import Icon from "@/shared/components/Icon";
 function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
   const borderColor = testStatus === "ok"
-    ? "border-green-500/40"
+    ? "border-success-500/40"
     : testStatus === "error"
-    ? "border-red-500/40"
-    : "border-border";
+    ? "border-error-500/40"
+    : "border-card-border";
 
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border ${borderColor} hover:bg-sidebar/50`}>
+    <div className={`flex items-center gap-3 p-3 rounded-lg border ${borderColor} hover:bg-background-gray-primary`}>
       <ModelIcon modelId={modelId || fullModel} testStatus={testStatus} size={16} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{modelId}</p>
+        <p className="text-sm font-medium text-text-primary truncate">{modelId}</p>
         <div className="flex items-center gap-1 mt-1">
-          <code className="text-xs text-text-muted font-mono bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
+          <code className="text-xs text-text-secondary font-mono bg-background-soft-50 px-1.5 py-0.5 rounded">{fullModel}</code>
           <div className="relative group/btn">
             <button
               onClick={() => onCopy(fullModel, `model-${modelId}`)}
-              className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary"
+              className="p-0.5 hover:bg-background-soft-50 rounded text-text-secondary hover:text-primary-500"
             >
-              <span className="material-symbols-outlined text-sm">
-                {copied === `model-${modelId}` ? "check" : "content_copy"}
-              </span>
+              <Icon name={copied === `model-${modelId}` ? "check" : "content_copy"} className="size-3.5" />
             </button>
-            <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-muted whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+            <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-secondary whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
               {copied === `model-${modelId}` ? "Copied!" : "Copy"}
             </span>
           </div>
@@ -38,13 +37,11 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
                 onClick={onTest}
                 disabled={isTesting}
                 aria-label="Test model"
-                className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary transition-colors"
+                className="p-0.5 hover:bg-background-soft-50 rounded text-text-secondary hover:text-primary-500 transition-colors"
               >
-                <span className="material-symbols-outlined text-sm" style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}>
-                  {isTesting ? "progress_activity" : "science"}
-                </span>
+                <Icon name={isTesting ? "progress_activity" : "science"} className="size-3.5" style={isTesting ? { animation: "spin 1s linear infinite" } : undefined} />
               </button>
-              <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-muted whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+              <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-secondary whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
                 {isTesting ? "Testing..." : "Test"}
               </span>
             </div>
@@ -53,10 +50,10 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
       </div>
       <button
         onClick={onDeleteAlias}
-        className="p-1 hover:bg-red-50 rounded text-red-500"
+        className="p-1 hover:bg-error-500/10 rounded text-error-500"
         title="Remove model"
       >
-        <span className="material-symbols-outlined text-sm">delete</span>
+        <Icon name="delete" className="size-3.5" />
       </button>
     </div>
   );
@@ -153,13 +150,13 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-text-muted">
+      <p className="text-sm text-text-secondary">
         Add {isAnthropic ? "Anthropic" : "OpenAI"}-compatible models manually or import them from the /models endpoint.
       </p>
 
       <div className="flex items-end gap-2 flex-wrap">
         <div className="flex-1 min-w-[240px]">
-          <label htmlFor="new-compatible-model-input" className="text-xs text-text-muted mb-1 block">Model ID</label>
+          <label htmlFor="new-compatible-model-input" className="text-xs text-text-secondary mb-1 block">Model ID</label>
           <input
             id="new-compatible-model-input"
             type="text"
@@ -167,7 +164,7 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
             onChange={(e) => setNewModel(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder={isAnthropic ? "claude-3-opus-20240229" : "gpt-4o"}
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+            className="h-10 w-full rounded-lg border border-input-border bg-card-background px-3 text-sm text-text-primary outline-none placeholder:text-input-placeholder-text focus:border-primary-500"
           />
         </div>
         <Button size="sm" icon="add" onClick={handleAdd} disabled={!newModel.trim() || adding}>
@@ -179,7 +176,7 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
       </div>
 
       {!canImport && (
-        <p className="text-xs text-text-muted">
+        <p className="text-xs text-text-secondary">
           Add a connection to enable importing models.
         </p>
       )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Input } from "@/shared/components";
+import Icon from "@/shared/components/Icon";
 
 /**
  * iFlow Cookie Authentication Modal
@@ -57,30 +58,30 @@ export default function IFlowCookieModal({ isOpen, onSuccess, onClose }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="iFlow Cookie Authentication">
-      <div className="space-y-4">
+      <div className="space-y-5">
         {success ? (
           <div className="text-center py-8">
-            <span className="material-symbols-outlined mb-4 text-[56px] text-success">check_circle</span>
+            <Icon name="check_circle" className="mb-4 size-14 text-success-500" />
             <p className="text-lg font-medium text-text-primary">Authentication Successful!</p>
-            <p className="text-sm text-text-muted mt-2">Fresh API key obtained</p>
+            <p className="text-sm text-text-secondary mt-2">Fresh API key obtained</p>
           </div>
         ) : (
           <>
-            <div className="space-y-2">
-              <p className="text-sm text-text-muted">
+            <div className="space-y-3">
+              <p className="text-sm text-text-secondary">
                 To get a fresh API key, paste your browser cookie from{" "}
                 <a
                   href="https://platform.iflow.cn"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline"
+                  className="text-primary-500 hover:underline"
                 >
                   platform.iflow.cn
                 </a>
               </p>
-              <div className="bg-surface-secondary p-3 rounded-lg text-xs space-y-2">
+              <div className="rounded-xl border-[0.5px] border-card-border bg-background-soft-50 p-5 text-xs space-y-2">
                 <p className="font-medium text-text-primary">How to get cookie:</p>
-                <ol className="list-decimal list-inside space-y-1 text-text-muted">
+                <ol className="list-decimal list-inside space-y-1 text-text-secondary">
                   <li>Open platform.iflow.cn in your browser</li>
                   <li>Login to your account</li>
                   <li>Open DevTools (F12) → Application/Storage → Cookies</li>
@@ -98,15 +99,15 @@ export default function IFlowCookieModal({ isOpen, onSuccess, onClose }) {
                 value={cookie}
                 onChange={(e) => setCookie(e.target.value)}
                 placeholder="BXAuth=xxx; ..."
-                className="w-full px-3 py-2 bg-surface-secondary border border-border rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                className="w-full rounded-lg border border-input-border bg-card-background px-3 py-2 text-sm text-text-primary outline-none placeholder:text-input-placeholder-text focus:border-primary-500 resize-none"
                 rows={4}
                 disabled={loading}
               />
             </div>
 
             {error && (
-              <div className="p-3 bg-error/10 border border-error/20 rounded-lg">
-                <p className="text-sm text-error">{error}</p>
+              <div className="rounded-lg border border-error-500/20 bg-error-500/10 p-3">
+                <p className="text-sm text-error-500">{error}</p>
               </div>
             )}
 

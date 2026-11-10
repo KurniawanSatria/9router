@@ -7,6 +7,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Toggle, ModelSelectModal } from "@/shared/components";
+import Icon from "@/shared/components/Icon";
 
 export default function KeyAccessControls({ apiKey, onChange, onRequestRestrict }) {
   const access = apiKey.access || { restricted: false, allow: [] };
@@ -44,26 +45,26 @@ export default function KeyAccessControls({ apiKey, onChange, onRequestRestrict 
       {access.restricted && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {access.allow.length === 0 && (
-            <span className="text-xs text-orange-500">No combos or models allowed — this key can call nothing.</span>
+            <span className="text-xs text-warning-500">No combos or models allowed — this key can call nothing.</span>
           )}
           {access.allow.map((entry) => (
-            <span key={entry} className="flex items-center gap-1 rounded-xl border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs text-text-main">
+            <span key={entry} className="flex items-center gap-1 rounded-full border border-primary-500/30 bg-primary-500/10 px-2 py-0.5 font-mono text-xs text-text-primary">
               {entry}
               <button
                 onClick={() => remove(entry)}
-                className="rounded text-text-muted hover:text-red-500"
+                className="rounded text-text-tertiary hover:text-error-500"
                 title={`Remove ${entry}`}
                 aria-label={`Remove ${entry}`}
               >
-                <span className="material-symbols-outlined leading-none" style={{ fontSize: "12px" }}>close</span>
+                <Icon name="close" style={{ fontSize: "12px" }} />
               </button>
             </span>
           ))}
           <button
             onClick={openPicker}
-            className="flex items-center gap-0.5 rounded-xl border border-dashed border-black/10 px-2 py-0.5 text-xs font-medium text-primary hover:border-primary/50 dark:border-white/10"
+            className="flex items-center gap-0.5 rounded-full border border-dashed border-card-border px-2 py-0.5 text-xs font-medium text-primary-500 hover:border-primary-500/50"
           >
-            <span className="material-symbols-outlined leading-none" style={{ fontSize: "14px" }}>add</span>
+            <Icon name="add" style={{ fontSize: "14px" }} />
             Add combo or model
           </button>
         </div>

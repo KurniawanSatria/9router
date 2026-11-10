@@ -46,6 +46,7 @@ import AutoPingScheduleModal from "@/app/(dashboard)/dashboard/providers/[id]/Au
 import { getScheduleSlotLabels } from "@/shared/services/quotaPingSchedule";
 import { USAGE_SUPPORTED_PROVIDERS, AI_PROVIDERS } from "@/shared/constants/providers";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import Icon from "@/shared/components/Icon";
 
 // Maps the stored providerSpecificData.authMethod to a human label for Kiro.
 // Values come from the Kiro connect flows: builder-id/idc (device code),
@@ -855,15 +856,13 @@ export default function ProviderLimits() {
 
   if (!connectionsLoading && !hasEligibleConnections) {
     return (
-      <Card padding="lg">
+      <Card padding="none" className="rounded-xl border-[0.5px] border-card-border bg-card-background p-5">
         <div className="text-center py-12">
-          <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">
-            cloud_off
-          </span>
+          <Icon name="cloud_off" className="size-16 text-text-tertiary opacity-20 mx-auto" />
           <h3 className="mt-4 text-lg font-semibold text-text-primary">
             No Providers Connected
           </h3>
-          <p className="mt-2 text-sm text-text-muted max-w-md mx-auto">
+          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
             Connect to providers with OAuth to track your API quota limits and
             usage.
           </p>
@@ -874,15 +873,13 @@ export default function ProviderLimits() {
 
   if (!connectionsLoading && !hasVisibleConnections) {
     return (
-      <Card padding="lg">
+      <Card padding="none" className="rounded-xl border-[0.5px] border-card-border bg-card-background p-5">
         <div className="text-center py-12">
-          <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">
-            {emptyState.icon}
-          </span>
+          <Icon name={emptyState.icon} className="size-16 text-text-tertiary opacity-20 mx-auto" />
           <h3 className="mt-4 text-lg font-semibold text-text-primary">
             {emptyState.title}
           </h3>
-          <p className="mt-2 text-sm text-text-muted max-w-md mx-auto">
+          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
             {emptyState.description}
           </p>
         </div>
@@ -899,16 +896,14 @@ export default function ProviderLimits() {
             <button
               type="button"
               onClick={() => setProviderMenuOpen((prev) => !prev)}
-              className="flex h-8 items-center justify-between gap-1 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
+              className="flex h-8 items-center justify-between gap-1 rounded-lg border border-card-border bg-card-background px-2 text-xs text-text-primary transition-colors hover:bg-background-gray-primary"
               aria-haspopup="menu"
               aria-expanded={providerMenuOpen}
               title="Filter quota providers"
             >
               <span className="flex min-w-0 items-center gap-1.5">
                 {providerFilter === "all" ? (
-                  <span className="material-symbols-outlined text-[14px] text-text-muted">
-                    apps
-                  </span>
+                  <Icon name="apps" className="size-3.5 text-text-tertiary" />
                 ) : (
                   <ProviderIcon
                     src={`/providers/${providerFilter}.png`}
@@ -922,9 +917,7 @@ export default function ProviderLimits() {
                   {selectedProviderLabel}
                 </span>
               </span>
-              <span className="material-symbols-outlined text-[14px] text-text-muted">
-                expand_more
-              </span>
+              <Icon name="expand_more" className="size-3.5 text-text-tertiary" />
             </button>
 
             {providerMenuOpen && (
@@ -935,7 +928,7 @@ export default function ProviderLimits() {
                   aria-label="Close provider filter"
                   onClick={() => setProviderMenuOpen(false)}
                 />
-                <div className="absolute left-0 z-40 mt-2 w-64 overflow-hidden rounded-2xl border border-black/10 bg-surface/95 p-1.5 shadow-xl shadow-black/10 backdrop-blur dark:border-white/10 dark:bg-surface/95 sm:w-72">
+                <div className="absolute left-0 z-40 mt-2 w-64 overflow-hidden rounded-xl border border-card-border bg-card-background p-1.5 shadow-xl shadow-black/10 backdrop-blur sm:w-72">
                   <button
                     type="button"
                     onClick={() => {
@@ -945,19 +938,15 @@ export default function ProviderLimits() {
                       setProviderFilter("all");
                       setProviderMenuOpen(false);
                     }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === "all" ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === "all" ? "bg-primary-500/10 text-primary-500" : "text-text-primary hover:bg-background-gray-primary"}`}
                   >
-                    <span className="material-symbols-outlined text-[22px]">
-                      apps
-                    </span>
+                    <Icon name="apps" className="size-[22px]" />
                     <span className="font-medium">All providers</span>
                     {providerFilter === "all" && (
-                      <span className="material-symbols-outlined ml-auto text-[20px]">
-                        check
-                      </span>
+                      <Icon name="check" className="ml-auto size-5" />
                     )}
                   </button>
-                  <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
+                  <div className="my-1 h-px bg-card-border" />
                   <div className="max-h-72 overflow-y-auto pr-1">
                     {providerOptions.map((provider) => (
                       <button
@@ -970,7 +959,7 @@ export default function ProviderLimits() {
                           setProviderFilter(provider);
                           setProviderMenuOpen(false);
                         }}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === provider ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === provider ? "bg-primary-500/10 text-primary-500" : "text-text-primary hover:bg-background-gray-primary"}`}
                       >
                         <ProviderIcon
                           src={`/providers/${provider}.png`}
@@ -983,9 +972,7 @@ export default function ProviderLimits() {
                           {providerLabel(provider)}
                         </span>
                         {providerFilter === provider && (
-                          <span className="material-symbols-outlined ml-auto text-[20px]">
-                            check
-                          </span>
+                          <Icon name="check" className="ml-auto size-5" />
                         )}
                       </button>
                     ))}
@@ -1025,12 +1012,10 @@ export default function ProviderLimits() {
             type="button"
             onClick={() => setExpiringFirst((prev) => !prev)}
             aria-pressed={expiringFirst}
-            className={`flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2 text-xs transition-colors ${expiringFirst ? "border-amber-500/40 bg-amber-500/10 text-amber-500" : "border-black/10 text-text-primary hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"}`}
+            className={`flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2 text-xs transition-colors ${expiringFirst ? "border-warning-500/40 bg-warning-500/10 text-warning-500" : "border-card-border text-text-primary hover:bg-background-gray-primary"}`}
             title="Sort accounts by earliest quota reset time"
           >
-            <span className="material-symbols-outlined text-[14px]">
-              hourglass_top
-            </span>
+            <Icon name="hourglass_top" className="size-3.5" />
             <span className="hidden sm:inline">Expiring first</span>
           </button>
 
@@ -1039,10 +1024,10 @@ export default function ProviderLimits() {
             type="button"
             onClick={handleDisableDepleted}
             disabled={bulkToggling}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-red-500/30 px-2 text-xs text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-error-500/30 px-2 text-xs text-error-500 transition-colors hover:bg-error-500/10 disabled:opacity-50"
             title="Disable connections with depleted quota on the current page"
           >
-            <span className="material-symbols-outlined text-[14px]">block</span>
+            <Icon name="block" className="size-3.5" />
             <span className="hidden sm:inline">Turn off Empty</span>
           </button>
 
@@ -1051,33 +1036,27 @@ export default function ProviderLimits() {
             type="button"
             onClick={handleEnableAvailable}
             disabled={bulkToggling}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-500/30 px-2 text-xs text-emerald-500 transition-colors hover:bg-emerald-500/10 disabled:opacity-50"
+            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-success-500/30 px-2 text-xs text-success-500 transition-colors hover:bg-success-500/10 disabled:opacity-50"
             title="Enable connections that still have quota on the current page"
           >
-            <span className="material-symbols-outlined text-[14px]">
-              check_circle
-            </span>
+            <Icon name="check_circle" className="size-3.5" />
             <span className="hidden sm:inline">Turn on Available</span>
           </button>
 
           {/* Auto-refresh toggle */}
           <button
             onClick={() => setAutoRefresh((prev) => !prev)}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-black/10 px-2 text-xs transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-card-border px-2 text-xs transition-colors hover:bg-background-gray-primary"
             title={autoRefresh ? "Disable auto-refresh" : "Enable auto-refresh"}
           >
-            <span
-              className={`material-symbols-outlined text-[14px] ${
-                autoRefresh ? "text-primary" : "text-text-muted"
-              }`}
-            >
-              {autoRefresh ? "toggle_on" : "toggle_off"}
-            </span>
+            <Icon name={autoRefresh ? "toggle_on" : "toggle_off"} className={` size-3.5 ${
+                autoRefresh ? "text-primary-500" : "text-text-tertiary"
+              }`} />
             <span className="hidden text-text-primary sm:inline">
               Auto-refresh
             </span>
             {autoRefresh && (
-              <span className="text-[10px] text-text-muted tabular-nums">
+              <span className="text-[10px] text-text-tertiary tabular-nums">
                 ({countdown}s)
               </span>
             )}
@@ -1089,27 +1068,23 @@ export default function ProviderLimits() {
             type="button"
             onClick={() => refreshAll(true)}
             disabled={refreshingAll}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-black/10 px-2 text-xs text-text-primary transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5 disabled:opacity-50"
+            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-card-border px-2 text-xs text-text-primary transition-colors hover:bg-background-gray-primary disabled:opacity-50"
             title="Refresh all"
           >
-            <span
-              className={`material-symbols-outlined text-[14px] ${refreshingAll ? "animate-spin" : ""}`}
-            >
-              refresh
-            </span>
+            <Icon name="refresh" className={` size-3.5 ${refreshingAll ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* Provider cards: 2 columns, compact */}
       {expiringFirst && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+        <div className="rounded-xl border border-warning-500/20 bg-warning-500/10 px-3 py-2 text-xs text-warning-500">
           Expiring-first currently reorders accounts inside the current page.
           Cross-page ordering still follows backend pagination.
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         {sortedConnections.map((conn) => {
           const quota = quotaData[conn.id];
           const isLoading = loading[conn.id];
@@ -1131,9 +1106,9 @@ export default function ProviderLimits() {
             <Card
               key={conn.id}
               padding="none"
-              className={`min-w-0 ${isInactive ? "opacity-60" : ""}`}
+              className={`min-w-0 rounded-xl border-[0.5px] border-card-border bg-card-background ${isInactive ? "opacity-60" : ""}`}
             >
-              <div className="px-3 py-2 border-b border-black/10 dark:border-white/10">
+              <div className="px-3 py-2 border-b border-card-border">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-8 h-8 shrink-0 rounded-md flex items-center justify-center overflow-hidden">
@@ -1152,34 +1127,34 @@ export default function ProviderLimits() {
                         {providerLabel(conn.provider)}
                       </h3>
                       {getConnectionLabel(conn) ? (
-                        <p className="text-xs text-text-muted truncate">
+                        <p className="text-xs text-text-secondary truncate">
                           {getConnectionLabel(conn)}
                         </p>
                       ) : null}
                       {getConnectionSecondaryLabel(conn) ? (
-                        <p className="text-[11px] text-text-muted/80 truncate">
+                        <p className="text-[11px] text-text-tertiary truncate">
                           {getConnectionSecondaryLabel(conn)}
                         </p>
                       ) : null}
                       {conn.provider === "kiro" && (
                         <div className="mt-1 flex flex-wrap items-center gap-1">
-                          <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-[10px] font-semibold text-brand-600 dark:text-brand-300">
+                          <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-500">
                             {kiroMethodLabel(conn)}
                           </span>
                           {kiroRegion(conn) && (
-                            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                            <span className="rounded-full bg-info-500/10 px-2 py-0.5 text-[10px] font-semibold text-info-500">
                               {kiroRegion(conn)}
                             </span>
                           )}
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                               isInactive
-                                ? "bg-surface-2 text-text-muted"
+                                ? "bg-background-gray-primary text-text-tertiary"
                                 : conn.testStatus === "active" || conn.testStatus === "success"
-                                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                  ? "bg-success-500/10 text-success-500"
                                   : conn.testStatus === "error" || conn.testStatus === "expired" || conn.testStatus === "unavailable"
-                                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                                    : "bg-surface-2 text-text-muted"
+                                    ? "bg-error-500/10 text-error-500"
+                                    : "bg-background-gray-primary text-text-tertiary"
                             }`}
                           >
                             {isInactive ? "disabled" : conn.testStatus || "unknown"}
@@ -1189,11 +1164,9 @@ export default function ProviderLimits() {
                               type="button"
                               onClick={() => copy(conn.providerSpecificData.profileArn, conn.id)}
                               title={conn.providerSpecificData.profileArn}
-                              className="inline-flex max-w-full items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-[10px] text-text-muted transition-colors hover:text-primary"
+                              className="inline-flex max-w-full items-center gap-1 rounded-full border border-card-border px-2 py-0.5 text-[10px] text-text-tertiary transition-colors hover:text-primary-500"
                             >
-                              <span className="material-symbols-outlined text-[12px]">
-                                {copied === conn.id ? "check" : "content_copy"}
-                              </span>
+                              <Icon name={copied === conn.id ? "check" : "content_copy"} className="size-3" />
                               <code className="truncate font-mono">
                                 {conn.providerSpecificData.profileArn}
                               </code>
@@ -1225,15 +1198,13 @@ export default function ProviderLimits() {
                                 ? `Use one ${resetLabel}. ${resetCreditCount} available.`
                                 : `No ${resetLabel}s available`
                             }
-                            className={`flex h-8 min-w-10 items-center justify-center gap-1 rounded-lg border px-2 text-[11px] font-medium tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 disabled:cursor-not-allowed disabled:opacity-60 ${
+                            className={`flex h-8 min-w-10 items-center justify-center gap-1 rounded-lg border px-2 text-[11px] font-medium tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500/60 disabled:cursor-not-allowed disabled:opacity-60 ${
                               resetCreditCount > 0
-                                ? "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
-                                : "border-black/10 bg-black/[0.02] text-text-muted dark:border-white/10 dark:bg-white/[0.03]"
+                                ? "border-primary-500/30 bg-primary-500/10 text-primary-500 hover:bg-primary-500/20"
+                                : "border-card-border bg-background-gray-primary text-text-tertiary"
                             }`}
                           >
-                            <span className={`material-symbols-outlined text-[15px] ${isResettingLimit ? "animate-spin" : ""}`}>
-                              {isResettingLimit ? "progress_activity" : "restart_alt"}
-                            </span>
+                            <Icon name={isResettingLimit ? "progress_activity" : "restart_alt"} className={` size-[15px] ${isResettingLimit ? "animate-spin" : ""}`} />
                             <span>{resetCreditCount}</span>
                           </button>
                         </Tooltip>
@@ -1243,9 +1214,9 @@ export default function ProviderLimits() {
                             onClick={() => (isCodex ? handleViewCodexResetCredits(conn) : handleViewClaudeResets(conn, claudeReset))}
                             disabled={isLoading || rowBusy}
                             aria-label={isCodex ? "View Codex reset credit expiry" : "View Claude Code reset expiry"}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-text-muted transition-colors hover:bg-black/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/5"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-card-border text-text-tertiary transition-colors hover:bg-background-gray-primary hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <span className="material-symbols-outlined text-[17px]">schedule</span>
+                            <Icon name="schedule" className="size-[17px]" />
                           </button>
                         </Tooltip>
                       </>
@@ -1275,9 +1246,9 @@ export default function ProviderLimits() {
                             type="button"
                             onClick={() => setScheduleConnection(conn)}
                             aria-label="Configure auto-ping"
-                            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${isActive ? "text-primary" : "text-text-muted"}`}
+                            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-background-gray-primary ${isActive ? "text-primary-500" : "text-text-tertiary"}`}
                           >
-                            <span className="material-symbols-outlined text-[18px]">bolt</span>
+                            <Icon name="bolt" className="size-4.5" />
                           </button>
                         </Tooltip>
                       );
@@ -1288,13 +1259,9 @@ export default function ProviderLimits() {
                         onClick={() => refreshProvider(conn.id, conn.provider)}
                         disabled={isLoading || rowBusy}
                         aria-label="Refresh quota"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-background-gray-primary transition-colors disabled:opacity-50"
                       >
-                        <span
-                          className={`material-symbols-outlined text-[18px] text-text-muted ${isLoading ? "animate-spin" : ""}`}
-                        >
-                          refresh
-                        </span>
+                        <Icon name="refresh" className={` size-4.5 text-text-tertiary ${isLoading ? "animate-spin" : ""}`} />
                       </button>
                     </Tooltip>
                     <Tooltip text="Edit connection">
@@ -1306,11 +1273,9 @@ export default function ProviderLimits() {
                         }}
                         disabled={rowBusy}
                         aria-label="Edit connection"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-background-gray-primary text-text-tertiary hover:text-primary-500 transition-colors disabled:opacity-50"
                       >
-                        <span className="material-symbols-outlined text-[18px]">
-                          edit
-                        </span>
+                        <Icon name="edit" className="size-4.5" />
                       </button>
                     </Tooltip>
                     <Tooltip text="Delete connection">
@@ -1319,13 +1284,9 @@ export default function ProviderLimits() {
                         onClick={() => handleDeleteConnection(conn.id)}
                         disabled={rowBusy}
                         aria-label="Delete connection"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-red-500/10 text-red-500 transition-colors disabled:opacity-50"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-error-500/10 text-error-500 transition-colors disabled:opacity-50"
                       >
-                        <span
-                          className={`material-symbols-outlined text-[18px] ${deletingId === conn.id ? "animate-pulse" : ""}`}
-                        >
-                          delete
-                        </span>
+                        <Icon name="delete" className={` size-4.5 ${deletingId === conn.id ? "animate-pulse" : ""}`} />
                       </button>
                     </Tooltip>
                     <div
@@ -1351,20 +1312,16 @@ export default function ProviderLimits() {
 
               <div className="px-2 py-1.5">
                 {isLoading ? (
-                  <div className="text-center py-5 text-text-muted">
-                    <span className="material-symbols-outlined text-[28px] animate-spin">
-                      progress_activity
-                    </span>
+                  <div className="text-center py-5 text-text-tertiary">
+                    <Icon name="progress_activity" className="size-7 animate-spin" />
                   </div>
                 ) : error ? (
                   <div className="text-center py-5">
-                    <span className="material-symbols-outlined text-[28px] text-red-500">
-                      error
-                    </span>
-                    <p className="mt-1.5 text-xs text-text-muted">{error}</p>
+                    <Icon name="error" className="size-7 text-error-500" />
+                    <p className="mt-1.5 text-xs text-text-tertiary">{error}</p>
                   </div>
                 ) : quota?.message && visibleQuotas.length === 0 ? (
-                  <p className="px-1 py-2 text-[11px] leading-relaxed text-text-muted">
+                  <p className="px-1 py-2 text-[11px] leading-relaxed text-text-tertiary">
                     {quota.message}
                   </p>
                 ) : (
@@ -1379,15 +1336,13 @@ export default function ProviderLimits() {
                   />
                 )}
                 {quota?.message && visibleQuotas.length > 0 && !error && !isLoading && (
-                  <p className="mt-2 px-1 text-[10px] leading-relaxed text-text-muted">
+                  <p className="mt-2 px-1 text-[10px] leading-relaxed text-text-tertiary">
                     {quota.message}
                   </p>
                 )}
                 {hiddenQuotaRows.length > 0 && (
-                  <div className="mt-2 flex min-w-0 items-center gap-1 border-t border-black/5 pt-2 text-[10px] text-text-muted dark:border-white/5">
-                    <span className="material-symbols-outlined shrink-0 text-[14px]">
-                      visibility_off
-                    </span>
+                  <div className="mt-2 flex min-w-0 items-center gap-1 border-t border-card-border pt-2 text-[10px] text-text-tertiary">
+                    <Icon name="visibility_off" className="shrink-0 size-3.5" />
                     <span className="shrink-0">Hidden:</span>
                     <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap pb-2">
                       {hiddenQuotaRows.map((quotaRow) => (
@@ -1395,7 +1350,7 @@ export default function ProviderLimits() {
                           key={getQuotaVisibilityKey(quotaRow)}
                           type="button"
                           onClick={() => handleShowQuota(conn.provider, quotaRow)}
-                          className="shrink-0 rounded-md border border-black/10 px-1.5 py-0.5 transition-colors hover:bg-black/5 hover:text-text-primary dark:border-white/10 dark:hover:bg-white/5"
+                          className="shrink-0 rounded-md border border-card-border px-1.5 py-0.5 transition-colors hover:bg-background-gray-primary hover:text-text-primary"
                           title="Show this quota row"
                         >
                           {quotaRow.name}
@@ -1410,9 +1365,9 @@ export default function ProviderLimits() {
         })}
       </div>
 
-      <div className="rounded-xl border border-black/10 bg-black/[0.02] px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="rounded-xl border border-card-border bg-background-gray-primary px-3 py-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs text-text-muted">{connectionsPageSummary}</span>
+            <span className="text-xs text-text-tertiary">{connectionsPageSummary}</span>
             <div className="flex flex-wrap items-center gap-2">
               <Select
                 size="sm"
@@ -1467,11 +1422,11 @@ export default function ProviderLimits() {
                   setPageSize(nextPageSize);
                   setCustomPageSizeInput(String(nextPageSize));
                 }}
-                className="h-8 w-20 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary outline-none transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
+                className="h-8 w-20 rounded-lg border border-card-border bg-card-background px-2 text-xs text-text-primary outline-none transition-colors hover:bg-background-gray-primary focus:border-primary-500"
                 aria-label="Custom accounts per page"
                 placeholder="Custom"
               />
-              <span className="text-xs text-text-muted">Page {pagination.page} / {pagination.totalPages}</span>
+              <span className="text-xs text-text-tertiary">Page {pagination.page} / {pagination.totalPages}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -1480,7 +1435,7 @@ export default function ProviderLimits() {
                 disabled={
                   pagination.page <= 1 || connectionsLoading || refreshingAll
                 }
-                className="flex h-8 items-center rounded-lg border border-black/10 px-3 text-xs text-text-primary transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:hover:bg-white/5"
+                className="flex h-8 items-center rounded-lg border border-card-border bg-card-background px-3 text-xs text-text-primary transition-colors hover:bg-background-gray-primary disabled:cursor-not-allowed disabled:opacity-40"
               >
                 First Page
               </button>
@@ -1492,12 +1447,10 @@ export default function ProviderLimits() {
                 disabled={
                   pagination.page <= 1 || connectionsLoading || refreshingAll
                 }
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-text-primary transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:hover:bg-white/5"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-card-border bg-card-background text-text-primary transition-colors hover:bg-background-gray-primary disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Previous accounts page"
               >
-                <span className="material-symbols-outlined text-[16px]">
-                  chevron_left
-                </span>
+                <Icon name="chevron_left" className="size-4" />
               </button>
               <button
                 type="button"
@@ -1511,12 +1464,10 @@ export default function ProviderLimits() {
                   connectionsLoading ||
                   refreshingAll
                 }
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-text-primary transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:hover:bg-white/5"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-card-border bg-card-background text-text-primary transition-colors hover:bg-background-gray-primary disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Next accounts page"
               >
-                <span className="material-symbols-outlined text-[16px]">
-                  chevron_right
-                </span>
+                <Icon name="chevron_right" className="size-4" />
               </button>
               <button
                 type="button"
@@ -1526,7 +1477,7 @@ export default function ProviderLimits() {
                   connectionsLoading ||
                   refreshingAll
                 }
-                className="flex h-8 items-center rounded-lg border border-black/10 px-3 text-xs text-text-primary transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:hover:bg-white/5"
+                className="flex h-8 items-center rounded-lg border border-card-border bg-card-background px-3 text-xs text-text-primary transition-colors hover:bg-background-gray-primary disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Last Page
               </button>
@@ -1557,66 +1508,66 @@ export default function ProviderLimits() {
 
       {resetCreditsState && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-black/15 bg-white shadow-2xl ring-1 ring-black/10 dark:border-white/15 dark:bg-neutral-950 dark:ring-white/10">
-            <div className="flex items-start justify-between gap-3 border-b border-black/10 bg-black/[0.03] px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="w-full max-w-2xl overflow-hidden rounded-xl border border-card-border bg-card-background shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-card-border bg-background-gray-primary px-4 py-3">
               <div className="min-w-0">
                 <h3 className="text-base font-semibold text-text-primary">
                   {resetCreditsState.data?.kind === "claude" ? "Claude Code Limit Resets" : "Codex Reset Credit Expiry"}
                 </h3>
-                <p className="mt-0.5 truncate text-xs text-text-muted">
+                <p className="mt-0.5 truncate text-xs text-text-secondary">
                   {getConnectionLabel(resetCreditsState.connection) || (resetCreditsState.data?.kind === "claude" ? "Claude account" : "Codex account")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setResetCreditsState(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-black/5 hover:text-text-primary dark:hover:bg-white/5"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-background-soft-50 hover:text-text-primary"
                 aria-label="Close reset credit expiry modal"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <Icon name="close" className="size-4.5" />
               </button>
             </div>
 
-            <div className="max-h-[70vh] overflow-auto bg-white p-4 dark:bg-neutral-950">
+            <div className="max-h-[70vh] overflow-auto bg-card-background p-4">
               {resetCreditsState.loading ? (
-                <div className="flex items-center justify-center gap-2 py-10 text-sm text-text-muted">
-                  <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+                <div className="flex items-center justify-center gap-2 py-10 text-sm text-text-tertiary">
+                  <Icon name="progress_activity" className="animate-spin size-5" />
                   Loading reset credits...
                 </div>
               ) : resetCreditsState.error ? (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">
+                <div className="rounded-xl border border-error-500/20 bg-error-500/10 px-3 py-2 text-sm text-error-500">
                   {resetCreditsState.error}
                 </div>
               ) : resetCreditsState.data?.kind === "claude" && resetCreditsState.data.grants?.length ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-xl border border-black/10 bg-black/[0.02] px-3 py-2 text-xs text-text-muted dark:border-white/10 dark:bg-white/[0.03]">
+                  <div className="flex items-center justify-between rounded-xl border border-card-border bg-background-gray-primary px-3 py-2 text-xs text-text-tertiary">
                     <span>{resetCreditsState.data.availableCount ?? 0} reset{resetCreditsState.data.availableCount === 1 ? "" : "s"} left</span>
                     <span>Weekly reset day: {formatCreditDate(resetCreditsState.data.weeklyResetsAt)}</span>
                   </div>
-                  <div className="overflow-x-auto rounded-xl border border-black/10 dark:border-white/10">
+                  <div className="overflow-x-auto rounded-xl border border-card-border">
                     <table className="w-full min-w-[560px] text-left text-sm">
-                      <thead className="bg-black/[0.03] text-xs uppercase tracking-wide text-text-muted dark:bg-white/[0.04]">
+                      <thead className="bg-background-gray-primary text-xs uppercase tracking-wide text-text-tertiary">
                         <tr>
-                          <th className="px-3 py-2 font-medium">Reset</th>
-                          <th className="px-3 py-2 font-medium">Left</th>
-                          <th className="px-3 py-2 font-medium">Refills</th>
-                          <th className="px-3 py-2 font-medium">Use By</th>
-                          <th className="px-3 py-2 font-medium">Remaining</th>
+                          <th className="px-4 py-3 font-medium">Reset</th>
+                          <th className="px-4 py-3 font-medium">Left</th>
+                          <th className="px-4 py-3 font-medium">Refills</th>
+                          <th className="px-4 py-3 font-medium">Use By</th>
+                          <th className="px-4 py-3 font-medium">Remaining</th>
                         </tr>
                       </thead>
                       <tbody>
                         {(resetCreditsState.data.grants || []).map((grant) => (
-                          <tr key={grant.id} className="border-t border-black/5 dark:border-white/5">
-                            <td className="px-3 py-2">
+                          <tr key={grant.id} className="border-t border-card-border last:border-t-0">
+                            <td className="px-4 py-3">
                               <div className="text-text-primary">{grant.label || grant.id}</div>
-                              <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                              <span className="mt-1 inline-block rounded-full bg-primary-500/10 px-2 py-0.5 text-xs font-medium text-primary-500">
                                 {claudeGrantStatus(grant)}
                               </span>
                             </td>
-                            <td className="whitespace-nowrap px-3 py-2 font-medium tabular-nums text-text-primary">{grant.resetsLeft} / {grant.resetsTotal}</td>
-                            <td className="px-3 py-2 text-text-muted">{formatClaudeResetClears(grant.clears)}</td>
-                            <td className="px-3 py-2 text-text-primary">{formatCreditDate(grant.endsAt)}</td>
-                            <td className="whitespace-nowrap px-3 py-2 font-medium text-text-primary">{formatTimeRemaining(grant.endsAt)}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-medium tabular-nums text-text-primary">{grant.resetsLeft} / {grant.resetsTotal}</td>
+                            <td className="px-4 py-3 text-text-tertiary">{formatClaudeResetClears(grant.clears)}</td>
+                            <td className="px-4 py-3 text-text-primary">{formatCreditDate(grant.endsAt)}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-medium text-text-primary">{formatTimeRemaining(grant.endsAt)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1625,31 +1576,31 @@ export default function ProviderLimits() {
                 </div>
               ) : resetCreditsState.data?.credits?.length ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-xl border border-black/10 bg-black/[0.02] px-3 py-2 text-xs text-text-muted dark:border-white/10 dark:bg-white/[0.03]">
+                  <div className="flex items-center justify-between rounded-xl border border-card-border bg-background-gray-primary px-3 py-2 text-xs text-text-tertiary">
                     <span>{resetCreditsState.data.credits.length} reset credit{resetCreditsState.data.credits.length === 1 ? "" : "s"}</span>
                     <span>{resetCreditsState.data.availableCount ?? 0} available</span>
                   </div>
-                  <div className="overflow-x-auto rounded-xl border border-black/10 dark:border-white/10">
+                  <div className="overflow-x-auto rounded-xl border border-card-border">
                     <table className="w-full min-w-[560px] text-left text-sm">
-                      <thead className="bg-black/[0.03] text-xs uppercase tracking-wide text-text-muted dark:bg-white/[0.04]">
+                      <thead className="bg-background-gray-primary text-xs uppercase tracking-wide text-text-tertiary">
                         <tr>
-                          <th className="px-3 py-2 font-medium">Status</th>
-                          <th className="px-3 py-2 font-medium">Granted At</th>
-                          <th className="px-3 py-2 font-medium">Expires At</th>
-                          <th className="px-3 py-2 font-medium">Remaining</th>
+                          <th className="px-4 py-3 font-medium">Status</th>
+                          <th className="px-4 py-3 font-medium">Granted At</th>
+                          <th className="px-4 py-3 font-medium">Expires At</th>
+                          <th className="px-4 py-3 font-medium">Remaining</th>
                         </tr>
                       </thead>
                       <tbody>
                         {resetCreditsState.data.credits.map((credit, index) => (
-                          <tr key={`${credit.status}-${credit.expiresAt || index}`} className="border-t border-black/5 dark:border-white/5">
-                            <td className="px-3 py-2">
-                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                          <tr key={`${credit.status}-${credit.expiresAt || index}`} className="border-t border-card-border last:border-t-0">
+                            <td className="px-4 py-3">
+                              <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-xs font-medium text-primary-500">
                                 {credit.status || "unknown"}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-text-muted">{formatCreditDate(credit.grantedAt)}</td>
-                            <td className="px-3 py-2 text-text-primary">{formatCreditDate(credit.expiresAt)}</td>
-                            <td className="px-3 py-2 font-medium text-text-primary">{formatTimeRemaining(credit.expiresAt)}</td>
+                            <td className="px-4 py-3 text-text-tertiary">{formatCreditDate(credit.grantedAt)}</td>
+                            <td className="px-4 py-3 text-text-primary">{formatCreditDate(credit.expiresAt)}</td>
+                            <td className="px-4 py-3 font-medium text-text-primary">{formatTimeRemaining(credit.expiresAt)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1657,7 +1608,7 @@ export default function ProviderLimits() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl border border-black/10 bg-black/[0.02] px-3 py-8 text-center text-sm text-text-muted dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="rounded-xl border border-card-border bg-background-gray-primary px-3 py-8 text-center text-sm text-text-tertiary">
                   {resetCreditsState.data?.kind === "claude" ? "No limit resets available for this account." : "No reset credit details returned for this account."}
                 </div>
               )}

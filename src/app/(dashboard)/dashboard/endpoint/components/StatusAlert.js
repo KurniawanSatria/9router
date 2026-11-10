@@ -1,5 +1,13 @@
 "use client";
 
+import { cnx } from "@/shared/utils/cn";
+
+const STATUS_TONES = {
+  success: "bg-success-500/10 text-success-500",
+  warning: "bg-warning-500/10 text-warning-500",
+  info: "bg-info-500/10 text-info-500",
+};
+
 /** Reusable status alert */
 export default function StatusAlert({ status, className = "" }) {
   const renderMessage = (msg) => {
@@ -12,11 +20,11 @@ export default function StatusAlert({ status, className = "" }) {
   };
 
   return (
-    <div className={`p-2 rounded text-sm ${className} ${status.type === "success" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
-        status.type === "warning" ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400" :
-        status.type === "info" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
-          "bg-red-500/10 text-red-600 dark:text-red-400"
-      }`}>
+    <div className={cnx(
+      "rounded-lg px-3 py-2 text-sm",
+      STATUS_TONES[status.type] || "bg-error-500/10 text-error-500",
+      className
+    )}>
       {renderMessage(status.message)}
     </div>
   );

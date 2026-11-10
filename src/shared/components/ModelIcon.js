@@ -2,6 +2,7 @@
 
 import PropTypes from "prop-types";
 import { getBrandIconUrl, resolveModelBrand } from "@/shared/utils/modelBrand";
+import Icon from "@/shared/components/Icon";
 
 const BRAND_LABELS = {
   anthropic: "Anthropic",
@@ -14,7 +15,7 @@ const BRAND_LABELS = {
   mistral: "Mistral",
   minimax: "MiniMax",
   stepfun: "StepFun",
-  "xiaomi-mimo": "Xiaomi MiMo",
+  xiaomi: "Xiaomi",
   "alibaba-cloud": "Alibaba Qwen",
   meta: "Meta Llama",
   nvidia: "NVIDIA",
@@ -52,13 +53,7 @@ export default function ModelIcon({ modelId, testStatus, size = 16, className = 
 
   if (testStatus === "ok" || testStatus === "error") {
     return (
-      <span
-        className={`material-symbols-outlined shrink-0 ${className}`}
-        style={{ color: statusColor, fontSize: size }}
-        aria-hidden="true"
-      >
-        {testStatus === "ok" ? "check_circle" : "cancel"}
-      </span>
+      <Icon name={testStatus === "ok" ? "check_circle" : "cancel"} className={` shrink-0 ${className}`} style={{ color: statusColor, fontSize: size }} aria-hidden="true" />
     );
   }
 
@@ -112,14 +107,7 @@ export default function ModelIcon({ modelId, testStatus, size = 16, className = 
   }
 
   return (
-    <span
-      className={`material-symbols-outlined shrink-0 text-text-muted ${className}`}
-      style={{ fontSize: size }}
-      title="Unknown model"
-      aria-hidden="true"
-    >
-      smart_toy
-    </span>
+    <Icon name="smart_toy" className={` shrink-0 text-text-tertiary ${className}`} style={{ fontSize: size }} title="Unknown model" aria-hidden="true" />
   );
 }
 

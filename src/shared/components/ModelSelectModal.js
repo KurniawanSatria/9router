@@ -10,6 +10,7 @@ import { getModelsByProviderId, getModelKind } from "@/shared/constants/models";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS, FREE_PROVIDERS, FREE_TIER_PROVIDERS, AI_PROVIDERS, isOpenAICompatibleProvider, isAnthropicCompatibleProvider, getProviderAlias } from "@/shared/constants/providers";
 import { parseSearchQuery, matchesSearch } from "@/shared/utils/modelSearchFilter";
 import { getDeactivatedProviderIds } from "@/shared/utils/connectionStatus";
+import Icon from "@/shared/components/Icon";
 
 // Provider order: OAuth first, then Free Tier, then API Key (matches dashboard/providers)
 const PROVIDER_ORDER = [
@@ -639,8 +640,8 @@ export default function ModelSelectModal({
       footer={null}
     >
       {/* Info bar */}
-      <div className="flex items-center gap-2 mb-3 px-2.5 py-2 bg-primary/8 border border-primary/20 rounded-lg text-xs text-text-muted">
-        <span className="material-symbols-outlined text-primary shrink-0" style={{ fontSize: "14px" }}>info</span>
+      <div className="flex items-center gap-2 mb-3 px-2.5 py-2 bg-primary/8 border border-primary/20 rounded-lg text-xs text-text-secondary">
+        <Icon name="info" className="text-primary shrink-0" style={{ fontSize: "14px" }} />
         <span>
           {allowProviderWildcard
             ? "Click to add/remove a model, or click a provider name for wildcard (e.g. provider/*). Search supports exclusions (e.g. claude -haiku) and RegEx (/pattern/)."
@@ -651,9 +652,7 @@ export default function ModelSelectModal({
       {/* Search & batch actions */}
       <div className="mb-3 space-y-2">
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">
-            search
-          </span>
+          <Icon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-secondary size-4" />
           <input
             type="text"
             placeholder={
@@ -663,7 +662,7 @@ export default function ModelSelectModal({
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-20 py-1.5 bg-surface border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+            className="w-full pl-8 pr-20 py-1.5 bg-card-background border border-input-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {parsedQuery.isRegex && (
@@ -680,17 +679,17 @@ export default function ModelSelectModal({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="text-text-muted hover:text-text-main cursor-pointer p-0.5 rounded"
+                className="text-text-secondary hover:text-text-primary cursor-pointer p-0.5 rounded"
                 title="Clear search"
               >
-                <span className="material-symbols-outlined text-[14px] leading-none">close</span>
+                <Icon name="close" className="size-3.5" />
               </button>
             )}
           </div>
         </div>
 
         {!closeOnSelect && visibleModels.length > 0 && (
-          <div className="flex items-center justify-between px-1 text-[11px] text-text-muted">
+          <div className="flex items-center justify-between px-1 text-[11px] text-text-secondary">
             <span className="flex items-center gap-1.5">
               <span>{visibleModels.length} models</span>
               {addedModelValues.length > 0 && (
@@ -712,7 +711,7 @@ export default function ModelSelectModal({
                 <button
                   type="button"
                   onClick={handleDeselectAllVisible}
-                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-border/40 text-text-muted hover:text-text-main hover:bg-border/60 transition-colors cursor-pointer"
+                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-card-border/40 text-text-secondary hover:text-text-primary hover:bg-card-border/60 transition-colors cursor-pointer"
                   title="Deselect all filtered models"
                 >
                   Deselect All ({visibleAdded.length})
@@ -728,10 +727,10 @@ export default function ModelSelectModal({
         {/* Combos section - always first */}
         {filteredCombos.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-surface py-0.5">
-              <span className="material-symbols-outlined text-primary text-[14px]">layers</span>
+            <div className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-card-background py-0.5">
+              <Icon name="layers" className="text-primary size-3.5" />
               <span className="text-xs font-medium text-primary">Combos</span>
-              <span className="text-[10px] text-text-muted">({filteredCombos.length})</span>
+              <span className="text-[10px] text-text-secondary">({filteredCombos.length})</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {filteredCombos.map((combo) => {
@@ -743,15 +742,15 @@ export default function ModelSelectModal({
                     className={`
                       px-2 py-1 rounded-xl text-xs font-medium transition-all border hover:cursor-pointer flex items-center gap-1
                       ${isSelected
-                        ? "bg-primary-solid text-on-primary border-primary"
+                        ? "bg-primary-500 text-white border-primary-500"
                         : addedModelValues.includes(combo.name)
-                          ? "bg-primary border-primary text-white hover:bg-primary-hover"
-                          : "bg-surface border-border text-text-main hover:border-primary/50 hover:bg-primary/5"
+                          ? "bg-primary border-primary text-white hover:bg-primary-600"
+                          : "bg-card-background border-card-border text-text-primary hover:border-primary/50 hover:bg-primary/5"
                       }
                     `}
                   >
                     {addedModelValues.includes(combo.name) && (
-                      <span className="material-symbols-outlined leading-none" style={{ fontSize: "10px" }}>check</span>
+                      <Icon name="check" style={{ fontSize: "10px" }} />
                     )}
                     {combo.name}
                   </button>
@@ -772,15 +771,10 @@ export default function ModelSelectModal({
               {/* Provider header */}
               <div
                 onClick={() => toggleProvider(providerId)}
-                className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-surface py-0.5 z-10 cursor-pointer select-none"
+                className="flex items-center gap-1.5 mb-1.5 sticky top-0 bg-card-background py-0.5 z-10 cursor-pointer select-none"
                 title={expanded ? `Collapse ${group.name}` : `Expand ${group.name}`}
               >
-                <span
-                  className="material-symbols-outlined text-text-muted transition-transform"
-                  style={{ fontSize: "14px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
-                >
-                  chevron_right
-                </span>
+                <Icon name="chevron_right" className="text-text-secondary transition-transform" style={{ fontSize: "14px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }} />
                 <ProviderIcon
                   src={`/providers/${providerId}.png`}
                   alt={group.name}
@@ -795,15 +789,15 @@ export default function ModelSelectModal({
                     title={isWildcardAdded ? `Click to remove wildcard ${wildcardValue}` : `Click to allow all models from ${group.name} (${wildcardValue})`}
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium transition-all cursor-pointer border ${
                       isWildcardAdded
-                        ? "bg-primary-solid text-on-primary border-primary shadow-2xs hover:bg-primary-hover"
+                        ? "bg-primary-500 text-white border-primary-500 shadow-2xs hover:bg-primary-600"
                         : "text-primary border-transparent hover:bg-primary/10 hover:border-primary/20"
                     }`}
                   >
                     {isWildcardAdded && (
-                      <span className="material-symbols-outlined leading-none text-[12px]">check</span>
+                      <Icon name="check" className="size-3" />
                     )}
                     <span>{group.name}</span>
-                    <span className={`text-[10px] font-mono px-1 py-0.2 rounded ${isWildcardAdded ? "bg-white/20 text-white" : "text-text-muted bg-sidebar border border-border/50"}`}>
+                    <span className={`text-[10px] font-mono px-1 py-0.2 rounded ${isWildcardAdded ? "bg-white/20 text-white" : "text-text-secondary bg-background-gray-primary border border-card-border/50"}`}>
                       {wildcardValue}
                     </span>
                   </button>
@@ -812,7 +806,7 @@ export default function ModelSelectModal({
                     {group.name}
                   </span>
                 )}
-                <span className="text-[10px] text-text-muted">
+                <span className="text-[10px] text-text-secondary">
                   ({group.models.length})
                 </span>
               </div>
@@ -830,22 +824,22 @@ export default function ModelSelectModal({
                     className={`
                       px-2 py-1 rounded-xl text-xs font-medium transition-all border hover:cursor-pointer
                       ${isPlaceholder
-                        ? "border-dashed border-border text-text-muted hover:border-primary/50 hover:text-primary bg-surface italic"
+                        ? "border-dashed border-card-border text-text-secondary hover:border-primary/50 hover:text-primary bg-card-background italic"
                         : isSelected
-                          ? "bg-primary-solid text-on-primary border-primary"
+                          ? "bg-primary-500 text-white border-primary-500"
                           : addedModelValues.includes(model.value)
-                            ? "bg-primary border-primary text-white hover:bg-primary-hover"
-                            : "bg-surface border-border text-text-main hover:border-primary/50 hover:bg-primary/5"
+                            ? "bg-primary border-primary text-white hover:bg-primary-600"
+                            : "bg-card-background border-card-border text-text-primary hover:border-primary/50 hover:bg-primary/5"
                       }
                     `}
                   >
                     <span className="flex items-center gap-1">
                       {addedModelValues.includes(model.value) && !isPlaceholder && (
-                        <span className="material-symbols-outlined leading-none" style={{ fontSize: "10px" }}>check</span>
+                        <Icon name="check" style={{ fontSize: "10px" }} />
                       )}
                       {isPlaceholder ? (
                         <>
-                          <span className="material-symbols-outlined text-[11px]">edit</span>
+                          <Icon name="edit" className="size-[11px]" />
                           {model.name}
                         </>
                       ) : model.isCustom ? (
@@ -871,10 +865,8 @@ export default function ModelSelectModal({
       })}
 
       {Object.keys(filteredGroups).length === 0 && filteredCombos.length === 0 && (
-        <div className="text-center py-4 text-text-muted">
-          <span className="material-symbols-outlined text-2xl mb-1 block">
-            search_off
-          </span>
+        <div className="text-center py-4 text-text-secondary">
+          <Icon name="search_off" className="size-6 mb-1 block" />
           <p className="text-xs">No models found</p>
         </div>
       )}

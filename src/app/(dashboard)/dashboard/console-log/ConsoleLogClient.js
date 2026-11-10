@@ -5,11 +5,11 @@ import { Card, Button, Input } from "@/shared/components";
 import { CONSOLE_LOG_CONFIG } from "@/shared/constants/config";
 
 const LOG_LEVEL_COLORS = {
-  LOG: "text-emerald-700 dark:text-[#9fd8bd]",
-  INFO: "text-blue-700 dark:text-[#9bbfff]",
-  WARN: "text-amber-700 dark:text-[#e7c07a]",
-  ERROR: "text-red-700 dark:text-[#f0a09a]",
-  DEBUG: "text-violet-700 dark:text-[#c9b3ea]",
+  LOG: "text-success-500",
+  INFO: "text-info-500",
+  WARN: "text-warning-500",
+  ERROR: "text-error-500",
+  DEBUG: "text-neutral-400",
 };
 
 const LEVELS = ["ALL", "LOG", "INFO", "WARN", "ERROR", "DEBUG"];
@@ -23,7 +23,7 @@ function getLevel(line) {
 }
 
 function colorLine(line) {
-  return <span className={LOG_LEVEL_COLORS[getLevel(line)] || "text-text-main dark:text-[#c9d3cc]"}>{line}</span>;
+  return <span className={LOG_LEVEL_COLORS[getLevel(line)] || "text-text-secondary"}>{line}</span>;
 }
 
 export default function ConsoleLogClient() {
@@ -95,18 +95,18 @@ export default function ConsoleLogClient() {
 
   return (
     <Card padding="none" className="overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-border-subtle px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-card-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-2 text-xs">
           <span className="relative flex size-2">
             {connected && <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-60 animate-ping" />}
             <span className={`relative inline-flex size-2 rounded-full ${connected ? "bg-success" : "bg-text-subtle"}`} />
           </span>
-          <span className="font-medium text-text-muted">{connected ? "Streaming" : "Disconnected"}</span>
-          <span className="text-text-subtle">
+          <span className="font-medium text-text-secondary">{connected ? "Streaming" : "Disconnected"}</span>
+          <span className="text-text-tertiary">
             {filteredLogs.length === logs.length ? `${logs.length} lines` : `${filteredLogs.length} of ${logs.length}`}
           </span>
           {paused && (
-            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            <span className="rounded-full border border-warning-500/30 bg-warning-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning-500">
               Paused
             </span>
           )}
@@ -125,7 +125,7 @@ export default function ConsoleLogClient() {
             value={level}
             onChange={(e) => setLevel(e.target.value)}
             aria-label="Filter by log level"
-            className="h-7 rounded-[7px] border border-border bg-surface px-2 text-xs font-medium text-text-main focus:outline-none focus:ring-2 focus:ring-primary/18"
+            className="h-7 rounded-lg border border-input-border bg-card-background px-2 py-0 text-xs font-medium leading-none text-text-primary focus:outline-none focus:border-primary-500"
           >
             {LEVELS.map((option) => (
               <option key={option} value={option}>
@@ -152,17 +152,17 @@ export default function ConsoleLogClient() {
       </div>
       <div
         ref={logRef}
-        className="bg-bg-alt dark:bg-[#0b110e] px-4 py-3 text-[12.5px] leading-relaxed font-mono h-[calc(100vh-240px)] overflow-y-auto custom-scrollbar"
+        className="rounded-xl border border-card-border bg-neutral-950 px-4 py-3 font-mono text-xs leading-relaxed h-[calc(100vh-240px)] overflow-y-auto custom-scrollbar"
         style={{ fontFamily: '"JetBrainsMono Nerd Font", "JetBrainsMono Nerd Font Mono", "JetBrains Mono Nerd Font", "JetBrains Mono", var(--font-mono)' }}
       >
         {logs.length === 0 ? (
-          <span className="text-text-muted">No console logs yet.</span>
+          <span className="text-text-tertiary">No console logs yet.</span>
         ) : filteredLogs.length === 0 ? (
-          <span className="text-text-muted">No logs match the current filter.</span>
+          <span className="text-text-tertiary">No logs match the current filter.</span>
         ) : (
           <div className="space-y-0.5">
             {filteredLogs.map((line, i) => (
-              <div key={i} className="whitespace-pre-wrap break-words rounded px-1 -mx-1 hover:bg-black/[0.025] dark:hover:bg-white/[0.04]">
+              <div key={i} className="whitespace-pre-wrap break-words rounded px-1 -mx-1 hover:bg-background-gray-primary">
                 {colorLine(line)}
               </div>
             ))}

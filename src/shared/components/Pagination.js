@@ -3,6 +3,7 @@
 import { cn } from "@/shared/utils/cn";
 import Button from "./Button";
 import Select from "./Select";
+import Icon from "@/shared/components/Icon";
 
 export default function Pagination({
   currentPage,
@@ -44,10 +45,10 @@ export default function Pagination({
     >
       {/* Info text */}
       {totalItems > 0 && (
-        <div className="text-sm text-text-muted">
-          Showing <span className="font-medium text-text-main">{startItem}</span> to{" "}
-          <span className="font-medium text-text-main">{endItem}</span> of{" "}
-          <span className="font-medium text-text-main">{totalItems}</span> results
+        <div className="text-sm text-text-secondary">
+          Showing <span className="font-medium text-text-primary">{startItem}</span> to{" "}
+          <span className="font-medium text-text-primary">{endItem}</span> of{" "}
+          <span className="font-medium text-text-primary">{totalItems}</span> results
         </div>
       )}
 
@@ -55,7 +56,7 @@ export default function Pagination({
         {/* Page size selector */}
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-text-muted">Rows:</span>
+            <span className="text-sm text-text-secondary">Rows:</span>
             <Select
               size="sm"
               align="right"
@@ -77,7 +78,7 @@ export default function Pagination({
               disabled={currentPage === 1}
               className="w-9 px-0"
             >
-              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+              <Icon name="chevron_left" className="size-4.5" />
             </Button>
 
             {pageNumbers[0] > 1 && (
@@ -91,7 +92,7 @@ export default function Pagination({
                   1
                 </Button>
                 {pageNumbers[0] > 2 && (
-                  <span className="text-text-muted px-1 hidden sm:inline">...</span>
+                  <span className="text-text-tertiary px-1 hidden sm:inline">...</span>
                 )}
               </>
             )}
@@ -114,7 +115,7 @@ export default function Pagination({
             {pageNumbers[pageNumbers.length - 1] < totalPages && (
               <>
                 {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                  <span className="text-text-muted px-1 hidden sm:inline">...</span>
+                  <span className="text-text-tertiary px-1 hidden sm:inline">...</span>
                 )}
                 <Button
                   variant="ghost"
@@ -134,7 +135,7 @@ export default function Pagination({
               disabled={currentPage === totalPages}
               className="w-9 px-0"
             >
-              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              <Icon name="chevron_right" className="size-4.5" />
             </Button>
           </div>
         )}

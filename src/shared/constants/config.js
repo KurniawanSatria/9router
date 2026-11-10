@@ -35,7 +35,7 @@ export const UPDATER_CONFIG = {
 // Theme configuration
 export const THEME_CONFIG = {
   storageKey: "theme",
-  defaultAccent: "orange",
+  defaultAccent: "blue",
   accents: ["orange", "blue", "green", "purple"],
 };
 

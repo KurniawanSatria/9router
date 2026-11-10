@@ -219,9 +219,9 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
           placeholder={isOAuth ? "Account name" : "Production Key"}
         />
         {isOAuth && connection.email && (
-          <div className="bg-sidebar/50 p-3 rounded-lg">
-            <p className="text-sm text-text-muted mb-1">Email</p>
-            <p className="font-medium">{connection.email}</p>
+          <div className="rounded-xl border border-card-border bg-background-gray-primary p-3">
+            <p className="text-sm text-text-secondary mb-1">Email</p>
+            <p className="font-medium text-text-primary">{connection.email}</p>
           </div>
         )}
         <Input
@@ -258,8 +258,8 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
         )}
 
         {isAzure && (
-          <div className="bg-sidebar/50 p-4 rounded-lg border border-accent/20">
-            <h3 className="font-semibold mb-3 text-sm">Azure OpenAI Configuration</h3>
+          <div className="rounded-xl border border-card-border bg-background-100 p-4">
+            <h3 className="text-sm font-semibold text-text-primary mb-3">Azure OpenAI Configuration</h3>
             <div className="flex flex-col gap-3">
               <Input
                 label="Azure Endpoint"
@@ -294,8 +294,8 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
         )}
 
         {usesAwsCredentialForm && (
-          <div className="bg-sidebar/50 p-4 rounded-lg border border-accent/20">
-            <h3 className="font-semibold mb-3 text-sm">AWS Bedrock Credentials</h3>
+          <div className="rounded-xl border border-card-border bg-background-100 p-4">
+            <h3 className="text-sm font-semibold text-text-primary mb-3">AWS Bedrock Credentials</h3>
             <div className="flex flex-col gap-3">
               <Input
                 label="AWS Profile (SSO — recommended)"
@@ -325,7 +325,7 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
                 hint="Leave blank to keep the saved token. Enter a new token to replace it."
                 disabled={clearAwsSessionToken}
               />
-              <label className="flex items-center gap-2 text-sm text-text-muted">
+              <label className="flex items-center gap-2 text-sm text-text-secondary">
                 <input
                   type="checkbox"
                   checked={clearAwsSessionToken}

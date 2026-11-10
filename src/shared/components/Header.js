@@ -11,16 +11,18 @@ import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { getProviderIconSrc } from "@/shared/utils/providerIcon";
 import { translate } from "@/i18n/runtime";
+import { MenuIcon, SearchIcon } from "@/shared/tailgrids/header-icons";
+import { ThreeDots } from "@/shared/tailgrids/sidebar-icons";
+import { cnx } from "@/shared/utils/cn";
+import Icon from "@/shared/components/Icon";
 
 const getPageInfo = (pathname) => {
   if (!pathname) return { title: "", description: "", breadcrumbs: [] };
 
-  // Provider detail page: /dashboard/providers/[id]
   const providerMatch = pathname.match(/\/providers\/([^/]+)$/);
   if (providerMatch) {
     const providerId = providerMatch[1];
-    const providerInfo =
-      OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId];
+    const providerInfo = OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId];
     if (providerInfo) {
       return {
         title: providerInfo.name,
@@ -36,92 +38,33 @@ const getPageInfo = (pathname) => {
     }
   }
 
-  if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
-    return {
-      title: "Providers",
-      description: "Manage your AI provider connections",
-      icon: "dns",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/combos"))
-    return {
-      title: "Combos",
-      description: "Model combos with fallback",
-      icon: "layers",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/systemone"))
-    return {
-      title: "System One",
-      description: "Decision endpoint for state + typed questions",
-      icon: "psychology",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/usage"))
-    return {
-      title: "Usage & Analytics",
-      description: "Monitor your API usage, token consumption, and request logs",
-      icon: "bar_chart",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/auth-files"))
-    return {
-      title: "Auth Files",
-      description: "Map provider credentials stored in the local database",
-      icon: "vpn_key",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/quota"))
-    return {
-      title: "Quota Tracker",
-      description: "Track and manage your API quota limits",
-      icon: "speed",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/proxy-pools"))
-    return {
-      title: "Proxy Pools",
-      description: "Manage your proxy pool configurations",
-      icon: "lan",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/profile"))
-    return {
-      title: "Settings",
-      description: "Manage your preferences",
-      icon: "settings",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/translator"))
-    return {
-      title: "Translator",
-      description: "Debug translation flow between formats",
-      icon: "translate",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/console-log"))
-    return {
-      title: "Console Log",
-      description: "Live server console output",
-      icon: "monitor",
-      breadcrumbs: [],
-    };
-  if (pathname === "/dashboard")
-    return {
-      title: "Home",
-      description: "Overview, endpoint access and API keys",
-      icon: "home",
-      breadcrumbs: [],
-    };
-  return { title: "", description: "", breadcrumbs: [] };
+  const match = (path, title, description, icon) =>
+    pathname.includes(path)
+      ? { title, description, icon, breadcrumbs: [] }
+      : null;
+
+  return (
+    match("/providers", "Providers", "Manage your AI provider connections", "dns") ||
+    match("/combos", "Combos", "Model combos with fallback", "layers") ||
+    match("/systemone", "System One", "Decision endpoint for state + typed questions", "psychology") ||
+    match("/usage", "Usage & Analytics", "Monitor your API usage, token consumption, and request logs", "bar_chart") ||
+    match("/endpoint", "Endpoint & API Keys", "Copy your endpoint URL and manage access keys", "api") ||
+    match("/quota", "Quota Tracker", "Track and manage your API quota limits", "speed") ||
+    match("/proxy-pools", "Proxy Pools", "Manage your proxy pool configurations", "lan") ||
+    match("/translator", "Translator", "Debug translation flow between formats", "translate") ||
+    match("/console-log", "Console Log", "Live server console output", "monitor") ||
+    match("/profile", "Settings", "Manage your preferences", "settings") ||
+    (pathname === "/dashboard"
+      ? { title: "Home", description: "System overview and host details", icon: "home", breadcrumbs: [] }
+      : { title: "", description: "", breadcrumbs: [] })
+  );
 };
 
 export default function Header({ onMenuClick, showMenuButton = true }) {
   const pathname = usePathname();
   const [displayName, setDisplayName] = useState("");
   const [loginMethod, setLoginMethod] = useState("");
-
-  // Memoize page info to prevent unnecessary recalculations
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const pageInfo = useMemo(() => getPageInfo(pathname), [pathname]);
   const { title, description, icon, breadcrumbs } = pageInfo;
 
@@ -134,7 +77,9 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) {
-          setDisplayName(data?.displayName || data?.samlName || data?.samlEmail || data?.oidcName || data?.oidcEmail || "");
+          setDisplayName(
+            data?.displayName || data?.samlName || data?.samlEmail || data?.oidcName || data?.oidcEmail || "",
+          );
           setLoginMethod(data?.loginMethod || "");
         }
       } catch {
@@ -162,107 +107,158 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
     }
   };
 
-  return (
-    <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 py-3 border-b border-border-subtle bg-bg/75 backdrop-blur-xl z-20">
-      {/* Mobile menu button */}
-      <div className="flex items-center gap-3 lg:hidden shrink-0">
-        {showMenuButton && (
-          <button
-            onClick={onMenuClick}
-            aria-label="Open navigation"
-            className="text-text-main hover:text-primary transition-colors"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-        )}
-      </div>
+  const actions = (
+    <>
+      <HeaderSearch />
+      <ThemeToggle />
+      <HeaderMenu onLogout={handleLogout} />
+    </>
+  );
 
-      {/* Page title with breadcrumbs */}
-      <div className="flex flex-col min-w-0 flex-1">
-        {breadcrumbs.length > 0 ? (
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            {breadcrumbs.map((crumb, index) => (
-              <div
-                key={`${crumb.label}-${crumb.href || "current"}`}
-                className={`items-center gap-1.5 sm:gap-2 min-w-0 ${
-                  index < breadcrumbs.length - 1 ? "hidden sm:flex shrink-0" : "flex flex-1"
-                }`}
+  return (
+    <>
+      <header className="sticky top-0 z-40 w-full border-b-[0.5px] border-card-border bg-card-surface-area px-2 py-4 lg:px-5">
+        {/* Mobile layout */}
+        <div className="flex items-center xl:hidden">
+          <div className="flex flex-1 justify-start">
+            {showMenuButton && (
+              <button
+                id="mobile-menu-toggle"
+                onClick={onMenuClick}
+                aria-label="Open sidebar menu"
+                className="rounded-md px-1.5 py-1 text-icon-tertiary transition-colors hover:text-text-primary"
               >
-                {index > 0 && (
-                  <span className="material-symbols-outlined text-text-muted text-base hidden sm:inline">
-                    chevron_right
-                  </span>
-                )}
-                {crumb.href ? (
-                  <Link
-                    href={crumb.href}
-                    className="text-text-muted hover:text-primary transition-colors truncate"
-                  >
-                    {crumb.label}
-                  </Link>
-                ) : (
-                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                    {crumb.image && (
-                      <ProviderIcon
-                        src={crumb.image}
-                        alt={crumb.label}
-                        size={28}
-                        className="object-contain rounded max-w-[24px] max-h-[24px] sm:max-w-[28px] sm:max-h-[28px] shrink-0"
-                        fallbackText={crumb.label.slice(0, 2).toUpperCase()}
-                      />
-                    )}
-                    <h1 className="text-base lg:text-[22px] font-semibold text-text-main tracking-[-0.02em] truncate">
-                      {translate(crumb.label)}
-                    </h1>
-                  </div>
-                )}
-              </div>
-            ))}
+                <MenuIcon />
+              </button>
+            )}
           </div>
-        ) : title ? (
-          <div>
-            <div className="flex items-center gap-2.5">
-              {icon && (
-                <span className="hidden sm:flex items-center justify-center size-8 rounded-[8px] border border-border-subtle bg-surface text-primary">
-                  <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                </span>
-              )}
-              <div className="min-w-0">
-                <h1 className="text-base lg:text-[24px] font-semibold tracking-[-0.02em] truncate leading-tight">
-                  {translate(title)}
-                </h1>
-                {description && (
-                  <p className="hidden lg:block text-[13px] text-text-muted truncate">
-                    {translate(description)}
-                  </p>
-                )}
-              </div>
+
+          <div className="flex flex-1 justify-center">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-semibold tracking-tight text-text-primary">
+                {translate(title || "Saturia Proxy")}
+              </span>
             </div>
           </div>
-        ) : null}
-      </div>
 
-      {/* Right actions */}
-      <div className="flex items-center gap-1 shrink-0">
-        {displayName && (loginMethod === "OIDC" || loginMethod === "SAML") && (
-          <div
-            className="hidden sm:flex items-center max-w-[220px] px-3 py-1.5 rounded-full border border-border bg-surface/70 text-xs text-text-muted truncate"
-            title={displayName}
-          >
-            <span className="material-symbols-outlined text-[14px] mr-1.5 text-primary">person</span>
-            <span className="truncate">{displayName}</span>
-            <span className="ml-2 shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-              {loginMethod}
-            </span>
+          <div className="flex flex-1 justify-end">
+            <button
+              id="mobile-info-toggle"
+              onClick={() => setIsDrawerOpen((v) => !v)}
+              aria-label="Open quick access"
+              className={cnx(
+                "rounded-md px-1.5 py-3 transition-colors",
+                isDrawerOpen
+                  ? "bg-background-gray-secondary text-text-primary"
+                  : "text-icon-tertiary hover:text-text-primary",
+              )}
+            >
+              <ThreeDots />
+            </button>
           </div>
-        )}
-        <HeaderSearch />
-        <ThemeToggle />
-        <HeaderMenu onLogout={handleLogout} />
+        </div>
+
+        {/* Desktop layout */}
+        <div className="hidden items-center justify-between gap-4 xl:flex">
+          <div className="min-w-0 flex-1">
+            {breadcrumbs.length > 0 ? (
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {breadcrumbs.map((crumb, index) => (
+                  <div
+                    key={`${crumb.label}-${crumb.href || "current"}`}
+                    className={cnx(
+                      "flex items-center gap-1.5 sm:gap-2",
+                      index < breadcrumbs.length - 1 ? "shrink-0" : "min-w-0 flex-1",
+                    )}
+                  >
+                    {index > 0 && (
+                      <Icon name="chevron_right" className="size-4 text-icon-tertiary" />
+                    )}
+                    {crumb.href ? (
+                      <Link
+                        href={crumb.href}
+                        className="truncate text-sm text-text-secondary transition-colors hover:text-text-primary"
+                      >
+                        {translate(crumb.label)}
+                      </Link>
+                    ) : (
+                      <div className="flex min-w-0 items-center gap-2">
+                        {crumb.image && (
+                          <ProviderIcon
+                            src={crumb.image}
+                            alt={crumb.label}
+                            size={28}
+                            className="max-h-[28px] max-w-[28px] shrink-0 rounded object-contain"
+                            fallbackText={crumb.label.slice(0, 2).toUpperCase()}
+                          />
+                        )}
+                        <h1 className="truncate text-xl font-semibold tracking-tight text-text-primary">
+                          {translate(crumb.label)}
+                        </h1>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : title ? (
+              <div className="flex items-center gap-3">
+                {icon && (
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-500">
+                    <Icon name={icon} className="size-[19px]" />
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <h1 className="truncate text-xl font-semibold tracking-tight text-text-primary">
+                    {translate(title)}
+                  </h1>
+                  {description && (
+                    <p className="truncate text-sm text-text-tertiary">{translate(description)}</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2.5">
+            {displayName && (loginMethod === "OIDC" || loginMethod === "SAML") && (
+              <div
+                className="hidden max-w-[220px] items-center truncate rounded-lg border border-border-secondary bg-background-gray-primary px-3 py-1.5 text-xs text-text-secondary sm:flex"
+                title={displayName}
+              >
+                <Icon name="person" className="mr-1.5 size-3.5 text-brand-500" />
+                <span className="truncate">{displayName}</span>
+                <span className="ml-2 shrink-0 rounded-full bg-brand-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-500">
+                  {loginMethod}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-2.5">
+              <ThemeToggle />
+              <HeaderMenu onLogout={handleLogout} />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className={cnx("xl:hidden", isDrawerOpen ? "block" : "hidden")}>
+        <div className="border-b-[0.5px] border-card-border bg-card-surface-area px-5 py-4 shadow-xs">
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <HeaderSearch />
+              <ThemeToggle />
+            </div>
+            <HeaderMenu onLogout={handleLogout} />
+          </div>
+        </div>
       </div>
-    </header>
+    </>
   );
 }
+
+Header.propTypes = {
+  onMenuClick: PropTypes.func,
+  showMenuButton: PropTypes.bool,
+};
 
 function HeaderSearch() {
   const visible = useHeaderSearchStore((s) => s.visible);
@@ -274,31 +270,24 @@ function HeaderSearch() {
 
   return (
     <div className="relative w-[160px] sm:w-[220px]">
-      <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">
-        search
-      </span>
+      <Icon name="search" className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 text-icon-tertiary" />
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-8 pl-7 pr-7 rounded-[8px] border border-border bg-surface text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all"
+        className="h-10 w-full rounded-lg border border-input-border bg-card-background pl-8 pr-7 text-sm text-text-primary outline-none transition-colors placeholder:text-input-placeholder-text focus:border-brand-500"
       />
       {query && (
         <button
           type="button"
           onClick={() => setQuery("")}
-          className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-0.5 rounded"
+          className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-icon-tertiary hover:text-text-primary"
           aria-label="Clear search"
         >
-          <span className="material-symbols-outlined text-[16px]">close</span>
+          <Icon name="close" className="size-4" />
         </button>
       )}
     </div>
   );
 }
-
-Header.propTypes = {
-  onMenuClick: PropTypes.func,
-  showMenuButton: PropTypes.bool,
-};

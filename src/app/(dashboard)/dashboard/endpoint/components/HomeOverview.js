@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, Skeleton } from "@/shared/components";
+import Icon from "@/shared/components/Icon";
 
 const QUICK_LINKS = [
-  { href: "/dashboard/providers", icon: "dns", label: "Providers", desc: "Connections" },
-  { href: "/dashboard/usage", icon: "bar_chart", label: "Usage", desc: "Tokens & requests" },
+  { href: "/dashboard/providers", icon: "hub", label: "Providers", desc: "Connections" },
+  { href: "/dashboard/usage", icon: "monitoring", label: "Usage", desc: "Tokens & requests" },
   { href: "/dashboard/combos", icon: "layers", label: "Combos", desc: "Model fallbacks" },
   { href: "/dashboard/profile", icon: "settings", label: "Settings", desc: "Security & access" },
 ];
@@ -30,13 +31,13 @@ function formatUptime(seconds) {
 
 function StatCard({ icon, label, value, note }) {
   return (
-    <div className="rounded-[11px] border border-border-subtle bg-surface px-4 py-3.5 shadow-[var(--shadow-soft)]">
-      <div className="flex items-center gap-2 text-text-muted">
-        <span className="material-symbols-outlined text-[16px]">{icon}</span>
+    <div className="rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-2 text-text-tertiary">
+        <Icon name={icon} className="size-4" />
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">{label}</span>
       </div>
-      <p className="mt-2 text-[22px] font-semibold leading-none tracking-tight text-text-main tabular-nums">{value}</p>
-      {note && <p className="mt-1.5 truncate text-[11.5px] text-text-muted">{note}</p>}
+      <p className="mt-2 text-[22px] font-semibold leading-none tracking-tight text-text-primary tabular-nums">{value}</p>
+      {note && <p className="mt-1.5 truncate text-[11.5px] text-text-tertiary">{note}</p>}
     </div>
   );
 }
@@ -44,10 +45,10 @@ function StatCard({ icon, label, value, note }) {
 function InfoTile({ icon, label, value, title }) {
   return (
     <div className="flex items-start gap-3 py-1">
-      <span className="material-symbols-outlined mt-0.5 text-[16px] text-text-muted">{icon}</span>
+      <Icon name={icon} className="mt-0.5 size-4 text-text-tertiary" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">{label}</p>
-        <p className="truncate text-[12.5px] font-medium text-text-main tabular-nums" title={title || value}>{value}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-tertiary">{label}</p>
+        <p className="truncate text-[12.5px] font-medium text-text-primary tabular-nums" title={title || value}>{value}</p>
       </div>
     </div>
   );
@@ -139,22 +140,22 @@ export default function HomeOverview() {
   return (
     <div className="flex flex-col gap-4">
       <Card padding="none" className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent" />
         <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
+            <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
                 <span className="relative inline-flex size-2 rounded-full bg-success" />
               </span>
               <span>System online</span>
-              {info && <span className="font-mono text-text-muted">v{info.app.version}</span>}
+              {info && <span className="font-mono text-text-tertiary">v{info.app.version}</span>}
               {info && <span className="normal-case tracking-normal tabular-nums">{formatUptime(info.app.uptime)} uptime</span>}
               {updatedLabel && <span className="normal-case tracking-normal tabular-nums">{updatedLabel}</span>}
             </div>
-            <h1 className="text-[24px] font-semibold tracking-tight text-text-main">Saturia Proxy</h1>
-            <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-text-muted">
-              One endpoint for every model. Manage provider connections, access keys and routing from here.
+            <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Saturia Proxy</h1>
+            <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-text-secondary">
+              One endpoint for every model. Manage provider connections and routing from here.
             </p>
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[360px]">
@@ -162,13 +163,11 @@ export default function HomeOverview() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group flex flex-col gap-1.5 rounded-[9px] border border-border-subtle bg-bg-alt/50 px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-surface"
+                className="group flex flex-col gap-1.5 rounded-[9px] border-[0.5px] border-card-border bg-background-soft-50 px-3 py-2.5 transition-colors hover:border-primary-500/40 hover:bg-card-background"
               >
-                <span className="material-symbols-outlined text-[19px] text-text-muted transition-colors group-hover:text-primary">
-                  {item.icon}
-                </span>
-                <span className="text-[12.5px] font-semibold text-text-main">{item.label}</span>
-                <span className="hidden text-[10.5px] leading-tight text-text-muted sm:block">{item.desc}</span>
+                <Icon name={item.icon} className="size-[19px] text-text-tertiary transition-colors group-hover:text-primary-500" />
+                <span className="text-[12.5px] font-semibold text-text-primary">{item.label}</span>
+                <span className="hidden text-[10.5px] leading-tight text-text-tertiary sm:block">{item.desc}</span>
               </Link>
             ))}
           </div>
@@ -176,7 +175,7 @@ export default function HomeOverview() {
       </Card>
 
       {failed ? (
-        <div className="rounded-[11px] border border-border-subtle bg-surface px-4 py-3 text-[12.5px] text-text-muted">
+        <div className="rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3 text-[12.5px] text-text-secondary">
           System information is unavailable right now.
         </div>
       ) : !info ? (

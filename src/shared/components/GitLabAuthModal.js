@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Input, OAuthModal } from "@/shared/components";
+import Icon from "@/shared/components/Icon";
 
 const GITLAB_COM = "https://gitlab.com";
 
@@ -102,28 +103,28 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
         {/* Mode selection */}
         {!mode && (
           <>
-            <p className="text-sm text-text-muted">
+            <p className="text-sm text-text-secondary">
               Choose how to authenticate with GitLab Duo:
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setMode("oauth")}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-card-border hover:border-primary-500 hover:bg-primary-500/5 transition-colors text-left"
               >
-                <span className="material-symbols-outlined text-2xl text-primary">lock_open</span>
+                <Icon name="lock_open" className="size-6 text-primary-500" />
                 <div>
                   <p className="text-sm font-medium">OAuth App</p>
-                  <p className="text-xs text-text-muted">Use a GitLab OAuth application</p>
+                  <p className="text-xs text-text-secondary">Use a GitLab OAuth application</p>
                 </div>
               </button>
               <button
                 onClick={() => setMode("pat")}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-card-border hover:border-primary-500 hover:bg-primary-500/5 transition-colors text-left"
               >
-                <span className="material-symbols-outlined text-2xl text-primary">key</span>
+                <Icon name="key" className="size-6 text-primary-500" />
                 <div>
                   <p className="text-sm font-medium">Personal Access Token</p>
-                  <p className="text-xs text-text-muted">Use a GitLab PAT with api scope</p>
+                  <p className="text-xs text-text-secondary">Use a GitLab PAT with api scope</p>
                 </div>
               </button>
             </div>
@@ -133,19 +134,19 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
         {/* OAuth mode */}
         {mode === "oauth" && (
           <>
-            <p className="text-xs text-text-muted">
+            <p className="text-xs text-text-secondary">
               Create an OAuth app at{" "}
-              <a href={`${baseUrl.trim() || GITLAB_COM}/-/profile/applications`} target="_blank" rel="noreferrer" className="text-primary underline">
+              <a href={`${baseUrl.trim() || GITLAB_COM}/-/profile/applications`} target="_blank" rel="noreferrer" className="text-primary-500 underline">
                 GitLab Applications
               </a>{" "}
               with redirect URI{" "}
-              <code className="bg-sidebar px-1 rounded text-xs">{getRedirectUri()}</code>
+              <code className="bg-background-gray-primary px-1 rounded text-xs">{getRedirectUri()}</code>
             </p>
             <Input label="GitLab Base URL" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder={GITLAB_COM} />
             <Input label="Client ID" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Your OAuth application client ID" />
             <Input label="Client Secret (optional for PKCE)" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="Leave empty for public PKCE app" />
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <div className="flex gap-2">
+            {error && <p className="text-sm text-error-500">{error}</p>}
+            <div className="flex gap-3">
               <Button onClick={handleOAuthStart} fullWidth disabled={!clientId.trim()}>
                 Authorize
               </Button>
@@ -159,19 +160,19 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
         {/* PAT mode */}
         {mode === "pat" && (
           <>
-            <p className="text-xs text-text-muted">
+            <p className="text-xs text-text-secondary">
               Create a PAT at{" "}
-              <a href={`${baseUrl.trim() || GITLAB_COM}/-/user_settings/personal_access_tokens`} target="_blank" rel="noreferrer" className="text-primary underline">
+              <a href={`${baseUrl.trim() || GITLAB_COM}/-/user_settings/personal_access_tokens`} target="_blank" rel="noreferrer" className="text-primary-500 underline">
                 GitLab Access Tokens
               </a>{" "}
-              with scopes: <code className="bg-sidebar px-1 rounded text-xs">api</code>,{" "}
-              <code className="bg-sidebar px-1 rounded text-xs">read_user</code>, and{" "}
-              <code className="bg-sidebar px-1 rounded text-xs">ai_features</code>.
+              with scopes: <code className="bg-background-gray-primary px-1 rounded text-xs">api</code>,{" "}
+              <code className="bg-background-gray-primary px-1 rounded text-xs">read_user</code>, and{" "}
+              <code className="bg-background-gray-primary px-1 rounded text-xs">ai_features</code>.
             </p>
             <Input label="GitLab Base URL" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder={GITLAB_COM} />
             <Input label="Personal Access Token" value={pat} onChange={(e) => setPat(e.target.value)} placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" type="password" />
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <div className="flex gap-2">
+            {error && <p className="text-sm text-error-500">{error}</p>}
+            <div className="flex gap-3">
               <Button onClick={handlePATSubmit} fullWidth disabled={!pat.trim() || loading} loading={loading}>
                 Connect
               </Button>

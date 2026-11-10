@@ -5,6 +5,7 @@ import { Badge, Button, Card, ModelSelectModal } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { getProvidersByKind } from "@/shared/constants/providers";
 import { getModelsByProviderId, getModelKind } from "@/shared/constants/models";
+import Icon from "@/shared/components/Icon";
 
 const DEFAULT_STATE = "Customer: I was charged twice for my order this morning.";
 
@@ -177,8 +178,8 @@ export default function SystemOnePage() {
           </Badge>
         }
       >
-        <div className="flex flex-wrap items-center gap-2 text-sm text-text-muted">
-          <span className="font-mono text-xs px-2 py-1 rounded bg-surface-2 text-text-main">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-text-secondary">
+          <span className="font-mono text-xs px-2 py-1 rounded bg-background-soft-50 text-text-primary">
             POST {origin || "http://localhost:20128"}/v1/systemone
           </span>
           <Button
@@ -192,23 +193,24 @@ export default function SystemOnePage() {
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
+      <div className="grid gap-6 lg:h-[calc(100svh-35.75rem)] lg:grid-cols-[1fr_1.15fr]">
         <Card
           title="Available lanes"
           subtitle="Providers that expose System One models"
           icon="hub"
+          className="lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden"
         >
-          <div className="flex flex-col gap-3">
-            <div className="rounded-[10px] border border-brand-500/40 bg-brand-500/5 p-3">
+          <div className="custom-scrollbar flex flex-col gap-3 pr-1 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+            <div className="rounded-xl border border-primary-500/40 bg-primary-500/5 p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-text-main">Auto</span>
+                    <span className="text-sm font-semibold text-text-primary">Auto</span>
                     <Badge variant="success" size="sm" dot>
                       dynamic
                     </Badge>
                   </div>
-                  <p className="text-xs text-text-muted mt-0.5">
+                  <p className="text-xs text-text-secondary mt-0.5">
                     Round-robin across every connected System One lane. Locked, rate-limited and
                     cooling-down accounts are skipped automatically, and lanes whose provider has
                     no available account move to the end.
@@ -224,8 +226,8 @@ export default function SystemOnePage() {
                   onClick={() => setModel("Auto")}
                   className={`font-mono text-[11px] px-2 py-1 rounded-[6px] border transition-colors cursor-pointer ${
                     model === "Auto"
-                      ? "border-brand-500/50 bg-brand-500/10 text-brand-600 dark:text-brand-300"
-                      : "border-border text-text-muted hover:text-text-main hover:bg-surface"
+                      ? "border-primary-500/50 bg-primary-500/10 text-primary-500"
+                      : "border-card-border text-text-secondary hover:text-text-primary hover:bg-background-gray-primary"
                   }`}
                   title="Round-robin every connected System One lane"
                 >
@@ -234,24 +236,24 @@ export default function SystemOnePage() {
               </div>
             </div>
             {lanes.length === 0 && (
-              <p className="text-sm text-text-muted">No System One lanes in the registry yet.</p>
+              <p className="text-sm text-text-secondary">No System One lanes in the registry yet.</p>
             )}
             {lanes.map(({ provider, models }) => (
               <div
                 key={provider.id}
-                className="rounded-[10px] border border-border-subtle bg-surface-2/50 p-3"
+                className="rounded-xl border border-card-border bg-background-soft-50 p-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-text-main truncate">
+                      <span className="text-sm font-semibold text-text-primary truncate">
                         {provider.name || provider.id}
                       </span>
                       <Badge variant={isConnected(provider.id) ? "success" : "default"} size="sm" dot>
                         {isConnected(provider.id) ? "connected" : "not connected"}
                       </Badge>
                     </div>
-                    <p className="text-xs text-text-muted font-mono mt-0.5">
+                    <p className="text-xs text-text-secondary font-mono mt-0.5">
                       {provider.alias || provider.id}
                     </p>
                   </div>
@@ -261,13 +263,13 @@ export default function SystemOnePage() {
                 </div>
 
                 {provider.systemoneConfig?.baseUrl && (
-                  <p className="text-[11px] text-text-muted font-mono mt-2 break-all">
+                  <p className="text-[11px] text-text-secondary font-mono mt-2 break-all">
                     {provider.systemoneConfig.baseUrl}
                   </p>
                 )}
 
                 {provider.notice?.text && (
-                  <p className="text-xs text-text-muted mt-2">{provider.notice.text}</p>
+                  <p className="text-xs text-text-secondary mt-2">{provider.notice.text}</p>
                 )}
 
                 {models.length > 0 && (
@@ -279,8 +281,8 @@ export default function SystemOnePage() {
                         onClick={() => setModel(`${m.alias}/${m.id}`)}
                         className={`font-mono text-[11px] px-2 py-1 rounded-[6px] border transition-colors cursor-pointer ${
                           model === `${m.alias}/${m.id}`
-                            ? "border-brand-500/50 bg-brand-500/10 text-brand-600 dark:text-brand-300"
-                            : "border-border text-text-muted hover:text-text-main hover:bg-surface"
+                            ? "border-primary-500/50 bg-primary-500/10 text-primary-500"
+                            : "border-card-border text-text-secondary hover:text-text-primary hover:bg-background-gray-primary"
                         }`}
                         title={`Use ${m.alias}/${m.id}`}
                       >
@@ -294,20 +296,25 @@ export default function SystemOnePage() {
           </div>
         </Card>
 
-        <Card title="Interactive probe" subtitle="Send a real request through the internal endpoint" icon="play_circle">
-          <div className="flex flex-col gap-4">
+        <Card
+          title="Interactive probe"
+          subtitle="Send a real request through the internal endpoint"
+          icon="play_circle"
+          className="lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden"
+        >
+          <div className="custom-scrollbar flex flex-col gap-4 pr-1 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-main">Model</span>
+              <span className="text-sm font-medium text-text-primary">Model</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowModelPicker(true)}
-                  className="flex-1 flex items-center justify-between gap-2 px-3 py-2.5 rounded-[10px] bg-surface-2 border border-transparent hover:border-brand-500/40 transition-colors text-left cursor-pointer"
+                  className="flex-1 flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-card-background border border-input-border hover:border-primary-500/40 transition-colors text-left cursor-pointer"
                 >
-                  <span className={`text-sm font-mono ${model ? "text-text-main" : "text-text-muted/70"}`}>
+                  <span className={`text-sm font-mono ${model ? "text-text-primary" : "text-text-secondary/70"}`}>
                     {model || "Select a System One model..."}
                   </span>
-                  <span className="material-symbols-outlined text-[18px] text-text-muted">expand_more</span>
+                  <Icon name="expand_more" className="size-4.5 text-text-secondary" />
                 </button>
                 <Button
                   variant={model === "Auto" ? "primary" : "secondary"}
@@ -324,20 +331,20 @@ export default function SystemOnePage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-main">State</span>
+              <span className="text-sm font-medium text-text-primary">State</span>
               <textarea
                 value={state}
                 onChange={(e) => setState(e.target.value)}
                 rows={3}
-                className="w-full py-2.5 px-3 text-sm text-text-main bg-surface-2 rounded-[10px] border border-transparent placeholder-text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500/40 transition-all resize-y font-mono"
+                className="w-full py-2.5 px-3 text-sm text-text-primary bg-card-background rounded-xl border border-input-border placeholder:text-input-placeholder-text focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/40 transition-all resize-y font-mono"
                 placeholder="Text / context to evaluate"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-text-main">Questions (JSON)</span>
-                <span className="text-[11px] text-text-muted">
+                <span className="text-sm font-medium text-text-primary">Questions (JSON)</span>
+                <span className="text-[11px] text-text-secondary">
                   {QUESTION_TYPES.map((q) => q.type).join(" · ")}
                 </span>
               </div>
@@ -346,13 +353,13 @@ export default function SystemOnePage() {
                 onChange={(e) => setQuestionsText(e.target.value)}
                 rows={9}
                 spellCheck={false}
-                className="w-full py-2.5 px-3 text-xs text-text-main bg-surface-2 rounded-[10px] border border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500/40 transition-all resize-y font-mono"
+                className="w-full py-2.5 px-3 text-xs text-text-primary bg-card-background rounded-xl border border-input-border focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/40 transition-all resize-y font-mono"
               />
             </div>
 
             {error && (
-              <p className="text-xs text-red-500 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">error</span>
+              <p className="text-xs text-error-500 flex items-center gap-1">
+                <Icon name="error" className="size-3.5" />
                 {error}
               </p>
             )}
@@ -371,7 +378,7 @@ export default function SystemOnePage() {
             </div>
 
             {result && (
-              <div className="rounded-[10px] border border-border-subtle bg-surface-2/50 p-3">
+              <div className="rounded-xl border border-card-border bg-background-soft-50 p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant={result.ok ? "success" : "error"} size="sm" dot>
                     {result.ok ? "OK" : `HTTP ${result.status}`}
@@ -380,7 +387,7 @@ export default function SystemOnePage() {
                     <Badge size="sm">{result.latencyMs} ms</Badge>
                   )}
                 </div>
-                <pre className="text-[11px] leading-relaxed text-text-main overflow-auto max-h-80 font-mono whitespace-pre-wrap break-words">
+                <pre className="text-[11px] leading-relaxed text-text-primary overflow-auto max-h-80 font-mono whitespace-pre-wrap break-words">
                   {JSON.stringify(result.data ?? result, null, 2)}
                 </pre>
               </div>
@@ -392,16 +399,16 @@ export default function SystemOnePage() {
       <Card title="Question types" subtitle="Question shapes accepted by System One lanes" icon="help">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {QUESTION_TYPES.map((q) => (
-            <div key={q.type} className="rounded-[10px] border border-border-subtle bg-surface-2/50 p-3">
+            <div key={q.type} className="rounded-xl border border-card-border bg-background-soft-50 p-3">
               <div className="flex items-center gap-2">
-                <code className="text-xs font-mono text-brand-600 dark:text-brand-300">{q.type}</code>
-                <span className="text-sm font-semibold text-text-main">{q.label}</span>
+                <code className="text-xs font-mono text-primary-500">{q.type}</code>
+                <span className="text-sm font-semibold text-text-primary">{q.label}</span>
               </div>
-              <p className="text-xs text-text-muted mt-1">{q.desc}</p>
+              <p className="text-xs text-text-secondary mt-1">{q.desc}</p>
             </div>
           ))}
         </div>
-        <p className="text-xs text-text-muted mt-4">
+        <p className="text-xs text-text-secondary mt-4">
           Images ride the top-level `assets` object: define each one once and reference its key in the text
           (`&quot;&lt;picture&gt;&quot;`). `drex-max` instead takes a top-level `images` array (PNG / JPEG / WebP, up to 8 per request).
         </p>

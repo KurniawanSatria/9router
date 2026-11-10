@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getDefaultPricing, formatCost } from "open-sse/providers/pricing.js";
+import Icon from "@/shared/components/Icon";
 
 export default function PricingModal({ isOpen, onClose, onSave }) {
   const [pricingData, setPricingData] = useState({});
@@ -94,29 +95,29 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
   const pricingFields = ["input", "output", "cached", "reasoning", "cache_creation"];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-base border border-border rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-card-background border-[0.5px] border-card-border rounded-xl shadow-[var(--shadow-elev)] max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Pricing Configuration</h2>
+        <div className="px-5 py-4 border-b border-card-border flex items-center justify-between">
+          <h2 className="text-base font-semibold text-text-primary">Pricing Configuration</h2>
           <button
             onClick={onClose}
-            className="text-text-muted hover:text-text text-2xl leading-none"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-background-gray-primary hover:text-text-primary"
           >
-            ×
+            <Icon name="close" className="size-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto p-5">
           {loading ? (
-            <div className="text-center py-8 text-text-muted">Loading pricing data...</div>
+            <div className="text-center py-8 text-text-secondary">Loading pricing data...</div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Instructions */}
-              <div className="bg-bg-subtle border border-border rounded-lg p-3 text-sm">
-                <p className="font-medium mb-1">Pricing Rates Format</p>
-                <p className="text-text-muted">
+              <div className="rounded-xl border-[0.5px] border-card-border bg-background-gray-primary p-3 text-sm">
+                <p className="text-sm font-semibold text-text-primary mb-1">Pricing Rates Format</p>
+                <p className="text-sm text-text-secondary">
                   All rates are in <strong>dollars per million tokens</strong> ($/1M tokens).
                   Example: Input rate of 2.50 means $2.50 per 1,000,000 input tokens.
                 </p>
@@ -126,35 +127,35 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
               {allProviders.map(provider => {
                 const models = Object.keys(pricingData[provider]).sort();
                 return (
-                  <div key={provider} className="border border-border rounded-lg overflow-hidden">
-                    <div className="bg-bg-subtle px-4 py-2 font-semibold text-sm">
+                  <div key={provider} className="rounded-xl border-[0.5px] border-card-border overflow-hidden">
+                    <div className="bg-background-gray-primary px-4 py-2 text-xs font-semibold uppercase text-text-tertiary">
                       {provider.toUpperCase()}
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-bg-hover text-text-muted uppercase text-xs">
+                        <thead className="bg-background-100 text-text-tertiary uppercase text-xs">
                           <tr>
-                            <th className="px-3 py-2 text-left">Model</th>
-                            <th className="px-3 py-2 text-right">Input</th>
-                            <th className="px-3 py-2 text-right">Output</th>
-                            <th className="px-3 py-2 text-right">Cached</th>
-                            <th className="px-3 py-2 text-right">Reasoning</th>
-                            <th className="px-3 py-2 text-right">Cache Creation</th>
+                            <th className="px-4 py-3 text-left">Model</th>
+                            <th className="px-4 py-3 text-right">Input</th>
+                            <th className="px-4 py-3 text-right">Output</th>
+                            <th className="px-4 py-3 text-right">Cached</th>
+                            <th className="px-4 py-3 text-right">Reasoning</th>
+                            <th className="px-4 py-3 text-right">Cache Creation</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
-                          {models.map(model => (
-                            <tr key={model} className="hover:bg-bg-subtle/50">
-                              <td className="px-3 py-2 font-medium">{model}</td>
+                        <tbody>
+                          {models.map((model, i) => (
+                            <tr key={model} className={`border-b border-card-border hover:bg-background-gray-primary transition-colors ${i === models.length - 1 ? "last:border-0" : ""}`}>
+                              <td className="px-4 py-3 font-medium text-text-primary">{model}</td>
                               {pricingFields.map(field => (
-                                <td key={field} className="px-3 py-2">
+                                <td key={field} className="px-4 py-3">
                                   <input
                                     type="number"
                                     step="0.01"
                                     min="0"
                                     value={pricingData[provider][model][field] || 0}
                                     onChange={(e) => handlePricingChange(provider, model, field, e.target.value)}
-                                    className="w-20 px-2 py-1 text-right bg-bg-base border border-border rounded focus:outline-none focus:border-primary"
+                                    className="w-20 px-2 py-1 text-right bg-card-background border border-input-border rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary-500"
                                   />
                                 </td>
                               ))}
@@ -168,7 +169,7 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
               })}
 
               {allProviders.length === 0 && (
-                <div className="text-center py-8 text-text-muted">
+                <div className="text-center py-8 text-text-secondary">
                   No pricing data available
                 </div>
               )}
@@ -177,10 +178,10 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border flex items-center justify-between gap-2">
+        <div className="px-5 py-4 border-t border-card-border flex items-center justify-between gap-2">
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded border border-red-500/20 transition-colors"
+            className="px-4 py-2 text-sm text-error-500 hover:bg-error-500/10 rounded-lg border border-error-500/20 transition-colors"
             disabled={saving}
           >
             Reset to Defaults
@@ -188,14 +189,14 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-text-muted hover:text-text border border-border rounded transition-colors"
+              className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary border border-card-border rounded-lg transition-colors"
               disabled={saving}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 text-sm bg-primary-solid text-on-primary rounded hover:bg-primary-solid-hover transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm bg-primary-500 text-primary-text rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
               disabled={saving}
             >
               {saving ? "Saving..." : "Save Changes"}

@@ -38,9 +38,9 @@ function ProviderNode({ data }) {
   const [imgError, setImgError] = useState(false);
   return (
     <div
-      className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg border-2 transition-all duration-300 bg-bg"
+      className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg border-2 transition-all duration-300 bg-background-soft-50"
       style={{
-        borderColor: active ? color : "var(--color-border)",
+        borderColor: active ? color : "var(--color-card-border)",
         boxShadow: active ? `0 0 16px ${color}40` : "none",
         minWidth: "150px",
       }}
@@ -75,8 +75,8 @@ function ProviderNode({ data }) {
 
       {/* Provider name */}
       <span
-        className="text-base font-medium truncate"
-        style={{ color: active ? color : "var(--color-text)" }}
+        className="text-base font-semibold truncate"
+        style={{ color: active ? color : "var(--color-text-primary)" }}
       >
         {label}
       </span>
@@ -484,9 +484,9 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
   }, [nodes.length, scheduleFit]);
 
   return (
-    <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]">
+    <div ref={containerRef} className="h-[240px] w-full min-w-0 rounded-xl border-[0.5px] border-card-border bg-card-background p-5 sm:h-[300px]">
       {providers.length === 0 ? (
-        <div className="h-full flex items-center justify-center text-text-muted text-sm">
+        <div className="h-full flex items-center justify-center text-sm text-text-secondary">
           No providers connected
         </div>
       ) : (

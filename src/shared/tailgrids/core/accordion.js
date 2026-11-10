@@ -1,0 +1,115 @@
+"use client";
+import { cnx as cn } from "@/shared/utils/cn";
+import { ChevronDown, Minus, Plus } from "lucide-react";
+import { cva } from "class-variance-authority";
+import { createContext, useContext, useId, useState } from "react";
+const RootContext = createContext(null);
+function useRootContext() {
+    const context = useContext(RootContext);
+    if (!context) {
+        throw new Error("useRootContext must be used within a RootContext Provider");
+    }
+    return context;
+}
+const accordionRootStyle = cva("flex w-full flex-col overflow-clip", {
+    variants: {
+        variant: {
+            style_one: "gap-5",
+            style_two: "gap-4",
+            style_three: "gap-3",
+            style_four: "gap-4",
+            style_five: "gap-x-4 gap-y-3",
+        },
+    },
+});
+export function AccordionRoot({ children, className, variant = "style_one" }) {
+    const [activeId, setActiveId] = useState();
+    function toggleActiveId(id) {
+        setActiveId((currentActiveId) => (currentActiveId === id ? undefined : id));
+    }
+    return (<RootContext.Provider value={{
+            activeId: activeId,
+            toggleActiveId,
+            variant,
+        }}>
+      <div className={cn(accordionRootStyle({ variant }), className)}>{children}</div>
+    </RootContext.Provider>);
+}
+const ItemContext = createContext(null);
+function useItemContext() {
+    const context = useContext(ItemContext);
+    if (!context) {
+        throw new Error("useItemContext must be used within a ItemContext Provider");
+    }
+    return context;
+}
+const accordionItemStyle = cva("w-full duration-200", {
+    variants: {
+        variant: {
+            style_one: "overflow-clip rounded-xl border border-base-100 bg-background-100",
+            style_two: "border-b border-base-50 last-of-type:border-b-0",
+            style_three: "overflow-clip rounded-xl bg-background-100",
+            style_four: "overflow-clip rounded-xl bg-background-soft-50",
+            style_five: "overflow-clip rounded-xl bg-background-soft-50",
+        },
+    },
+});
+export function AccordionItem({ children, className }) {
+    const triggerId = useId();
+    const contentId = useId();
+    const { activeId, variant } = useRootContext();
+    const dataState = activeId === triggerId ? "open" : "closed";
+    return (<ItemContext.Provider value={{
+            triggerId,
+            contentId,
+            dataState,
+        }}>
+      <div data-state={dataState} className={cn(accordionItemStyle({ variant }), className)}>
+        {children}
+      </div>
+    </ItemContext.Provider>);
+}
+const accordionTriggerStyle = cva("group flex w-full items-start justify-between gap-2 px-3 py-3.5 text-left text-title-50", {
+    variants: {
+        variant: {
+            style_one: "data-[state=open]:pb-4 data-[state=open]:font-medium data-[state=open]:text-text-primary",
+            style_two: "data-[state=open]:pb-4 data-[state=open]:font-medium",
+            style_three: "data-[state=open]:pb-4",
+            style_four: "font-medium data-[state=open]:pb-4",
+            style_five: "data-[state=open]:pb-5",
+        },
+    },
+});
+export function AccordionTrigger({ children, className }) {
+    const { triggerId, contentId, dataState } = useItemContext();
+    const { toggleActiveId, activeId, variant } = useRootContext();
+    return (<h3>
+      <button type="button" id={triggerId} aria-controls={contentId} aria-expanded={activeId === triggerId} data-state={dataState} className={cn(accordionTriggerStyle({ variant }), className)} onClick={() => toggleActiveId(triggerId)}>
+        {children}
+
+        <span className="flex h-lh items-center">
+          {variant === "style_four" ? (<ChevronDown className="transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180"/>) : (<>{dataState === "open" ? <Minus /> : <Plus />}</>)}
+        </span>
+      </button>
+    </h3>);
+}
+const accordionContentStyle = cva("mt-2 px-3 py-4 text-pretty text-text-100", {
+    variants: {
+        variant: {
+            style_one: "",
+            style_two: "",
+            style_three: "border-t border-base-50",
+            style_four: "border-t border-base-200",
+            style_five: "",
+        },
+    },
+});
+export function AccordionContent({ children, className }) {
+    const { triggerId, contentId, dataState } = useItemContext();
+    const { variant } = useRootContext();
+    return (<div id={contentId} role="region" aria-labelledby={triggerId} data-state={dataState} className="grid transition-[grid-template-rows] duration-300 ease-in-out data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]">
+      <div className={cn("overflow-hidden", accordionContentStyle({ variant }), className)}>
+        {children}
+      </div>
+    </div>);
+}

@@ -10,12 +10,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/shared/components";
 import { useNotificationStore } from "@/store/notificationStore";
+import Icon from "@/shared/components/Icon";
 
 const STATUS_CONFIG = {
-  available: { icon: "check_circle", color: "#22c55e", label: "Available" },
-  cooldown: { icon: "schedule", color: "#f59e0b", label: "Cooldown" },
-  unavailable: { icon: "error", color: "#ef4444", label: "Unavailable" },
-  unknown: { icon: "help", color: "#6b7280", label: "Unknown" },
+  available: { icon: "check_circle", className: "text-success-500", label: "Available" },
+  cooldown: { icon: "schedule", className: "text-warning-500", label: "Cooldown" },
+  unavailable: { icon: "error", className: "text-error-500", label: "Unavailable" },
+  unknown: { icon: "help", className: "text-text-tertiary", label: "Unknown" },
 };
 
 export default function ModelAvailabilityBadge() {
@@ -101,45 +102,38 @@ export default function ModelAvailabilityBadge() {
             : "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/15"
         }`}
       >
-        <span className="material-symbols-outlined text-[14px]">
-          {isHealthy ? "verified" : "warning"}
-        </span>
+        <Icon name={isHealthy ? "verified" : "warning"} className="size-3.5" />
         {isHealthy
           ? "All models operational"
           : `${unavailableCount} model${unavailableCount !== 1 ? "s" : ""} with issues`}
       </button> */}
 
       {expanded && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-surface border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-bg">
+        <div className="absolute top-full right-0 mt-2 w-80 rounded-xl border border-card-border bg-card-background shadow-2xl z-50 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-card-border px-4 py-3">
             <div className="flex items-center gap-2">
-              <span
-                className="material-symbols-outlined text-[16px]"
-                style={{ color: isHealthy ? "#22c55e" : "#f59e0b" }}
-              >
-                {isHealthy ? "verified" : "warning"}
-              </span>
-              <span className="text-sm font-semibold text-text-main">Model Status</span>
+              <Icon name={isHealthy ? "verified" : "warning"} className={` size-4 ${isHealthy ? "text-success-500" : "text-warning-500"}`} />
+              <span className="text-sm font-semibold text-text-primary">Model Status</span>
             </div>
             <button
               onClick={fetchStatus}
-              className="p-1 rounded-lg hover:bg-surface text-text-muted hover:text-text-main transition-colors"
+              className="rounded-lg p-1 text-text-tertiary transition-colors hover:bg-background-gray-primary hover:text-text-primary"
               title="Refresh"
             >
-              <span className="material-symbols-outlined text-[14px]">refresh</span>
+              <Icon name="refresh" className="size-3.5" />
             </button>
           </div>
 
-          <div className="px-4 py-3 max-h-60 overflow-y-auto">
+          <div className="max-h-60 overflow-y-auto px-4 py-3">
             {isHealthy ? (
-              <p className="text-sm text-text-muted text-center py-2">
+              <p className="py-2 text-center text-sm text-text-secondary">
                 All models are responding normally.
               </p>
             ) : (
               <div className="flex flex-col gap-2.5">
                 {Object.entries(byProvider).map(([provider, provModels]) => (
                   <div key={provider}>
-                    <p className="text-xs font-semibold text-text-main mb-1.5 capitalize">{provider}</p>
+                    <p className="mb-1.5 text-xs font-semibold capitalize text-text-primary">{provider}</p>
                     <div className="flex flex-col gap-1">
                       {provModels.map((m) => {
                         const status = STATUS_CONFIG[m.status] || STATUS_CONFIG.unknown;
@@ -147,16 +141,11 @@ export default function ModelAvailabilityBadge() {
                         return (
                           <div
                             key={`${m.provider}-${m.model}`}
-                            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface/30"
+                            className="flex items-center justify-between rounded-lg bg-background-gray-primary px-2.5 py-1.5"
                           >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span
-                                className="material-symbols-outlined text-[14px] shrink-0"
-                                style={{ color: status.color }}
-                              >
-                                {status.icon}
-                              </span>
-                              <span className="font-mono text-xs text-text-main truncate">{m.model}</span>
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <Icon name={status.icon} className={` size-3.5 shrink-0 ${status.className}`} />
+                              <span className="truncate font-mono text-xs text-text-primary">{m.model}</span>
                             </div>
                             {m.status === "cooldown" && (
                               <Button
@@ -164,7 +153,7 @@ export default function ModelAvailabilityBadge() {
                                 variant="ghost"
                                 onClick={() => handleClearCooldown(m.provider, m.model)}
                                 disabled={isClearing}
-                                className="text-[10px] px-1.5! py-0.5! ml-2"
+                                className="ml-2 px-1.5! py-0.5! text-[10px]"
                               >
                                 {isClearing ? "..." : "Clear"}
                               </Button>

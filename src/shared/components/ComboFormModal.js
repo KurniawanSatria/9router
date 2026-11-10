@@ -5,6 +5,7 @@ import Modal from "./Modal";
 import Input from "./Input";
 import Button from "./Button";
 import ModelSelectModal from "./ModelSelectModal";
+import Icon from "@/shared/components/Icon";
 
 const VALID_NAME_REGEX = /^[a-zA-Z0-9_.\-]+$/;
 
@@ -23,27 +24,27 @@ function ModelItem({ index, model, isFirst, isLast, onEdit, onMoveUp, onMoveDown
     if (e.key === "Escape") { setDraft(model); setEditing(false); }
   };
   return (
-    <div className="group flex min-w-0 items-center gap-1.5 rounded-md bg-black/[0.02] px-2 py-1 transition-colors hover:bg-black/[0.04] dark:bg-white/[0.02] dark:hover:bg-white/[0.04]">
-      <span className="text-[10px] font-medium text-text-muted w-3 text-center shrink-0">{index + 1}</span>
+    <div className="group flex min-w-0 items-center gap-1.5 rounded-lg border border-card-border bg-background-gray-primary px-2 py-1 transition-colors hover:bg-background-soft-50">
+      <span className="text-[10px] font-medium text-text-tertiary w-3 text-center shrink-0">{index + 1}</span>
       {editing ? (
         <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={commit} onKeyDown={handleKeyDown}
-          className="min-w-0 flex-1 rounded border border-primary/40 bg-white px-1.5 py-0.5 font-mono text-xs text-text-main outline-none dark:bg-black/20" />
+          className="min-w-0 flex-1 rounded-lg border border-primary-500 bg-card-background px-1.5 py-0.5 font-mono text-xs text-text-primary outline-none" />
       ) : (
-        <div className="min-w-0 flex-1 cursor-text truncate rounded px-1.5 py-0.5 font-mono text-xs text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+        <div className="min-w-0 flex-1 cursor-text truncate rounded-lg px-1.5 py-0.5 font-mono text-xs text-text-primary hover:bg-background-soft-50"
           onClick={() => setEditing(true)} title="Click to edit">{model}</div>
       )}
       <div className="flex shrink-0 items-center gap-0.5">
         <button onClick={onMoveUp} disabled={isFirst} aria-label="Move up"
-          className={`p-0.5 rounded ${isFirst ? "text-text-muted/20 cursor-not-allowed" : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"}`} title="Move up">
-          <span className="material-symbols-outlined text-[12px]">arrow_upward</span>
+          className={`p-0.5 rounded-lg ${isFirst ? "text-text-tertiary/30 cursor-not-allowed" : "text-text-secondary hover:text-primary-500 hover:bg-background-soft-50"}`} title="Move up">
+          <Icon name="arrow_upward" className="size-3" />
         </button>
         <button onClick={onMoveDown} disabled={isLast} aria-label="Move down"
-          className={`p-0.5 rounded ${isLast ? "text-text-muted/20 cursor-not-allowed" : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"}`} title="Move down">
-          <span className="material-symbols-outlined text-[12px]">arrow_downward</span>
+          className={`p-0.5 rounded-lg ${isLast ? "text-text-tertiary/30 cursor-not-allowed" : "text-text-secondary hover:text-primary-500 hover:bg-background-soft-50"}`} title="Move down">
+          <Icon name="arrow_downward" className="size-3" />
         </button>
       </div>
-      <button onClick={onRemove} aria-label="Remove model" className="p-0.5 hover:bg-red-500/10 rounded text-text-muted hover:text-red-500 transition-all" title="Remove">
-        <span className="material-symbols-outlined text-[12px]">close</span>
+      <button onClick={onRemove} aria-label="Remove model" className="p-0.5 rounded-lg text-text-secondary transition-colors hover:bg-error-500/10 hover:text-error-500" title="Remove">
+        <Icon name="close" className="size-3" />
       </button>
     </div>
   );
@@ -115,28 +116,28 @@ export default function ComboFormModal({ isOpen, combo, onClose, onSave, activeP
           <div>
             {forcePrefix ? (
               <>
-                <label className="text-sm font-medium mb-1 block">Combo Name</label>
+                <label className="text-sm font-medium text-text-primary mb-1 block">Combo Name</label>
                 <div className="flex items-stretch">
-                  <span className="inline-flex items-center px-2 rounded-l border border-r-0 border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.04] text-text-muted font-mono text-sm">{forcePrefix}</span>
+                  <span className="inline-flex items-center px-2 rounded-l-lg border border-r-0 border-input-border bg-background-gray-primary text-text-secondary font-mono text-sm">{forcePrefix}</span>
                   <input value={name} onChange={handleNameChange} placeholder="my-combo"
-                    className="flex-1 min-w-0 rounded-r border border-black/10 dark:border-white/10 bg-white dark:bg-black/20 px-2 py-1.5 font-mono text-sm outline-none focus:border-primary" />
+                    className="flex-1 min-w-0 rounded-r-lg border border-input-border bg-card-background px-2 py-1.5 font-mono text-sm text-text-primary outline-none focus:border-primary-500" />
                 </div>
-                {nameError && <p className="text-[11px] text-red-500 mt-0.5">{nameError}</p>}
+                {nameError && <p className="text-[11px] text-error-500 mt-0.5">{nameError}</p>}
               </>
             ) : (
               <Input label="Combo Name" value={name} onChange={handleNameChange} placeholder="my-combo" error={nameError} />
             )}
-            <p className="text-[10px] text-text-muted mt-0.5">
+            <p className="text-[10px] text-text-tertiary mt-0.5">
               {forcePrefix ? `Auto-prefixed with "${forcePrefix}". ` : ""}Only letters, numbers, -, _ and . allowed
             </p>
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Models</label>
+            <label className="text-sm font-medium text-text-primary mb-1.5 block">Models</label>
             {models.length === 0 ? (
-              <div className="text-center py-4 border border-dashed border-black/10 dark:border-white/10 rounded-lg bg-black/[0.01] dark:bg-white/[0.01]">
-                <span className="material-symbols-outlined text-text-muted text-xl mb-1">layers</span>
-                <p className="text-xs text-text-muted">No models added yet</p>
+              <div className="text-center py-4 border border-dashed border-card-border rounded-lg bg-background-gray-primary">
+                <Icon name="layers" className="text-text-tertiary size-5 mb-1 mx-auto" />
+                <p className="text-xs text-text-tertiary">No models added yet</p>
               </div>
             ) : (
               <div className="flex max-h-[55vh] min-w-0 flex-col gap-1 overflow-y-auto sm:max-h-[350px]">
@@ -151,8 +152,8 @@ export default function ComboFormModal({ isOpen, combo, onClose, onSave, activeP
               </div>
             )}
             <button onClick={() => setShowModelSelect(true)}
-              className="w-full mt-2 py-2 border border-dashed border-black/10 dark:border-white/10 rounded-lg text-xs text-primary font-medium hover:text-primary hover:border-primary/50 transition-colors flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-[16px]">add</span>
+              className="w-full mt-2 py-2 border border-dashed border-card-border rounded-lg text-xs text-primary-500 font-medium hover:text-primary-600 hover:border-primary-500 transition-colors flex items-center justify-center gap-1">
+              <Icon name="add" className="size-4" />
               Add Model
             </button>
           </div>

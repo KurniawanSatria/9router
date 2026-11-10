@@ -11,6 +11,7 @@ import {
   maxSlotsPerDay,
   parseAnchor,
 } from "@/shared/services/quotaPingSchedule";
+import Icon from "@/shared/components/Icon";
 
 const MODE_OPTIONS = [
   { value: "off", label: "Off", icon: "block" },
@@ -87,11 +88,11 @@ export default function AutoPingScheduleModal({ isOpen, onClose, onSave, connect
       }
     >
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-text-secondary">
           Configure automated quota pings{connection?.name ? ` for ${connection.name}` : ""} — pick one mode.
         </p>
 
-        <div className="grid grid-cols-3 gap-1 rounded-[10px] bg-surface-2 p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-[10px] bg-background-gray-primary p-1">
           {MODE_OPTIONS.map((option) => {
             const isSelected = form.mode === option.value;
             return (
@@ -102,13 +103,11 @@ export default function AutoPingScheduleModal({ isOpen, onClose, onSave, connect
                 className={cn(
                   "flex h-9 items-center justify-center gap-1.5 rounded-[8px] px-3 text-sm font-medium transition-all",
                   isSelected
-                    ? "bg-surface text-text-main shadow-sm"
-                    : "text-text-muted hover:text-text-main"
+                    ? "bg-card-background text-text-primary shadow-sm"
+                    : "text-text-secondary hover:text-text-primary"
                 )}
               >
-                <span className="material-symbols-outlined text-[15px] leading-none">
-                  {option.icon}
-                </span>
+                <Icon name={option.icon} className="size-[15px]" />
                 <span>{option.label}</span>
               </button>
             );
@@ -116,14 +115,14 @@ export default function AutoPingScheduleModal({ isOpen, onClose, onSave, connect
         </div>
 
         {form.mode === "reset" && (
-          <p className="text-xs text-text-muted">
+          <p className="text-xs text-text-secondary">
             Pings right after the 5h quota window resets, so a new window starts immediately.
           </p>
         )}
 
         {form.mode === "schedule" && (
           <div className="flex flex-col gap-4">
-            <p className="text-xs text-text-muted">
+            <p className="text-xs text-text-secondary">
               Pings at fixed local times so the 5h windows align with your workday.
             </p>
 
@@ -134,7 +133,7 @@ export default function AutoPingScheduleModal({ isOpen, onClose, onSave, connect
                 value={form.anchor}
                 onChange={(e) => update({ anchor: e.target.value })}
                 error={anchorValid ? "" : "Use HH:MM"}
-                inputClassName="ring-1 ring-black/10 dark:ring-white/15"
+                inputClassName="ring-1 ring-card-border"
               />
               <Input
                 label="Window (hours)"
@@ -145,7 +144,7 @@ export default function AutoPingScheduleModal({ isOpen, onClose, onSave, connect
                 value={form.windowHours}
                 onChange={(e) => update({ windowHours: e.target.value })}
                 error={windowValid ? "" : "0.5 – 24"}
-                inputClassName="ring-1 ring-black/10 dark:ring-white/15"
+                inputClassName="ring-1 ring-card-border"
               />
               <Input
                 label="Pings per day"
@@ -157,17 +156,17 @@ export default function AutoPingScheduleModal({ isOpen, onClose, onSave, connect
                 onChange={(e) => update({ slotsPerDay: e.target.value })}
                 error={slotsValid ? "" : `1 – ${slotsMax}`}
                 hint={slotsValid ? `Max ${slotsMax}` : ""}
-                inputClassName="ring-1 ring-black/10 dark:ring-white/15"
+                inputClassName="ring-1 ring-card-border"
               />
             </div>
 
             {previewSlots.length > 0 && (
-              <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-                <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
+              <div className="rounded-[10px] bg-background-gray-primary px-3 py-2.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Daily slots ({form.timezone})
                 </p>
-                <p className="mt-1 text-sm font-medium text-text-main">{previewSlots.join("  →  ")}</p>
-                <p className="mt-1 text-xs text-text-muted">
+                <p className="mt-1 text-sm font-medium text-text-primary">{previewSlots.join("  →  ")}</p>
+                <p className="mt-1 text-xs text-text-secondary">
                   Covers {previewSlots[0]} – {coverageEnd}, then pauses until {previewSlots[0]} next day.
                 </p>
               </div>

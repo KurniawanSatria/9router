@@ -5,6 +5,7 @@ import { Card, Button } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import dynamic from "next/dynamic";
 import { MONACO_VS_PATH } from "@/shared/constants/monaco";
+import Icon from "@/shared/components/Icon";
 
 const Editor = dynamic(
   () => import("@monaco-editor/react").then((mod) => {
@@ -218,17 +219,17 @@ export default function TranslatorPage() {
   };
 
   return (
-    <div className="p-8 space-y-3">
+    <div className="p-8 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-text-main">Translator Debug</h1>
-          <p className="text-sm text-text-muted mt-1">Replay request flow — matches log files</p>
+          <h1 className="text-2xl font-bold text-text-primary">Translator Debug</h1>
+          <p className="text-sm text-text-secondary mt-1">Replay request flow — matches log files</p>
         </div>
         {meta && (
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <MetaBadge label="src" value={meta.sourceFormat} color="blue" />
-            <span className="material-symbols-outlined text-text-muted text-[14px]">arrow_forward</span>
+            <Icon name="arrow_forward" className="text-text-tertiary size-3.5" />
             <MetaBadge label="dst" value={meta.targetFormat} color="orange" />
             <MetaBadge label="provider" value={meta.provider} color="green" />
             <MetaBadge label="model" value={meta.model} color="purple" />
@@ -247,13 +248,11 @@ export default function TranslatorPage() {
               {/* Step header */}
               <div className="flex items-center justify-between">
                 <button onClick={() => toggle(step.id)} className="flex items-center gap-2 flex-1 text-left group">
-                  <span className="material-symbols-outlined text-[20px] text-text-muted group-hover:text-primary transition-colors">
-                    {isExpanded ? "expand_more" : "chevron_right"}
-                  </span>
-                  <span className="text-xs font-mono text-text-muted/60 w-4">{step.id}</span>
-                  <h3 className="text-sm font-semibold text-text-main">{step.label}</h3>
-                  <span className="text-xs text-text-muted/60 font-mono">{step.file}</span>
-                  {content && <span className="text-xs text-green-500">({content.length} chars)</span>}
+                  <Icon name={isExpanded ? "expand_more" : "chevron_right"} className="size-5 text-text-tertiary group-hover:text-primary-500 transition-colors" />
+                  <span className="text-xs font-mono text-text-tertiary w-4">{step.id}</span>
+                  <h3 className="text-sm font-semibold text-text-primary">{step.label}</h3>
+                  <span className="text-xs text-text-tertiary font-mono">{step.file}</span>
+                  {content && <span className="text-xs text-success-500">({content.length} chars)</span>}
                 </button>
                 {!isExpanded && (
                   <div className="flex gap-1 shrink-0">
@@ -266,7 +265,7 @@ export default function TranslatorPage() {
               {/* Expanded content */}
               {isExpanded && (
                 <>
-                  <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="rounded-xl border border-card-border overflow-hidden">
                     <Editor
                       height="400px"
                       defaultLanguage={step.lang === "text" ? "plaintext" : "json"}
@@ -297,14 +296,14 @@ export default function TranslatorPage() {
 
 function MetaBadge({ label, value, color }) {
   const colors = {
-    blue: "bg-blue-500/10 text-blue-500",
-    orange: "bg-orange-500/10 text-orange-500",
-    green: "bg-green-500/10 text-green-500",
-    purple: "bg-purple-500/10 text-purple-500",
+    blue: "bg-info-500/10 text-info-500",
+    orange: "bg-warning-500/10 text-warning-500",
+    green: "bg-success-500/10 text-success-500",
+    purple: "bg-primary-500/10 text-primary-500",
   };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono ${colors[color]}`}>
-      <span className="text-text-muted/70 font-sans text-[10px]">{label}:</span>{value}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono ${colors[color]}`}>
+      <span className="text-text-tertiary font-sans text-[10px]">{label}:</span>{value}
     </span>
   );
 }

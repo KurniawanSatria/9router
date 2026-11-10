@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
-  Card,
   CardSkeleton,
-  Badge,
   Button,
   Toggle,
   Select,
 } from "@/shared/components";
+import { Card } from "@/shared/tailgrids/core/card";
+import { Badge } from "@/shared/tailgrids/core/badge";
+import { cnx } from "@/shared/utils/cn";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { getProviderIconSrc } from "@/shared/utils/providerIcon";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
@@ -27,12 +28,19 @@ import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import ModelAvailabilityBadge from "./components/ModelAvailabilityBadge";
 import AddCompatibleModal from "./components/AddCompatibleModal";
 import { STATUS_FILTER_OPTIONS, matchesStatusFilter } from "./utils";
+import Icon from "@/shared/components/Icon";
 
 function getStatusDisplay(connected, error, errorCode) {
   const parts = [];
   if (connected > 0) {
     parts.push(
-      <Badge key="connected" variant="success" size="sm" dot>
+      <Badge
+        key="connected"
+        color="success"
+        size="sm"
+        className="gap-1.5 bg-success-500/10 text-[11px] text-success-500"
+        prefixIcon={<span className="size-1.5 rounded-full bg-current" />}
+      >
         {connected} Connected
       </Badge>,
     );
@@ -42,13 +50,19 @@ function getStatusDisplay(connected, error, errorCode) {
       ? `${error} Error (${errorCode})`
       : `${error} Error`;
     parts.push(
-      <Badge key="error" variant="error" size="sm" dot>
+      <Badge
+        key="error"
+        color="error"
+        size="sm"
+        className="gap-1.5 bg-error-500/10 text-[11px] text-error-500"
+        prefixIcon={<span className="size-1.5 rounded-full bg-current" />}
+      >
         {errText}
       </Badge>,
     );
   }
   if (parts.length === 0) {
-    return <span className="text-text-muted">No connections</span>;
+    return <span className="text-xs text-text-tertiary">No connections</span>;
   }
   return parts;
 }
@@ -107,7 +121,7 @@ export default function ProvidersPage() {
     useState(false);
   const [testingMode, setTestingMode] = useState(null);
   const [testResults, setTestResults] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("active");
+  const [statusFilter, setStatusFilter] = useState("all");
   const notify = useNotificationStore();
   const searchQuery = useHeaderSearchStore((s) => s.query);
   const registerSearch = useHeaderSearchStore((s) => s.register);
@@ -413,16 +427,14 @@ export default function ProvidersPage() {
           onChange={setStatusFilter}
           options={STATUS_FILTER_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
           ariaLabel="Filter providers by connection status"
-          buttonClassName="min-w-[150px]"
+          buttonClassName="h-10 min-w-[160px] focus:border-primary-500"
         />
       </div>
 
       {!hasAnyResult && (
-        <div className="text-center py-8 border border-dashed border-border rounded-xl">
-          <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">
-            search_off
-          </span>
-          <p className="text-text-muted text-sm">
+        <div className="rounded-xl border border-dashed border-card-border bg-card-background px-5 py-10 text-center">
+          <Icon name="search_off" className="mb-2 block size-8 text-text-tertiary" />
+          <p className="text-sm text-text-secondary">
             No providers match your search or filters
           </p>
         </div>
@@ -436,9 +448,9 @@ export default function ProvidersPage() {
         webCookieEntries.length > 0 ||
         compatibleProviders.length > 0 ||
         anthropicCompatibleProviders.length > 0) && (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
+          <h2 className="flex items-center gap-2 text-lg font-semibold leading-tight text-text-primary sm:text-xl">
             Providers
           </h2>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -456,31 +468,28 @@ export default function ProvidersPage() {
               variant="secondary"
               icon="add"
               onClick={() => setShowAddCompatibleModal(true)}
-              className="w-full !bg-white !text-black hover:!bg-gray-100 sm:w-auto"
+              className="w-full sm:w-auto"
             >
               Add OpenAI Compatible
             </Button>
             <button
               onClick={() => handleBatchTest("all")}
               disabled={!!testingMode}
-              className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
+              className={cnx(
+                "flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5",
                 testingMode === "all"
-                  ? "bg-primary/20 border-primary/40 text-primary animate-pulse"
-                  : "bg-bg border-border text-text-muted hover:text-text-main hover:border-primary/40"
-              }`}
+                  ? "animate-pulse border-primary-500/40 bg-primary-500/10 text-primary-500"
+                  : "border-card-border bg-card-background text-text-secondary hover:border-primary-500/40 hover:text-text-primary",
+              )}
               title="Test all connections"
               aria-label="Test all provider connections"
             >
-              <span
-                className={`material-symbols-outlined text-[14px]${testingMode === "all" ? " animate-spin" : ""}`}
-              >
-                play_arrow
-              </span>
+              <Icon name="play_arrow" className={` size-3.5${testingMode === "all" ? " animate-spin" : ""}`} />
               {testingMode === "all" ? "Testing..." : "Test All"}
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
           {[...compatibleProviders, ...anthropicCompatibleProviders].map((info) => (
             <ApiKeyProviderCard
               key={info.id}
@@ -556,9 +565,9 @@ export default function ProvidersPage() {
         {!isApikeySearching && !showAllApikey && hiddenApikeyCount > 0 && (
           <button
             onClick={() => setShowAllApikey(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 px-3 py-2.5 text-sm font-medium text-primary transition-colors hover:border-primary hover:bg-primary/5"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary-500/40 px-3 py-2.5 text-sm font-medium text-primary-500 transition-colors hover:border-primary-500 hover:bg-primary-500/5"
           >
-            <span className="material-symbols-outlined text-[16px]">expand_more</span>
+            <Icon name="expand_more" className="size-4" />
             Show all {apikeyEntries.length} API key providers
           </button>
         )}
@@ -592,17 +601,17 @@ export default function ProvidersPage() {
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div
-            className="relative bg-surface border border-border rounded-xl w-full max-w-[600px] max-h-[86vh] sm:max-h-[80vh] overflow-y-auto shadow-2xl"
+            className="relative max-h-[86vh] w-full max-w-[600px] overflow-y-auto rounded-xl border border-card-border bg-card-background shadow-2xl sm:max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 border-b border-border bg-surface/95 backdrop-blur-sm rounded-t-xl">
-              <h3 className="font-semibold">Test Results</h3>
+            <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-xl border-b border-card-border bg-card-background px-5 py-3 backdrop-blur-sm">
+              <h3 className="text-base font-semibold text-text-primary">Test Results</h3>
               <button
                 onClick={() => setTestResults(null)}
-                className="p-1 rounded-lg hover:bg-bg text-text-muted hover:text-text-main transition-colors"
+                className="rounded-lg p-1 text-text-tertiary transition-colors hover:bg-background-gray-primary hover:text-text-primary"
                 aria-label="Close test results"
               >
-                <span className="material-symbols-outlined text-lg">close</span>
+                <Icon name="close" className="size-4.5" />
               </button>
             </div>
             <div className="p-5">
@@ -635,8 +644,10 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
   return (
     <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">
       <Card
-        padding="xs"
-        className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
+        className={cnx(
+          "h-full cursor-pointer transition-colors hover:border-primary-500/40 hover:shadow-sm",
+          allDisabled && "opacity-50",
+        )}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -658,24 +669,35 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
               />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-semibold">{provider.name}</h3>
-              <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap">
+              <h3 className="truncate text-base font-semibold text-text-primary">
+                {provider.name}
+              </h3>
+              <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
                 {allDisabled ? (
-                  <Badge variant="default" size="sm">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px]">
-                        pause_circle
-                      </span>
-                      Disabled
-                    </span>
+                  <Badge
+                    color="gray"
+                    size="sm"
+                    className="text-[11px]"
+                    prefixIcon={
+                      <Icon name="pause_circle" className="size-3" />
+                    }
+                  >
+                    Disabled
                   </Badge>
                 ) : isNoAuth ? (
-                  <Badge variant="success" size="sm" dot>Ready</Badge>
+                  <Badge
+                    color="success"
+                    size="sm"
+                    className="gap-1.5 bg-success-500/10 text-[11px] text-success-500"
+                    prefixIcon={<span className="size-1.5 rounded-full bg-current" />}
+                  >
+                    Ready
+                  </Badge>
                 ) : (
                   <>
                     {getStatusDisplay(connected, error, errorCode)}
                     {errorTime && (
-                      <span className="text-text-muted">{errorTime}</span>
+                      <span className="text-text-tertiary">{errorTime}</span>
                     )}
                   </>
                 )}
@@ -763,8 +785,10 @@ function ApiKeyProviderCard({
   return (
     <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">
       <Card
-        padding="xs"
-        className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
+        className={cnx(
+          "h-full cursor-pointer transition-colors hover:border-primary-500/40 hover:shadow-sm",
+          allDisabled && "opacity-50",
+        )}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -786,34 +810,38 @@ function ApiKeyProviderCard({
               />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-semibold">{provider.name}</h3>
-              <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap">
+              <h3 className="truncate text-base font-semibold text-text-primary">
+                {provider.name}
+              </h3>
+              <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
                 {allDisabled ? (
-                  <Badge variant="default" size="sm">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px]">
-                        pause_circle
-                      </span>
-                      Disabled
-                    </span>
+                  <Badge
+                    color="gray"
+                    size="sm"
+                    className="text-[11px]"
+                    prefixIcon={
+                      <Icon name="pause_circle" className="size-3" />
+                    }
+                  >
+                    Disabled
                   </Badge>
                 ) : (
                   <>
                     {getStatusDisplay(connected, error, errorCode)}
                     {isCompatible && (
-                      <Badge variant="default" size="sm">
+                      <Badge color="gray" size="sm" className="text-[11px]">
                         {provider.apiType === "responses"
                           ? "Responses"
                           : "Chat"}
                       </Badge>
                     )}
                     {isAnthropicCompatible && (
-                      <Badge variant="default" size="sm">
+                      <Badge color="gray" size="sm" className="text-[11px]">
                         Messages
                       </Badge>
                     )}
                     {errorTime && (
-                      <span className="text-text-muted">{errorTime}</span>
+                      <span className="text-text-tertiary">{errorTime}</span>
                     )}
                   </>
                 )}
@@ -867,11 +895,9 @@ ApiKeyProviderCard.propTypes = {
 function ProviderTestResultsView({ results }) {
   if (results.error && !results.results) {
     return (
-      <div className="text-center py-6">
-        <span className="material-symbols-outlined text-red-500 text-[32px] mb-2 block">
-          error
-        </span>
-        <p className="text-sm text-red-400">{results.error}</p>
+      <div className="py-6 text-center">
+        <Icon name="error" className="mb-2 block size-8 text-error-500" />
+        <p className="text-sm text-error-500">{results.error}</p>
       </div>
     );
   }
@@ -890,17 +916,17 @@ function ProviderTestResultsView({ results }) {
   return (
     <div className="flex min-w-0 flex-col gap-3">
       {summary && (
-        <div className="flex flex-wrap items-center gap-2 text-xs mb-1 sm:gap-3">
-          <span className="text-text-muted">{modeLabel} Test</span>
-          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium">
+        <div className="mb-1 flex flex-wrap items-center gap-2 text-xs sm:gap-3">
+          <span className="text-text-tertiary">{modeLabel} Test</span>
+          <span className="rounded bg-success-500/10 px-2 py-0.5 font-medium text-success-500">
             {summary.passed} passed
           </span>
           {summary.failed > 0 && (
-            <span className="px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">
+            <span className="rounded bg-error-500/10 px-2 py-0.5 font-medium text-error-500">
               {summary.failed} failed
             </span>
           )}
-          <span className="text-text-muted sm:ml-auto">
+          <span className="text-text-tertiary sm:ml-auto">
             {summary.total} tested
           </span>
         </div>
@@ -908,31 +934,27 @@ function ProviderTestResultsView({ results }) {
       {items.map((r, i) => (
         <div
           key={r.connectionId || i}
-          className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg bg-black/[0.03] px-3 py-2 text-xs dark:bg-white/[0.03] sm:flex-nowrap"
+          className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg bg-background-gray-primary px-3 py-2 text-xs sm:flex-nowrap"
         >
-          <span
-            className={`material-symbols-outlined text-[16px] ${r.valid ? "text-emerald-500" : "text-red-500"}`}
-          >
-            {r.valid ? "check_circle" : "error"}
-          </span>
+          <Icon name={r.valid ? "check_circle" : "error"} className={` size-4 ${r.valid ? "text-success-500" : "text-error-500"}`} />
           <div className="min-w-0 flex-[1_1_160px]">
-            <span className="block truncate font-medium sm:inline">
+            <span className="block truncate font-medium text-text-primary sm:inline">
               {r.connectionName}
             </span>
-            <span className="block truncate text-text-muted sm:ml-1.5 sm:inline">
+            <span className="block truncate text-text-tertiary sm:ml-1.5 sm:inline">
               ({r.provider})
             </span>
           </div>
           {r.latencyMs !== undefined && (
-            <span className="shrink-0 text-text-muted font-mono tabular-nums">
+            <span className="shrink-0 font-mono text-text-tertiary tabular-nums">
               {r.latencyMs}ms
             </span>
           )}
           <span
-            className={`shrink-0 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
               r.valid
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "bg-red-500/15 text-red-400"
+                ? "bg-success-500/10 text-success-500"
+                : "bg-error-500/10 text-error-500"
             }`}
           >
             {r.valid ? "OK" : r.diagnosis?.type || "ERROR"}
@@ -940,7 +962,7 @@ function ProviderTestResultsView({ results }) {
         </div>
       ))}
       {items.length === 0 && (
-        <div className="text-center py-4 text-text-muted text-sm">
+        <div className="py-4 text-center text-sm text-text-secondary">
           No active connections found for this group.
         </div>
       )}

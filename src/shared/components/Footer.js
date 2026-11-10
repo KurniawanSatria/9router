@@ -23,7 +23,7 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-bg border-t border-border pt-16 pb-12">
+    <footer className="bg-background border-t border-card-border pt-16 pb-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-12">
           {/* Brand */}
@@ -38,18 +38,18 @@ export default function Footer() {
                   />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-text-main">
+              <span className="text-xl font-bold text-text-primary">
                 {APP_CONFIG.name}
               </span>
             </div>
-            <p className="text-text-muted mb-6 max-w-sm font-light">
+            <p className="text-sm text-text-secondary mb-6 max-w-sm font-light">
               The unified interface for modern AI infrastructure. Secure, observable, and scalable.
             </p>
             {/* Social links */}
             <div className="flex gap-4">
               <a
                 href="#"
-                className="text-gray-400 hover:text-primary transition-colors"
+                className="text-text-tertiary hover:text-primary transition-colors"
                 aria-label="Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-primary transition-colors"
+                className="text-text-tertiary hover:text-primary transition-colors"
                 aria-label="GitHub"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -70,8 +70,8 @@ export default function Footer() {
 
           {/* Product */}
           <div>
-            <h4 className="font-semibold text-text-main mb-4">Product</h4>
-            <ul className="flex flex-col gap-3 text-sm text-text-muted font-light">
+            <h4 className="font-semibold text-text-primary mb-4">Product</h4>
+            <ul className="flex flex-col gap-3 text-sm text-text-secondary font-light">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="hover:text-primary transition-colors">
@@ -84,8 +84,8 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="font-semibold text-text-main mb-4">Resources</h4>
-            <ul className="flex flex-col gap-3 text-sm text-text-muted font-light">
+            <h4 className="font-semibold text-text-primary mb-4">Resources</h4>
+            <ul className="flex flex-col gap-3 text-sm text-text-secondary font-light">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="hover:text-primary transition-colors">
@@ -98,8 +98,8 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold text-text-main mb-4">Company</h4>
-            <ul className="flex flex-col gap-3 text-sm text-text-muted font-light">
+            <h4 className="font-semibold text-text-primary mb-4">Company</h4>
+            <ul className="flex flex-col gap-3 text-sm text-text-secondary font-light">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="hover:text-primary transition-colors">
@@ -112,11 +112,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-text-muted">
+        <div className="border-t border-card-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-text-tertiary">
             © {new Date().getFullYear()} {APP_CONFIG.name} Inc. All rights reserved.
           </p>
-          <div className="flex gap-6 text-sm text-text-muted">
+          <div className="flex gap-6 text-sm text-text-tertiary">
             <Link href="#" className="hover:text-primary transition-colors">
               Privacy Policy
             </Link>

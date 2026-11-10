@@ -1,18 +1,20 @@
 "use client";
 
-import { cn } from "@/shared/utils/cn";
+import { cnx } from "@/shared/utils/cn";
+import Icon from "@/shared/components/Icon";
 
 const variants = {
-  default: "bg-surface-2 text-text-muted",
-  primary: "bg-brand-500/10 text-brand-600 dark:text-brand-300",
-  success: "bg-green-500/10 text-green-600 dark:text-green-400",
-  warning: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-  error: "bg-red-500/10 text-red-600 dark:text-red-400",
-  info: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  default: "bg-background-soft-100 text-text-secondary",
+  neutral: "bg-background-soft-100 text-text-secondary",
+  primary: "bg-primary-500/10 text-primary-500",
+  success: "bg-success-500/10 text-success-500",
+  warning: "bg-warning-500/10 text-warning-500",
+  error: "bg-error-500/10 text-error-500",
+  info: "bg-info-500/10 text-info-500",
 };
 
 const sizes = {
-  sm: "px-2 py-0.5 text-[10px]",
+  sm: "px-2 py-0.5 text-[11px]",
   md: "px-2.5 py-1 text-xs",
   lg: "px-3 py-1.5 text-sm",
 };
@@ -27,8 +29,8 @@ export default function Badge({
 }) {
   return (
     <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full font-semibold",
+      className={cnx(
+        "inline-flex items-center gap-1.5 rounded-full font-medium",
         variants[variant],
         sizes[size],
         className
@@ -36,18 +38,18 @@ export default function Badge({
     >
       {dot && (
         <span
-          className={cn(
+          className={cnx(
             "size-1.5 rounded-full",
-            variant === "success" && "bg-green-500",
-            variant === "warning" && "bg-yellow-500",
-            variant === "error" && "bg-red-500",
-            variant === "info" && "bg-blue-500",
-            variant === "primary" && "bg-brand-500",
-            variant === "default" && "bg-gray-500"
+            variant === "success" && "bg-success-500",
+            variant === "warning" && "bg-warning-500",
+            variant === "error" && "bg-error-500",
+            variant === "info" && "bg-info-500",
+            variant === "primary" && "bg-primary-500",
+            variant === "default" && "bg-text-tertiary"
           )}
         />
       )}
-      {icon && <span className="material-symbols-outlined text-[14px]">{icon}</span>}
+      {icon && <Icon name={icon} className="size-3.5" />}
       {children}
     </span>
   );

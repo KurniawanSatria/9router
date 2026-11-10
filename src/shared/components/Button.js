@@ -1,21 +1,22 @@
 "use client";
 
-import { cn } from "@/shared/utils/cn";
+import { cnx } from "@/shared/utils/cn";
+import Icon from "@/shared/components/Icon";
 
 const variants = {
-  primary: "bg-primary-solid hover:bg-primary-solid-hover text-on-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_1px_2px_rgba(20,29,25,0.12)] disabled:bg-surface-3 disabled:text-text-muted",
-  secondary: "bg-surface hover:bg-bg-alt text-text-main border border-border disabled:opacity-50",
-  outline: "border border-border text-text-main hover:bg-surface hover:border-primary/50",
-  ghost: "text-text-muted hover:bg-surface hover:text-text-main",
-  danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm disabled:bg-surface-3 disabled:text-text-muted",
-  success: "bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm disabled:bg-surface-3 disabled:text-text-muted",
+  primary: "bg-primary-500 text-primary-text hover:bg-primary-600",
+  secondary: "border border-base-100 bg-background-100 text-text-primary hover:bg-background-soft-50",
+  outline: "border border-base-100 text-text-primary hover:bg-background-soft-50",
+  ghost: "text-text-secondary hover:bg-background-soft-50 hover:text-text-primary",
+  danger: "bg-error-500 text-primary-text hover:bg-error-500/90",
+  success: "bg-success-500 text-primary-text hover:bg-success-500/90",
 };
 
 const sizes = {
-  xs: "h-6 px-2.5 text-[11px] rounded-[6px] gap-1.5",
-  sm: "h-7 px-3 text-xs rounded-[7px]",
-  md: "h-9 px-4 text-sm rounded-[8px]",
-  lg: "h-11 px-6 text-sm rounded-[9px]",
+  xs: "h-6 px-2.5 text-[11px] rounded-lg gap-1.5",
+  sm: "h-7 px-3 text-xs rounded-lg",
+  md: "h-9 px-4 text-sm rounded-lg",
+  lg: "h-11 px-6 text-sm rounded-lg",
 };
 
 export default function Button({
@@ -32,9 +33,9 @@ export default function Button({
 }) {
   return (
     <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 ease-out cursor-pointer",
-        "active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
+      className={cnx(
+        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 ease-out cursor-pointer",
+        "active:translate-y-px disabled:cursor-not-allowed disabled:bg-background-soft-200 disabled:text-text-tertiary",
         variants[variant],
         sizes[size],
         fullWidth && "w-full",
@@ -44,13 +45,13 @@ export default function Button({
       {...props}
     >
       {loading ? (
-        <span className={cn("material-symbols-outlined animate-spin", size === "xs" ? "text-[14px]" : "text-[18px]")}>progress_activity</span>
+        <Icon name="progress_activity" className={cnx(" animate-spin", size === "xs" ? "size-3.5" : "size-4.5")} />
       ) : icon ? (
-        <span className={cn("material-symbols-outlined", size === "xs" ? "text-[14px]" : "text-[18px]")}>{icon}</span>
+        <Icon name={icon} className={cnx("", size === "xs" ? "size-3.5" : "size-4.5")} />
       ) : null}
       {children}
       {iconRight && !loading && (
-        <span className={cn("material-symbols-outlined", size === "xs" ? "text-[14px]" : "text-[18px]")}>{iconRight}</span>
+        <Icon name={iconRight} className={cnx("", size === "xs" ? "size-3.5" : "size-4.5")} />
       )}
     </button>
   );

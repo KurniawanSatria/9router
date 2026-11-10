@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
+import Icon from "@/shared/components/Icon";
 
 export default function Drawer({
   isOpen,
@@ -42,39 +43,39 @@ export default function Drawer({
     <div className="fixed inset-0 z-50">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-[2px] fade-in cursor-pointer"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm fade-in cursor-pointer"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer panel */}
       <div className={cn(
-        "absolute right-0 top-0 h-full bg-surface flex flex-col",
+        "absolute right-0 top-0 h-full bg-card-background flex flex-col",
         "shadow-[var(--shadow-elev)]",
         "slide-in-right",
-        "border-l border-border-subtle",
+        "rounded-l-xl border-l-[0.5px] border-card-border",
         widths[width] || widths.md,
         className
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border-subtle flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 p-5 border-b border-card-border shrink-0">
           <div className="flex items-center gap-3">
             {title && (
-              <h2 className="text-lg font-semibold text-text-main">{title}</h2>
+              <h2 className="text-base font-semibold text-text-primary">{title}</h2>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-1.5 rounded-[10px] text-text-muted hover:bg-surface-2 hover:text-text-main transition-colors"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-background-gray-primary hover:text-text-primary"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <Icon name="close" className="size-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
           {children}
         </div>
       </div>

@@ -6,6 +6,7 @@ import ProviderIcon from "@/shared/components/ProviderIcon";
 import Badge from "@/shared/components/Badge";
 import QuotaProgressBar from "./QuotaProgressBar";
 import { calculatePercentage } from "./utils";
+import Icon from "@/shared/components/Icon";
 
 const planVariants = {
   free: "default",
@@ -55,7 +56,7 @@ export default function ProviderLimitCard({
   const planVariant = planVariants[plan?.toLowerCase()] || "default";
 
   return (
-    <Card padding="md" className="flex flex-col gap-4">
+    <Card padding="none" className="flex flex-col gap-4 rounded-xl border-[0.5px] border-card-border bg-card-background p-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -75,7 +76,7 @@ export default function ProviderLimitCard({
           </div>
 
           <div>
-            <h3 className="font-semibold text-text-primary">
+            <h3 className="text-base font-semibold text-text-primary">
               {name || provider}
             </h3>
             {plan && (
@@ -93,16 +94,12 @@ export default function ProviderLimitCard({
         <button
           onClick={handleRefresh}
           disabled={refreshing || loading}
-          className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg hover:bg-background-gray-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Refresh quota"
         >
-          <span
-            className={`material-symbols-outlined text-[20px] text-text-muted ${
+          <Icon name="refresh" className={` size-5 text-text-secondary ${
               refreshing || loading ? "animate-spin" : ""
-            }`}
-          >
-            refresh
-          </span>
+            }`} />
         </button>
       </div>
 
@@ -110,36 +107,32 @@ export default function ProviderLimitCard({
       {loading && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <div className="h-4 bg-black/5 dark:bg-white/5 rounded animate-pulse" />
-            <div className="h-2 bg-black/5 dark:bg-white/5 rounded animate-pulse" />
+            <div className="h-4 bg-background-gray-primary rounded animate-pulse" />
+            <div className="h-2 bg-background-gray-primary rounded animate-pulse" />
           </div>
           <div className="space-y-2">
-            <div className="h-4 bg-black/5 dark:bg-white/5 rounded animate-pulse" />
-            <div className="h-2 bg-black/5 dark:bg-white/5 rounded animate-pulse" />
+            <div className="h-4 bg-background-gray-primary rounded animate-pulse" />
+            <div className="h-2 bg-background-gray-primary rounded animate-pulse" />
           </div>
         </div>
       )}
 
       {/* Error State */}
       {!loading && error && (
-        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+        <div className="p-4 rounded-lg bg-error-500/10 border border-error-500/20">
           <div className="flex items-start gap-2">
-            <span className="material-symbols-outlined text-red-500 text-[20px]">
-              error
-            </span>
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <Icon name="error" className="text-error-500 size-5" />
+            <p className="text-sm text-error-500">{error}</p>
           </div>
         </div>
       )}
 
       {/* Info Message (for providers without API) */}
       {!loading && !error && message && (
-        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+        <div className="p-4 rounded-lg bg-info-500/10 border border-info-500/20">
           <div className="flex items-start gap-2">
-            <span className="material-symbols-outlined text-blue-500 text-[20px]">
-              info
-            </span>
-            <p className="text-sm text-blue-600 dark:text-blue-400">
+            <Icon name="info" className="text-info-500 size-5" />
+            <p className="text-sm text-info-500">
               {message}
             </p>
           </div>
@@ -175,10 +168,8 @@ export default function ProviderLimitCard({
 
       {/* Empty State */}
       {!loading && !error && !message && quotas?.length === 0 && (
-        <div className="text-center py-8 text-text-muted">
-          <span className="material-symbols-outlined text-[48px] opacity-20">
-            data_usage
-          </span>
+        <div className="text-center py-8 text-text-tertiary">
+          <Icon name="data_usage" className="size-12 opacity-20 mx-auto" />
           <p className="text-sm mt-2">No quota data available</p>
         </div>
       )}

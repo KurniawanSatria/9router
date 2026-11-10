@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import { cn } from "@/shared/utils/cn";
+import Icon from "@/shared/components/Icon";
 
 /**
  * Select — a real dropdown, not a native <select>.
@@ -38,10 +39,10 @@ export default function Select({
   const selectId = id || autoId;
 
   const sizes = {
-    xs: "h-7 px-2 text-[11px] rounded-[7px] gap-1",
-    sm: "h-8 px-2.5 text-xs rounded-[8px] gap-1.5",
-    md: "h-9 px-3 text-sm rounded-[10px] gap-2",
-    lg: "h-11 px-4 text-sm rounded-[10px] gap-2",
+    xs: "h-8 px-2 text-[11px] rounded-md gap-1",
+    sm: "h-9 px-2.5 text-xs rounded-lg gap-1.5",
+    md: "h-10 px-3 text-sm rounded-lg gap-2",
+    lg: "h-11 px-4 text-sm rounded-lg gap-2",
   };
 
   const selected = options.find((o) => String(o.value) === String(value));
@@ -161,7 +162,7 @@ export default function Select({
           id={`${selectId}-listbox`}
           role="listbox"
           aria-labelledby={selectId}
-          className="fixed z-[100] max-h-72 overflow-y-auto overscroll-contain rounded-[10px] border border-border bg-surface p-1 shadow-[var(--shadow-elevated)] animate-pop-in custom-scrollbar"
+          className="fixed z-[100] max-h-72 overflow-y-auto overscroll-contain rounded-xl border border-card-border bg-card-background p-1 shadow-lg animate-pop-in custom-scrollbar"
           style={{
             ...(rect.placement === "top"
               ? { bottom: Math.max(8, window.innerHeight - rect.bottom + rect.gap) }
@@ -185,26 +186,26 @@ export default function Select({
                 onMouseEnter={() => setActiveIndex(i)}
                 onClick={() => commit(opt)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-left text-sm transition-colors",
+                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors",
                   "disabled:cursor-not-allowed disabled:opacity-40",
                   isSelected
-                    ? "bg-surface-2 font-medium text-text-main"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main",
-                  i === activeIndex && !isSelected && "bg-surface-2/70"
+                    ? "bg-background-gray-primary font-medium text-text-primary"
+                    : "text-text-secondary hover:bg-background-gray-primary hover:text-text-primary",
+                  i === activeIndex && !isSelected && "bg-background-gray-primary/70"
                 )}
               >
                 {opt.icon && (
-                  <span className="material-symbols-outlined text-[16px] leading-none">{opt.icon}</span>
+                  <Icon name={opt.icon} className="size-4" />
                 )}
                 <span className="min-w-0 flex-1 truncate">{opt.label}</span>
                 {isSelected && (
-                  <span className="material-symbols-outlined text-[15px] leading-none text-primary">check</span>
+                  <Icon name="check" className="size-[15px] text-primary" />
                 )}
               </button>
             );
           })}
           {options.length === 0 && (
-            <div className="px-2.5 py-2 text-xs text-text-muted">No options</div>
+            <div className="px-2.5 py-2 text-xs text-text-tertiary">No options</div>
           )}
         </div>,
         document.body
@@ -214,9 +215,9 @@ export default function Select({
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       {label && (
-        <label htmlFor={selectId} className="text-xs font-medium text-text-muted">
+        <label htmlFor={selectId} className="text-xs font-medium text-text-secondary">
           {label}
-          {required && <span className="ml-1 text-red-500">*</span>}
+          {required && <span className="ml-1 text-error-500">*</span>}
         </label>
       )}
 
@@ -233,35 +234,31 @@ export default function Select({
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={onKeyDown}
         className={cn(
-          "inline-flex min-w-0 items-center justify-between border bg-surface text-left transition-colors",
+          "inline-flex min-w-0 items-center justify-between border bg-card-background text-left transition-colors",
           "hover:border-brand-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30",
           "disabled:cursor-not-allowed disabled:opacity-50",
           open && "border-brand-500/50 ring-2 ring-brand-500/20",
-          error ? "border-red-500/50" : "border-border",
+          error ? "border-error-500/50" : "border-input-border",
           sizes[size],
           buttonClassName
         )}
       >
-        <span className={cn("min-w-0 truncate", selected ? "text-text-main" : "text-text-subtle")}>
+        <span className={cn("min-w-0 truncate", selected ? "text-text-primary" : "text-text-tertiary")}>
           {displayLabel}
         </span>
-        <span
-          className={cn(
-            "material-symbols-outlined shrink-0 text-[16px] leading-none text-text-muted transition-transform duration-150",
-            open && "rotate-180"
-          )}
-        >
-          expand_more
-        </span>
+        <Icon name="expand_more" className={cn(
+ " shrink-0 size-4 text-text-tertiary transition-transform duration-150",
+ open && "rotate-180"
+ )} />
       </button>
 
       {error && (
-        <p className="flex items-center gap-1 text-xs text-red-500">
-          <span className="material-symbols-outlined text-[13px]">error</span>
+        <p className="flex items-center gap-1 text-xs text-error-500">
+          <Icon name="error" className="size-[13px]" />
           {error}
         </p>
       )}
-      {hint && !error && <p className="text-xs text-text-muted">{hint}</p>}
+      {hint && !error && <p className="text-xs text-text-tertiary">{hint}</p>}
 
       {list}
     </div>

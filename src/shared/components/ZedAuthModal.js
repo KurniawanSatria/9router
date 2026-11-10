@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Input } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import Icon from "@/shared/components/Icon";
 
 /**
  * Zed Connect modal (Codex-style):
@@ -293,13 +294,11 @@ export default function ZedAuthModal({ isOpen, providerInfo, onSuccess, onClose 
 
   return (
     <Modal isOpen={isOpen} title={title} onClose={handleClose} size="lg">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {(phase === "booting" || phase === "importing") && (
-          <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-sidebar/50">
-            <span className="material-symbols-outlined text-base text-primary animate-spin">
-              progress_activity
-            </span>
-            <span className="text-sm">
+          <div className="flex items-center gap-2 rounded-lg border border-card-border bg-background-gray-primary px-3 py-2">
+            <Icon name="progress_activity" className="size-4 text-primary-500 animate-spin" />
+            <span className="text-sm text-text-secondary">
               {phase === "importing"
                 ? "Importing session from Zed IDE…"
                 : "Detecting Zed IDE session…"}
@@ -308,13 +307,11 @@ export default function ZedAuthModal({ isOpen, providerInfo, onSuccess, onClose 
         )}
 
         {phase === "ide-found" && ideSession && (
-          <div className="space-y-3">
-            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="space-y-4">
+            <div className="rounded-lg border border-success-500/20 bg-success-500/10 p-3">
               <div className="flex gap-2">
-                <span className="material-symbols-outlined text-green-600 dark:text-green-400">
-                  check_circle
-                </span>
-                <p className="text-sm text-green-800 dark:text-green-200">
+                <Icon name="check_circle" className="text-success-500" />
+                <p className="text-sm text-success-500">
                   Zed IDE session detected (user {ideSession.userId}). Import failed — retry or use browser sign-in below.
                 </p>
               </div>
@@ -326,32 +323,30 @@ export default function ZedAuthModal({ isOpen, providerInfo, onSuccess, onClose 
         )}
 
         {phase === "success" && (
-          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800 text-sm text-green-800 dark:text-green-200">
+          <div className="rounded-lg border border-success-500/20 bg-success-500/10 p-3 text-sm text-success-500">
             Connected successfully.
           </div>
         )}
 
         {showBrowserUi && (
           <>
-            <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-sidebar/50">
-              <span className="material-symbols-outlined text-base text-primary animate-spin">
-                progress_activity
-              </span>
-              <span className="text-sm">Waiting for popup authorization…</span>
+            <div className="flex items-center gap-2 rounded-lg border border-card-border bg-background-gray-primary px-3 py-2">
+              <Icon name="progress_activity" className="size-4 text-primary-500 animate-spin" />
+              <span className="text-sm text-text-secondary">Waiting for popup authorization…</span>
             </div>
 
             <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted uppercase tracking-wider">
+              <div className="flex-1 h-px bg-card-border" />
+              <span className="text-xs text-text-tertiary uppercase tracking-wider">
                 Or paste callback URL manually
               </span>
-              <div className="flex-1 h-px bg-border" />
+              <div className="flex-1 h-px bg-card-border" />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <p className="text-sm font-medium mb-2">Step 1: Open this URL in your browser</p>
-                <div className="flex gap-2">
+                <p className="text-sm font-medium text-text-primary mb-2">Step 1: Open this URL in your browser</p>
+                <div className="flex gap-3">
                   <Input
                     value={authData?.authUrl || ""}
                     readOnly
@@ -369,8 +364,8 @@ export default function ZedAuthModal({ isOpen, providerInfo, onSuccess, onClose 
               </div>
 
               <div>
-                <p className="text-sm font-medium mb-2">Step 2: Paste the callback URL here</p>
-                <p className="text-xs text-text-muted mb-2">
+                <p className="text-sm font-medium text-text-primary mb-2">Step 2: Paste the callback URL here</p>
+                <p className="text-xs text-text-tertiary mb-2">
                   After authorization, copy the full URL from your browser (or the local callback page).
                 </p>
                 <Input
@@ -383,12 +378,12 @@ export default function ZedAuthModal({ isOpen, providerInfo, onSuccess, onClose 
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <div className="rounded-lg border border-error-500/20 bg-error-500/10 p-3">
+                <p className="text-sm text-error-500">{error}</p>
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 onClick={handleManualCallback}
                 fullWidth

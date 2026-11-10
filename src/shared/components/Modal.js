@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
 import Button from "./Button";
+import Icon from "@/shared/components/Icon";
 
 export default function Modal({
   isOpen,
@@ -45,42 +46,42 @@ export default function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-[2px] fade-in"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm fade-in"
         onClick={closeOnOverlay ? onClose : undefined}
       />
 
       {/* Modal content */}
       <div
         className={cn(
-          "relative w-full bg-surface",
-          "border border-border",
-          "rounded-[12px] shadow-[var(--shadow-elev)]",
+          "relative w-full bg-card-background",
+          "border-[0.5px] border-card-border",
+          "rounded-xl shadow-[var(--shadow-elev)]",
           "fade-in",
           sizes[size],
           className
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-2 border-b border-border-subtle">
+        <div className="flex items-center justify-between gap-3 p-5 border-b border-card-border">
           {title ? (
-            <h2 className="text-lg font-semibold text-text-main px-2">{title}</h2>
+            <h2 className="text-base font-semibold text-text-primary">{title}</h2>
           ) : <span />}
           <button
             onClick={onClose}
             aria-label="Close"
             title="Close"
-            className="p-1.5 rounded-[10px] text-text-muted hover:bg-surface-2 hover:text-text-main transition-colors"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-background-gray-primary hover:text-text-primary"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <Icon name="close" className="size-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 max-h-[calc(85vh-100px)] overflow-y-auto custom-scrollbar">{children}</div>
+        <div className="p-5 max-h-[calc(85vh-100px)] overflow-y-auto custom-scrollbar">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-border-subtle">
+          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-card-border">
             {footer}
           </div>
         )}
@@ -117,7 +118,7 @@ export function ConfirmModal({
         </>
       }
     >
-      <p className="text-text-muted">{message}</p>
+      <p className="text-sm text-text-secondary">{message}</p>
     </Modal>
   );
 }

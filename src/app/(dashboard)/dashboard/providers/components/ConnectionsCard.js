@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getStatusVariant as getConnectionStatusVariant } from "@/shared/utils/connectionStatus";
 import PropTypes from "prop-types";
-import { Card, Badge, Button, Modal, Select, Toggle, EditConnectionModal, ConfirmModal } from "@/shared/components";
+import { Card, Badge, Button, Input, Modal, Select, Toggle, EditConnectionModal, ConfirmModal } from "@/shared/components";
 import WebLoginButton from "./WebLoginButton";
+import Icon from "@/shared/components/Icon";
 
 // ── CooldownTimer ──────────────────────────────────────────────
 function CooldownTimer({ until }) {
@@ -25,7 +26,7 @@ function CooldownTimer({ until }) {
   }, [until]);
 
   if (!remaining) return null;
-  return <span className="text-xs text-orange-500 font-mono">⏱ {remaining}</span>;
+  return <span className="text-xs text-warning-500 font-mono">⏱ {remaining}</span>;
 }
 
 CooldownTimer.propTypes = { until: PropTypes.string.isRequired };
@@ -101,19 +102,19 @@ function ConnectionRow({ connection, proxyPools, isOAuth, isFirst, isLast, onMov
   };
 
   return (
-    <div className={`group flex flex-col gap-3 p-2 rounded-lg sm:flex-row sm:items-center sm:justify-between hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors ${connection.isActive === false ? "opacity-60" : ""}`}>
+    <div className={`group flex flex-col gap-3 border-b border-card-border p-2 transition-colors last:border-0 hover:bg-background-gray-primary sm:flex-row sm:items-center sm:justify-between ${connection.isActive === false ? "opacity-60" : ""}`}>
       <div className="flex w-full min-w-0 flex-1 items-start gap-3 sm:items-center">
         <div className="flex flex-col">
-          <button onClick={onMoveUp} disabled={isFirst} aria-label="Move up" className={`p-0.5 rounded ${isFirst ? "text-text-muted/30 cursor-not-allowed" : "hover:bg-sidebar text-text-muted hover:text-primary"}`}>
-            <span className="material-symbols-outlined text-sm">keyboard_arrow_up</span>
+          <button onClick={onMoveUp} disabled={isFirst} aria-label="Move up" className={`p-0.5 rounded ${isFirst ? "text-text-tertiary/40 cursor-not-allowed" : "hover:bg-background-gray-primary text-text-tertiary hover:text-primary-500"}`}>
+            <Icon name="keyboard_arrow_up" className="size-3.5" />
           </button>
-          <button onClick={onMoveDown} disabled={isLast} aria-label="Move down" className={`p-0.5 rounded ${isLast ? "text-text-muted/30 cursor-not-allowed" : "hover:bg-sidebar text-text-muted hover:text-primary"}`}>
-            <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
+          <button onClick={onMoveDown} disabled={isLast} aria-label="Move down" className={`p-0.5 rounded ${isLast ? "text-text-tertiary/40 cursor-not-allowed" : "hover:bg-background-gray-primary text-text-tertiary hover:text-primary-500"}`}>
+            <Icon name="keyboard_arrow_down" className="size-3.5" />
           </button>
         </div>
-        <span className="material-symbols-outlined text-base text-text-muted">{isOAuth ? "lock" : "key"}</span>
+        <Icon name={isOAuth ? "lock" : "key"} className="size-4 text-text-secondary" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{displayName}</p>
+          <p className="text-sm font-medium text-text-primary truncate">{displayName}</p>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge variant={getStatusVariant()} size="sm" dot>
               {connection.isActive === false ? "disabled" : (effectiveStatus || "Unknown")}
@@ -121,15 +122,15 @@ function ConnectionRow({ connection, proxyPools, isOAuth, isFirst, isLast, onMov
             {hasAnyProxy && <Badge variant={proxyBadgeVariant} size="sm">Proxy</Badge>}
             {isCooldown && connection.isActive !== false && <CooldownTimer until={modelLockUntil} />}
             {connection.lastError && connection.isActive !== false && (
-              <span className="text-xs text-red-500 truncate max-w-[300px]" title={connection.lastError}>{connection.lastError}</span>
+              <span className="text-xs text-error-500 truncate max-w-[300px]" title={connection.lastError}>{connection.lastError}</span>
             )}
-            <span className="text-xs text-text-muted">#{connection.priority}</span>
+            <span className="text-xs text-text-tertiary">#{connection.priority}</span>
           </div>
           {hasAnyProxy && (
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] text-text-muted truncate max-w-[420px]" title={proxyDisplayText}>{proxyDisplayText}</span>
-              {maskedProxyUrl && <code className="text-[10px] font-mono bg-black/5 dark:bg-white/5 px-1 py-0.5 rounded text-text-muted">{maskedProxyUrl}</code>}
-              {noProxyText && <span className="text-[11px] text-text-muted truncate max-w-[320px]" title={noProxyText}>no_proxy: {noProxyText}</span>}
+              <span className="text-[11px] text-text-tertiary truncate max-w-[420px]" title={proxyDisplayText}>{proxyDisplayText}</span>
+              {maskedProxyUrl && <code className="text-[10px] font-mono bg-background-soft-100 px-1 py-0.5 rounded text-text-secondary">{maskedProxyUrl}</code>}
+              {noProxyText && <span className="text-[11px] text-text-tertiary truncate max-w-[320px]" title={noProxyText}>no_proxy: {noProxyText}</span>}
             </div>
           )}
         </div>
@@ -140,28 +141,28 @@ function ConnectionRow({ connection, proxyPools, isOAuth, isFirst, isLast, onMov
             <div className="relative" ref={proxyDropdownRef}>
               <button
                 onClick={() => setShowProxyDropdown((v) => !v)}
-                className={`flex flex-col items-center px-2 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${hasAnyProxy ? "text-primary" : "text-text-muted hover:text-primary"}`}
+                className={`flex flex-col items-center px-2 py-1 rounded hover:bg-background-gray-primary transition-colors ${hasAnyProxy ? "text-primary-500" : "text-text-tertiary hover:text-primary-500"}`}
                 disabled={updatingProxy}
               >
-                <span className="material-symbols-outlined text-[18px]">{updatingProxy ? "progress_activity" : "lan"}</span>
+                <Icon name={updatingProxy ? "progress_activity" : "lan"} className="size-4.5" />
                 <span className="text-[10px] leading-tight">Proxy</span>
               </button>
               {showProxyDropdown && (
-                <div className="absolute right-0 top-full mt-1 z-50 bg-bg border border-border rounded-lg shadow-lg py-1 min-w-[160px]">
-                  <button onClick={() => handleSelectProxy("__none__")} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/5 ${!boundProxyPoolId ? "text-primary font-medium" : "text-text-main"}`}>None</button>
+                <div className="absolute right-0 top-full mt-1 z-50 border border-card-border bg-card-background rounded-lg shadow-md py-1 min-w-[160px]">
+                  <button onClick={() => handleSelectProxy("__none__")} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-background-gray-primary ${!boundProxyPoolId ? "text-primary-500 font-medium" : "text-text-primary"}`}>None</button>
                   {(proxyPools || []).map((pool) => (
-                    <button key={pool.id} onClick={() => handleSelectProxy(pool.id)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/5 ${boundProxyPoolId === pool.id ? "text-primary font-medium" : "text-text-main"}`}>{pool.name}</button>
+                    <button key={pool.id} onClick={() => handleSelectProxy(pool.id)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-background-gray-primary ${boundProxyPoolId === pool.id ? "text-primary-500 font-medium" : "text-text-primary"}`}>{pool.name}</button>
                   ))}
                 </div>
               )}
             </div>
           )}
-          <button onClick={onEdit} className="flex flex-col items-center px-2 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-text-muted hover:text-primary">
-            <span className="material-symbols-outlined text-[18px]">edit</span>
+          <button onClick={onEdit} className="flex flex-col items-center px-2 py-1 rounded hover:bg-background-gray-primary text-text-tertiary hover:text-primary-500">
+            <Icon name="edit" className="size-4.5" />
             <span className="text-[10px] leading-tight">Edit</span>
           </button>
-          <button onClick={onDelete} className="flex flex-col items-center px-2 py-1 rounded hover:bg-red-500/10 text-red-500">
-            <span className="material-symbols-outlined text-[18px]">delete</span>
+          <button onClick={onDelete} className="flex flex-col items-center px-2 py-1 rounded hover:bg-error-500/10 text-error-500">
+            <Icon name="delete" className="size-4.5" />
             <span className="text-[10px] leading-tight">Delete</span>
           </button>
         </div>
@@ -248,15 +249,20 @@ function AddApiKeyModal({ isOpen, provider, providerName, proxyPools, onSave, on
   return (
     <Modal isOpen={isOpen} title={`Add ${providerName || provider} API Key`} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        <div>
-          <label className="text-xs text-text-muted mb-1 block">Name</label>
-          <input className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Production Key" />
-        </div>
+        <Input
+          label="Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Production Key"
+        />
         <div className="flex gap-2">
-          <div className="flex-1">
-            <label className="text-xs text-text-muted mb-1 block">API Key</label>
-            <input type="password" className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary" value={formData.apiKey} onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })} />
-          </div>
+          <Input
+            className="flex-1"
+            label="API Key"
+            type="password"
+            value={formData.apiKey}
+            onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+          />
           <div className="pt-6">
             <Button onClick={handleValidate} disabled={!formData.apiKey || validating || saving} variant="secondary">
               {validating ? "Checking..." : "Check"}
@@ -268,10 +274,12 @@ function AddApiKeyModal({ isOpen, provider, providerName, proxyPools, onSave, on
             {validationResult === "success" ? "Valid" : "Invalid"}
           </Badge>
         )}
-        <div>
-          <label className="text-xs text-text-muted mb-1 block">Priority</label>
-          <input type="number" className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary" value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: Number.parseInt(e.target.value) || 1 })} />
-        </div>
+        <Input
+          label="Priority"
+          type="number"
+          value={formData.priority}
+          onChange={(e) => setFormData({ ...formData, priority: Number.parseInt(e.target.value) || 1 })}
+        />
         <Select label="Proxy Pool" value={formData.proxyPoolId} onChange={(e) => setFormData({ ...formData, proxyPoolId: e.target.value })}
           options={[{ value: NONE, label: "None" }, ...(proxyPools || []).map((p) => ({ value: p.id, label: p.name }))]} />
         <div className="flex gap-2">
@@ -397,15 +405,15 @@ export default function ConnectionsCard({ providerId, isOAuth, loginProviderId =
     } catch (e) { console.log("update connection error:", e); }
   };
 
-  if (loading) return <Card><div className="h-20 animate-pulse bg-black/5 rounded-lg" /></Card>;
+  if (loading) return <Card><div className="h-20 animate-pulse bg-background-gray-primary rounded-lg" /></Card>;
 
   return (
     <>
       <Card>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <h2 className="text-lg font-semibold">Connections</h2>
+          <h2 className="text-base font-semibold text-text-primary">Connections</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-text-muted font-medium">Round Robin</span>
+            <span className="text-xs text-text-secondary font-medium">Round Robin</span>
             <Toggle
               checked={providerStrategy === "round-robin"}
               onChange={(enabled) => {
@@ -417,11 +425,11 @@ export default function ConnectionsCard({ providerId, isOAuth, loginProviderId =
             />
             {providerStrategy === "round-robin" && (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-text-muted">Sticky:</span>
+                <span className="text-xs text-text-secondary">Sticky:</span>
                 <input
                   type="number" min={1} value={providerStickyLimit}
                   onChange={(e) => { setProviderStickyLimit(e.target.value); saveStrategy("round-robin", e.target.value); }}
-                  className="w-16 px-2 py-1 text-xs border border-border rounded-md bg-background focus:outline-none focus:border-primary"
+                  className="h-8 w-16 rounded-lg border border-input-border bg-card-background px-2 text-sm text-text-primary outline-none focus:border-primary-500"
                 />
               </div>
             )}
@@ -430,7 +438,7 @@ export default function ConnectionsCard({ providerId, isOAuth, loginProviderId =
 
         {connections.length === 0 ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-text-muted">No connections yet</p>
+            <p className="text-sm text-text-secondary">No connections yet</p>
             <div className="flex flex-wrap gap-2">
               {loginProviderId && (
                 <WebLoginButton providerId={loginProviderId} onConnected={fetch_} />
@@ -440,7 +448,7 @@ export default function ConnectionsCard({ providerId, isOAuth, loginProviderId =
           </div>
         ) : (
           <>
-            <div className="flex flex-col divide-y divide-black/[0.03] dark:divide-white/[0.03] max-h-[500px] overflow-y-auto pr-1">
+            <div className="flex flex-col max-h-[500px] overflow-y-auto pr-1">
               {connections.map((conn, idx) => (
                 <ConnectionRow
                   key={conn.id}

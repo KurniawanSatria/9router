@@ -4,6 +4,7 @@ import { useState } from "react";
 import Modal from "./Modal";
 import Button from "./Button";
 import Badge from "./Badge";
+import Icon from "@/shared/components/Icon";
 
 const QUICK_THRESHOLDS = [60, 70, 75, 80, 85, 90];
 
@@ -91,7 +92,7 @@ export default function SmartPolicyModal({
       size="lg"
     >
       <div className="flex flex-col gap-4">
-        <p className="text-xs text-text-muted">
+        <p className="text-sm text-text-secondary">
           Choose how the System One router manages model selection across conversation turns:
         </p>
 
@@ -104,8 +105,8 @@ export default function SmartPolicyModal({
                 onClick={() => setSelectedPolicy(p.id)}
                 className={`relative flex flex-col rounded-xl border p-3 cursor-pointer transition-all ${
                   isSelected
-                    ? "border-primary bg-primary/[0.04] shadow-sm"
-                    : "border-border/60 hover:border-border hover:bg-black/[0.01] dark:hover:bg-white/[0.01]"
+                    ? "border-primary-500 bg-primary-500/[0.04] shadow-sm"
+                    : "border-card-border bg-background-100 hover:border-primary-500/40 hover:bg-background-soft-50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -113,22 +114,20 @@ export default function SmartPolicyModal({
                     <span
                       className={`size-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                         isSelected
-                          ? "border-primary bg-primary-solid text-on-primary"
-                          : "border-border-subtle bg-surface"
+                          ? "border-primary-500 bg-primary-500 text-primary-text"
+                          : "border-card-border bg-card-background"
                       }`}
                     >
-                      {isSelected && <span className="size-1.5 rounded-full bg-white" />}
+                      {isSelected && <span className="size-1.5 rounded-full bg-primary-text" />}
                     </span>
-                    <span className="size-5 rounded flex items-center justify-center shrink-0 text-text-muted">
-                      <span className="material-symbols-outlined text-[15px] leading-none select-none inline-block">
-                        {p.icon}
-                      </span>
+                    <span className="size-5 rounded flex items-center justify-center shrink-0 text-text-tertiary">
+                      <Icon name={p.icon} className="size-[15px] select-none inline-block" />
                     </span>
-                    <span className="text-sm font-medium text-text-main">
+                    <span className="text-sm font-medium text-text-primary">
                       {p.title}
                     </span>
                     {p.recommended && (
-                      <span className="text-[10px] uppercase tracking-wide font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] uppercase tracking-wide font-semibold text-primary-500 bg-primary-500/10 px-1.5 py-0.5 rounded">
                         Recommended
                       </span>
                     )}
@@ -138,19 +137,19 @@ export default function SmartPolicyModal({
                   </Badge>
                 </div>
 
-                <p className="text-xs text-text-muted mt-1.5 pl-6 leading-relaxed">
+                <p className="text-xs text-text-secondary mt-1.5 pl-6 leading-relaxed">
                   {p.desc}
                 </p>
 
                 {/* Custom Threshold Slider & Chips */}
                 {p.id === "custom" && isSelected && (
                   <div
-                    className="mt-3 pl-6 pt-3 border-t border-border/40 flex flex-col gap-2.5"
+                    className="mt-3 pl-6 pt-3 border-t border-card-border flex flex-col gap-2.5"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-text-muted">Switch Confidence Threshold:</span>
-                      <span className="font-mono font-semibold text-primary text-sm">{threshold}%</span>
+                      <span className="font-medium text-text-secondary">Switch Confidence Threshold:</span>
+                      <span className="font-mono font-semibold text-primary-500 text-sm">{threshold}%</span>
                     </div>
 
                     <input
@@ -160,20 +159,20 @@ export default function SmartPolicyModal({
                       step="1"
                       value={threshold}
                       onChange={(e) => setThreshold(Number(e.target.value))}
-                      className="w-full accent-primary cursor-pointer h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none"
+                      className="w-full accent-primary-500 cursor-pointer h-1.5 bg-background-gray-primary rounded-lg appearance-none"
                     />
 
                     <div className="flex items-center gap-1.5 pt-1">
-                      <span className="text-[10px] text-text-muted mr-1">Presets:</span>
+                      <span className="text-[10px] text-text-tertiary mr-1">Presets:</span>
                       {QUICK_THRESHOLDS.map((pct) => (
                         <button
                           key={pct}
                           type="button"
                           onClick={() => setThreshold(pct)}
-                          className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
+                          className={`px-2 py-0.5 rounded-lg text-[11px] font-mono transition-colors ${
                             threshold === pct
-                              ? "bg-primary-solid text-on-primary font-semibold"
-                              : "bg-black/5 dark:bg-white/5 text-text-muted hover:text-text-main"
+                              ? "bg-primary-500 text-primary-text font-semibold"
+                              : "bg-background-gray-primary text-text-secondary hover:text-text-primary"
                           }`}
                         >
                           {pct}%
@@ -188,19 +187,17 @@ export default function SmartPolicyModal({
         </div>
 
         {/* Prompt Cache Benefit Callout */}
-        <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-3 text-xs flex items-start gap-2.5">
-          <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">
-            bolt
-          </span>
-          <div className="text-text-muted leading-relaxed">
-            <span className="font-medium text-text-main">Prompt Cache Benefits: </span>
+        <div className="rounded-xl border border-primary-500/20 bg-primary-500/[0.03] p-3 text-xs flex items-start gap-2.5">
+          <Icon name="bolt" className="text-primary-500 size-4.5 shrink-0 mt-0.5" />
+          <div className="text-text-secondary leading-relaxed">
+            <span className="font-medium text-text-primary">Prompt Cache Benefits: </span>
             Retaining the same model across session turns keeps upstream prompt caches warm,
-            reducing input token costs by up to <strong className="text-text-main">90%</strong> and
+            reducing input token costs by up to <strong className="text-text-primary">90%</strong> and
             cutting latency in half (Claude Prompt Cache, DeepSeek KV-cache, Gemini Implicit Cache).
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-card-border">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>

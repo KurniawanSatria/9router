@@ -1,6 +1,7 @@
 "use client";
 
-import Card from "./Card";
+import { Card } from "@/shared/tailgrids/core/card";
+import Icon from "@/shared/components/Icon";
 
 // Only show fields user actually cares about
 const FIELD_SCHEMA = {
@@ -10,7 +11,7 @@ const FIELD_SCHEMA = {
   costPerQuery:     { label: "Cost / call", format: (v) => v === 0 ? "Free" : `$${v.toFixed(4)}` },
   pricingUrl:       { label: "Pricing",    format: () => "View pricing", isLink: true },
   freeTier:         { label: "Free tier",  format: (v) => v },
-  freeMonthlyQuota: { label: "Free quota",  format: (v) => v === 0 ? "—" : v >= 999999 ? "Unlimited" : `${v.toLocaleString()} / mo` },
+  freeMonthlyQuota: { label: "Free quota", format: (v) => v === 0 ? "—" : v >= 999999 ? "Unlimited" : `${v.toLocaleString()} / mo` },
   searchTypes:      { label: "Types",      format: (v) => v.join(", ") },
   formats:          { label: "Formats",    format: (v) => v.join(", ") },
   maxMaxResults:    { label: "Max results", format: (v) => v },
@@ -36,44 +37,44 @@ export default function ProviderInfoCard({ config, provider, title = "Provider I
 
   return (
     <Card>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-text-primary">{title}</h2>
         {signupUrl && (
           <a
             href={signupUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary-500 hover:text-primary-600"
           >
-            <span className="material-symbols-outlined text-sm">open_in_new</span>
+            <Icon name="open_in_new" className="size-3.5" />
             Get API Key
           </a>
         )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         {rows.map((r) => (
-          <div key={r.key} className="flex items-center gap-3 min-w-0">
-            <span className="text-xs text-text-muted w-28 shrink-0">{r.label}</span>
+          <div key={r.key} className="flex min-w-0 items-center gap-3">
+            <span className="w-28 shrink-0 text-xs text-text-tertiary">{r.label}</span>
             {r.isLink ? (
               <a
                 href={r.raw}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`text-sm text-primary hover:underline truncate ${r.mono ? "font-mono" : ""}`}
+                className={`truncate text-sm text-primary-500 hover:underline ${r.mono ? "font-mono" : ""}`}
               >
                 {r.value}
               </a>
             ) : (
-              <span className={`text-sm text-text-main truncate ${r.mono ? "font-mono" : ""}`}>
+              <span className={`truncate text-sm text-text-primary ${r.mono ? "font-mono" : ""}`}>
                 {r.value}
               </span>
             )}
           </div>
         ))}
         {noticeText && (
-          <div className="flex items-start gap-3 min-w-0 sm:col-span-2">
-            <span className="text-xs text-text-muted w-28 shrink-0 mt-0.5">Notice</span>
-            <span className="text-sm text-text-main leading-relaxed">{noticeText}</span>
+          <div className="flex min-w-0 items-start gap-3 sm:col-span-2">
+            <span className="mt-0.5 w-28 shrink-0 text-xs text-text-tertiary">Notice</span>
+            <span className="text-sm leading-relaxed text-text-secondary">{noticeText}</span>
           </div>
         )}
       </div>
