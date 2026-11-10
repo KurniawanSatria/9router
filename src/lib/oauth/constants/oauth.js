@@ -171,7 +171,6 @@ export const NOUS_CONFIG = {
   portalBaseUrl: "https://portal.nousresearch.com",
   deviceCodeUrl: "https://portal.nousresearch.com/api/oauth/device/code",
   tokenUrl: "https://portal.nousresearch.com/api/oauth/token",
-  agentKeyUrl: "https://portal.nousresearch.com/api/oauth/agent-key",
   inferenceBaseUrl: "https://inference-api.nousresearch.com/v1",
   scope: "inference:invoke inference:mint_agent_key",
 };

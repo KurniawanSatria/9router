@@ -2,6 +2,7 @@ import { PROVIDERS, PROVIDER_OAUTH } from "../../config/providers.js";
 import { OAUTH_ENDPOINTS, GITHUB_COPILOT, buildKimiHeaders } from "../../config/appConstants.js";
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { dedupRefresh } from "./dedup.js";
+import { NOUS_OAUTH_CLIENT_ID, NOUS_TOKEN_URL, mintNousAgentKey } from "../nous.js";
 import { buildExternalIdpRefreshParams } from "../../../src/lib/oauth/kiroExternalIdp.js";
 
 let _xaiServiceSingleton = null;
@@ -688,7 +689,7 @@ export async function refreshNousToken(refreshToken, log) {
   if (!refreshToken) return null;
   return dedupRefresh("nous", refreshToken, async () => {
     try {
-      const tokenResponse = await fetch("https://portal.nousresearch.com/api/oauth/token", {
+      const tokenResponse = await fetch(NOUS_TOKEN_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -698,7 +699,7 @@ export async function refreshNousToken(refreshToken, log) {
         body: new URLSearchParams({
           grant_type: "refresh_token",
           refresh_token: refreshToken,
-          client_id: "hermes-cli",
+          client_id: NOUS_OAUTH_CLIENT_ID,
         }),
         signal: AbortSignal.timeout(30000),
       });
@@ -718,46 +719,22 @@ export async function refreshNousToken(refreshToken, log) {
         return null;
       }
 
-      let agentKey = null;
-      let agentKeyId = null;
-      let agentKeyExpiresAt = null;
-      try {
-        const agentKeyResponse = await fetch("https://portal.nousresearch.com/api/oauth/agent-key", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${tokenData.access_token}`,
-          },
-          body: JSON.stringify({
-            min_ttl_seconds: 7200,
-          }),
-          signal: AbortSignal.timeout(15000),
-        });
-
-        if (agentKeyResponse.ok) {
-          const agentKeyData = await agentKeyResponse.json();
-          agentKey = agentKeyData.api_key || null;
-          agentKeyId = agentKeyData.key_id || null;
-          agentKeyExpiresAt = agentKeyData.expires_at || null;
-          log?.info?.("TOKEN_REFRESH", "Nous agent key minted successfully");
-        } else {
-          const error = await agentKeyResponse.text().catch(() => "");
-          log?.warn?.("TOKEN_REFRESH", "Failed to mint Nous agent key, falling back to access_token", { error });
-        }
-      } catch (mintErr) {
-        log?.warn?.("TOKEN_REFRESH", `Nous agent key mint error: ${mintErr?.message || mintErr}`);
+      const minted = await mintNousAgentKey(tokenData.access_token);
+      if (minted.agentKey) {
+        log?.info?.("TOKEN_REFRESH", "Nous agent key minted successfully");
+      } else {
+        log?.warn?.("TOKEN_REFRESH", "Failed to mint Nous agent key, falling back to access_token", { error: minted.error });
       }
 
       return {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token || refreshToken,
         expiresIn: tokenData.expires_in,
-        apiKey: agentKey || tokenData.access_token,
-        agentKey,
+        apiKey: minted.agentKey || tokenData.access_token,
+        agentKey: minted.agentKey,
         providerSpecificData: {
-          ...(agentKeyId ? { agentKeyId } : {}),
-          ...(agentKeyExpiresAt ? { agentKeyExpiresAt } : {}),
+          ...(minted.agentKeyId ? { agentKeyId: minted.agentKeyId } : {}),
+          ...(minted.agentKeyExpiresAt ? { agentKeyExpiresAt: minted.agentKeyExpiresAt } : {}),
         },
       };
     } catch (error) {

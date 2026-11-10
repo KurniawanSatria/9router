@@ -1,8 +1,11 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  NOUS_AGENT_KEY_TTL_SECONDS,
+  NOUS_AGENT_KEY_URL,
   NOUS_CHAT_COMPLETIONS_URL,
   NOUS_VALIDATION_MODEL,
+  mintNousAgentKey,
 } from "../../open-sse/services/nous.js";
 import { parseModel } from "../../open-sse/services/model.js";
 
@@ -209,5 +212,62 @@ describe("Nous route wiring (API key + OAuth)", () => {
       provider: "nous",
       model: "poolside/laguna-s-2.1:free",
     });
+  });
+});
+
+describe("mintNousAgentKey", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
+  it("mints an agent key with the configured TTL", async () => {
+    global.fetch.mockResolvedValue(new Response(JSON.stringify({
+      api_key: "agent-key",
+      key_id: "key-1",
+      expires_at: "2026-01-01T00:00:00Z",
+      expires_in: 7200,
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+
+    const minted = await mintNousAgentKey("oauth-access-token");
+
+    expect(minted).toEqual({
+      agentKey: "agent-key",
+      agentKeyId: "key-1",
+      agentKeyExpiresAt: "2026-01-01T00:00:00Z",
+      agentKeyExpiresIn: 7200,
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      NOUS_AGENT_KEY_URL,
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ Authorization: "Bearer oauth-access-token" }),
+      }),
+    );
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({
+      min_ttl_seconds: NOUS_AGENT_KEY_TTL_SECONDS,
+    });
+  });
+
+  it("returns agentKey null on a non-OK response", async () => {
+    global.fetch.mockResolvedValue(new Response("nope", { status: 403 }));
+
+    const minted = await mintNousAgentKey("oauth-access-token");
+
+    expect(minted.agentKey).toBeNull();
+    expect(minted.error).toContain("403");
+  });
+
+  it("returns agentKey null when the request throws", async () => {
+    global.fetch.mockRejectedValue(new Error("socket hung up"));
+
+    const minted = await mintNousAgentKey("oauth-access-token");
+
+    expect(minted.agentKey).toBeNull();
+    expect(minted.error).toBe("socket hung up");
   });
 });
