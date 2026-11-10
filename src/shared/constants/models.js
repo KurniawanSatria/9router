@@ -42,6 +42,9 @@ export const getModelKind = (m, fallback = null) => m?.kind || m?.type || fallba
 // Capacity metadata for UI badges — icon + label + color per capability.
 export const CAPACITY_META = {
   vision: { icon: "visibility", label: "Vision", desc: "Supports image input", color: "text-blue-500" },
+  pdf: { icon: "description", label: "PDF", desc: "Supports PDF / document input", color: "text-red-500" },
+  audioInput: { icon: "graphic_eq", label: "Audio input", desc: "Supports audio input", color: "text-purple-500" },
+  videoInput: { icon: "movie", label: "Video input", desc: "Supports video input", color: "text-emerald-500" },
   // search: temporarily hidden (feature not wired yet)
   reasoning: { icon: "neurology", label: "Reasoning", desc: "Supports reasoning / thinking", color: "text-amber-500" },
 };
