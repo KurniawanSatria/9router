@@ -37,8 +37,8 @@ function NavItem({ icon, label, href, collapsed, onItemClick }) {
               className={cnx(
                 "flex items-center justify-center rounded-lg px-3 py-2.5",
                 isActive
-                  ? "bg-sidebar-navigation-nav-item-nav-hover-background text-icon-primary"
-                  : "text-icon-tertiary transition-colors duration-200 hover:bg-sidebar-navigation-nav-item-nav-hover-background hover:text-icon-primary",
+                  ? "bg-sidebar-navigation-nav-item-nav-hover-background text-primary"
+                  : "text-icon-tertiary transition-colors duration-200 hover:bg-sidebar-navigation-nav-item-nav-hover-background hover:text-primary",
               )}
             >
               {iconNode}
@@ -64,7 +64,7 @@ function NavItem({ icon, label, href, collapsed, onItemClick }) {
             : "text-text-secondary hover:bg-sidebar-navigation-nav-item-nav-hover-background hover:text-text-primary",
         )}
       >
-        <span className="text-icon-tertiary">{iconNode}</span>
+        <span className={cnx(isActive ? "text-primary" : "text-icon-tertiary")}>{iconNode}</span>
         <span>{label}</span>
       </Link>
     )

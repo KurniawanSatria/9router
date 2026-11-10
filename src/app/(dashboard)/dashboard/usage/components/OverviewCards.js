@@ -19,9 +19,6 @@ const fmtLatency = (ms) => {
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`;
 };
 
-const pctChange = (cur, prev) =>
-  prev > 0 && Number.isFinite(cur) ? ((cur - prev) / prev) * 100 : null;
-
 const STATS = [
   { key: "totalRequests", label: "Total Requests", icon: "rocket_launch", iconClass: "text-primary-500" },
   { key: "totalPromptTokens", label: "Input Tokens", icon: "input", iconClass: "text-info-500" },
@@ -30,43 +27,16 @@ const STATS = [
   { key: "successRate", label: "Success Rate", icon: "check_circle", iconClass: "text-success-500" },
 ];
 
-function Delta({ value }) {
-  if (value == null) return null;
-  const up = value >= 0;
-  return (
-    <span className={cnx("font-medium", up ? "text-success-500" : "text-error-500")}>
-      {up ? "+" : ""}{value.toFixed(1)}% {up ? "↑" : "↓"}
-    </span>
-  );
-}
-
-Delta.propTypes = {
-  value: PropTypes.number,
-};
-
 export default function OverviewCards({ stats }) {
   const latency = stats.latency || {};
   const success = stats.success || {};
-  const previous = stats.previous || {};
 
   const values = {
-    totalRequests: {
-      value: fmtCompact(stats.totalRequests),
-      delta: pctChange(stats.totalRequests || 0, previous.totalRequests || 0),
-    },
-    totalPromptTokens: {
-      value: fmtCompact(stats.totalPromptTokens),
-      delta: pctChange(stats.totalPromptTokens || 0, previous.totalPromptTokens || 0),
-    },
-    totalCachedTokens: { value: fmtCompact(stats.totalCachedTokens), delta: null },
-    avgLatency: {
-      value: fmtLatency(latency.avgMs),
-      delta: pctChange(latency.avgMs, latency.prevAvgMs),
-    },
-    successRate: {
-      value: success.rate == null ? "—" : `${success.rate.toFixed(1)}%`,
-      delta: success.rate != null && success.prevRate != null ? success.rate - success.prevRate : null,
-    },
+    totalRequests: fmtCompact(stats.totalRequests),
+    totalPromptTokens: fmtCompact(stats.totalPromptTokens),
+    totalCachedTokens: fmtCompact(stats.totalCachedTokens),
+    avgLatency: fmtLatency(latency.avgMs),
+    successRate: success.rate == null ? "—" : `${success.rate.toFixed(1)}%`,
   };
 
   return (
@@ -78,16 +48,9 @@ export default function OverviewCards({ stats }) {
             <Icon name={icon} className={cnx(" size-4.5 ", iconClass)} />
           </div>
 
-          <div className="mt-4 truncate text-2xl leading-8 font-semibold tabular-nums text-text-primary" title={values[key].value}>
-            {values[key].value}
+          <div className="mt-4 truncate text-2xl leading-8 font-semibold tabular-nums text-text-primary" title={values[key]}>
+            {values[key]}
           </div>
-
-          {values[key].delta != null && (
-            <div className="mt-1 flex items-center gap-1.5 text-xs">
-              <Delta value={values[key].delta} />
-              <span className="text-text-tertiary">vs previous period</span>
-            </div>
-          )}
         </Card>
       ))}
     </div>

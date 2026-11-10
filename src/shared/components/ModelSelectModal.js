@@ -20,8 +20,10 @@ const PROVIDER_ORDER = [
   ...Object.keys(APIKEY_PROVIDERS),
 ];
 
-// Providers that need no auth — always show in model selector
-const NO_AUTH_PROVIDER_IDS = Object.keys(FREE_PROVIDERS).filter(id => FREE_PROVIDERS[id].noAuth);
+// Providers that need no auth — always show in model selector. Hidden ones are
+// listed via a real connection only (e.g. devin-cli needs a local binary/login).
+const NO_AUTH_PROVIDER_IDS = Object.keys(FREE_PROVIDERS)
+  .filter(id => FREE_PROVIDERS[id].noAuth && !FREE_PROVIDERS[id].hidden);
 
 // Providers with per-account live catalogs via /api/providers/[id]/models.
 // Static registry stays as fallback when live fetch fails or is empty.

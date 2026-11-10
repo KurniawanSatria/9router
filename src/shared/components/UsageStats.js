@@ -55,7 +55,7 @@ function ModelName({ modelId }) {
 
 function RecentRequests({ requests = [] }) {
   return (
-    <Card className="flex h-[240px] min-w-0 flex-col overflow-hidden rounded-xl border-[0.5px] border-card-border bg-card-background p-5 sm:h-[300px]" padding="none">
+    <Card className="flex min-w-0 flex-col overflow-hidden rounded-xl border-[0.5px] border-card-border bg-card-background p-5" padding="none">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 py-2 shrink-0">
         <span className="text-base font-semibold text-text-primary">Recent Requests</span>
@@ -76,7 +76,7 @@ function RecentRequests({ requests = [] }) {
               <span className="text-right whitespace-nowrap">In / Out</span>
               <span className="text-right whitespace-nowrap">When</span>
             </div>
-            {requests.map((r, i) => (
+            {requests.slice(0, 5).map((r, i) => (
               <div key={i} className="grid grid-cols-[minmax(0,1fr)_80px_56px] items-center gap-2">
                 <div className="flex min-w-0 items-center gap-2 rounded-lg bg-white/5 px-2 py-1.5 transition-colors hover:bg-white/10">
                   <ModelIcon modelId={r.model} size={14} />
@@ -226,24 +226,20 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
       {/* Overview cards */}
       {loading ? spinner : <OverviewCards stats={stats} />}
 
-      {/* Provider topology + Recent Requests */}
+      {/* Provider topology + Recent Requests / Top Usage */}
       {loading ? spinner : (
-        <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(380px,1fr)]">
+        <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.9fr)]">
           <ProviderTopology
             providers={providers}
             activeRequests={stats.activeRequests || []}
             lastProvider={stats.recentRequests?.[0]?.provider || ""}
             errorProvider={stats.errorProvider || ""}
           />
-          <RecentRequests requests={stats.recentRequests || []} />
-        </div>
-      )}
-
-      {/* Activity chart + top model usage */}
-      {loading ? spinner : (
-        <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(340px,1fr)]">
-          <UsageChart period={period} />
-          {stats.byModel && <TopUsage byModel={stats.byModel} />}
+          <div className="flex min-w-0 flex-col gap-3">
+            <RecentRequests requests={stats.recentRequests || []} />
+            {stats.byModel && <TopUsage byModel={stats.byModel} />}
+            <UsageChart period={period} />
+          </div>
         </div>
       )}
 

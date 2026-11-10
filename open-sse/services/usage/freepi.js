@@ -35,16 +35,14 @@ export function parseFreepiStats(stats) {
     };
   }
 
-  const prompt = toFiniteNumber(stats?.prompt_tokens_today);
-  const completion = toFiniteNumber(stats?.completion_tokens_today);
-  const notes = [`today: ${prompt.toLocaleString("en-US")} prompt / ${completion.toLocaleString("en-US")} completion tokens`];
+  const notes = [];
   if (stats?.lane === "fallback") notes.push("slow lane");
   else if (stats?.lane === "wait") notes.push("queued: daily allowance exhausted");
 
   return {
     plan: `free-pi ${formatTier(stats?.tier)}`,
     quotas,
-    message: notes.join(" · "),
+    ...(notes.length ? { message: notes.join(" · ") } : {}),
   };
 }
 

@@ -50,7 +50,7 @@ describe("parseFreepiStats", () => {
       currency: "USD",
     });
     expect(usage.quotas.Credits).toMatchObject({ total: 3, isCreditBalance: true });
-    expect(usage.message).toContain("1,200 prompt");
+    expect(usage.message).toBeUndefined();
   });
 
   it("drops empty rows and flags the slow lane", () => {

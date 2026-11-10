@@ -1,5 +1,15 @@
 const CDN = "https://cdn.jsdelivr.net/gh/glincker/thesvg@v0.6.0/public/icons";
-const LOCAL_ICONS = { zhipu: "/providers/zhipu.svg", stepfun: "/providers/stepfun.webp" };
+const LOCAL_ICONS = {
+  anthropic: "/providers/claude.svg",
+  "google-gemini": "/providers/gemini.svg",
+  zhipu: "/providers/zai.svg",
+  stepfun: "/providers/stepfun.svg",
+  longcat: "/providers/longcat.svg",
+  moonshot: "/providers/moonshot.svg",
+  kimi: "/providers/kimi.svg",
+  "alibaba-cloud": "/providers/qwen.svg",
+  poolside: "/providers/poolside.svg",
+};
 
 const FAMILIES = [
   ["anthropic", /claude|fable|opus|sonnet|haiku/i],
@@ -7,10 +17,12 @@ const FAMILIES = [
   ["google-gemini", /gemini/i],
   ["deepseek", /deepseek/i],
   ["xai-grok", /grok/i],
-  ["moonshot", /kimi|moonshot/i],
+  ["kimi", /kimi/i],
+  ["moonshot", /moonshot/i],
   ["zhipu", /glm|zhipu|chatglm/i],
   ["mistral", /mistral|mixtral|codestral|magistral|devstral/i],
   ["minimax", /minimax/i],
+  ["longcat", /longcat/i],
   ["stepfun", /stepfun|step-\d/i],
   ["xiaomi", /mimo|xiaomi/i],
   ["alibaba-cloud", /qwen|qwq|alibaba/i],
@@ -18,6 +30,7 @@ const FAMILIES = [
   ["nvidia", /nemotron|nvidia/i],
   ["cerebras", /cerebras/i],
   ["cohere", /command|cohere/i],
+  ["poolside", /poolside/i],
   ["openrouter", /openrouter/i],
 ];
 

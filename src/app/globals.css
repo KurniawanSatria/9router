@@ -291,6 +291,99 @@
   --shadow-focus: 0 0 0 3px rgba(255, 122, 77, 0.24);
 }
 
+.dark[data-accent="pink"] {
+  --color-brand-50: #2b1220;
+  --color-brand-100: #3d1729;
+  --color-brand-200: #5c223d;
+  --color-brand-300: #ffb3d1;
+  --color-brand-400: #ff8fbd;
+  --color-brand-500: #ff6fa5;
+  --color-brand-600: #e0508a;
+  --color-brand-700: #bf3f73;
+  --color-brand-800: #9c325d;
+  --color-brand-900: #7a2749;
+
+  --color-primary: #ff8fbd;
+  --color-primary-hover: #ffb3d1;
+  --color-primary-solid: #ff6fa5;
+  --color-primary-solid-hover: #ff8fbd;
+  --color-on-primary: #1d0812;
+
+  --color-primary-100: var(--color-brand-100);
+  --color-primary-300: var(--color-brand-300);
+  --color-primary-500: var(--color-brand-500);
+  --color-primary-600: var(--color-brand-600);
+  --color-primary-700: var(--color-brand-700);
+  --color-primary-900: var(--color-brand-900);
+  --primary-text: #1d0812;
+
+  --chart-requests: #ff6fa5;
+  --shadow-warm: 0 2px 14px -2px rgba(255, 111, 165, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(255, 111, 165, 0.24);
+}
+
+.dark[data-accent="teal"] {
+  --color-brand-50: #0a1f1f;
+  --color-brand-100: #0d2b2b;
+  --color-brand-200: #124040;
+  --color-brand-300: #6fe0e0;
+  --color-brand-400: #45d4d4;
+  --color-brand-500: #2fc4c4;
+  --color-brand-600: #22a4a4;
+  --color-brand-700: #1b8585;
+  --color-brand-800: #156969;
+  --color-brand-900: #0f4c4c;
+
+  --color-primary: #45d4d4;
+  --color-primary-hover: #6fe0e0;
+  --color-primary-solid: #2fc4c4;
+  --color-primary-solid-hover: #45d4d4;
+  --color-on-primary: #041515;
+
+  --color-primary-100: var(--color-brand-100);
+  --color-primary-300: var(--color-brand-300);
+  --color-primary-500: var(--color-brand-500);
+  --color-primary-600: var(--color-brand-600);
+  --color-primary-700: var(--color-brand-700);
+  --color-primary-900: var(--color-brand-900);
+  --primary-text: #041515;
+
+  --chart-requests: #2fc4c4;
+  --shadow-warm: 0 2px 14px -2px rgba(47, 196, 196, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(47, 196, 196, 0.24);
+}
+
+.dark[data-accent="yellow"] {
+  --color-brand-50: #2a2008;
+  --color-brand-100: #3d2e0a;
+  --color-brand-200: #5c440f;
+  --color-brand-300: #ffe08a;
+  --color-brand-400: #ffd05c;
+  --color-brand-500: #f0b429;
+  --color-brand-600: #d19a1a;
+  --color-brand-700: #ad7f12;
+  --color-brand-800: #8a650e;
+  --color-brand-900: #684c0a;
+
+  --color-primary: #ffd05c;
+  --color-primary-hover: #ffe08a;
+  --color-primary-solid: #f0b429;
+  --color-primary-solid-hover: #ffd05c;
+  --color-on-primary: #1a1204;
+
+  --color-primary-100: var(--color-brand-100);
+  --color-primary-300: var(--color-brand-300);
+  --color-primary-500: var(--color-brand-500);
+  --color-primary-600: var(--color-brand-600);
+  --color-primary-700: var(--color-brand-700);
+  --color-primary-900: var(--color-brand-900);
+  --primary-text: #1a1204;
+
+  --chart-requests: #f0b429;
+  --shadow-warm: 0 2px 14px -2px rgba(240, 180, 41, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(240, 180, 41, 0.24);
+}
+
 /* ============================================================
    Fix native select dropdowns in dark mode
    ============================================================ */

@@ -36,7 +36,7 @@ export const UPDATER_CONFIG = {
 export const THEME_CONFIG = {
   storageKey: "theme",
   defaultAccent: "blue",
-  accents: ["orange", "blue", "green", "purple"],
+  accents: ["orange", "blue", "green", "purple", "pink", "teal", "yellow"],
 };
 
 export const ACCENT_SWATCHES = {
@@ -44,6 +44,9 @@ export const ACCENT_SWATCHES = {
   blue: "#4d9bff",
   green: "#34c98a",
   purple: "#9a75ff",
+  pink: "#ff6fa5",
+  teal: "#2fc4c4",
+  yellow: "#f0b429",
 };
 
 // Subscription

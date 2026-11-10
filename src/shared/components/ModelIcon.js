@@ -11,9 +11,11 @@ const BRAND_LABELS = {
   deepseek: "DeepSeek",
   "xai-grok": "xAI Grok",
   moonshot: "Moonshot AI",
-  zhipu: "Zhipu GLM",
+  kimi: "Kimi",
+  zhipu: "Z.ai GLM",
   mistral: "Mistral",
   minimax: "MiniMax",
+  longcat: "LongCat",
   stepfun: "StepFun",
   xiaomi: "Xiaomi",
   "alibaba-cloud": "Alibaba Qwen",
@@ -21,6 +23,7 @@ const BRAND_LABELS = {
   nvidia: "NVIDIA",
   cerebras: "Cerebras",
   cohere: "Cohere",
+  poolside: "Poolside",
   openrouter: "OpenRouter",
 };
 
@@ -37,6 +40,9 @@ const MASK_BRANDS = {
   nvidia: "#76B900",    // NVIDIA green
   openai: null,         // monochrome mark
   "xai-grok": null,     // monochrome mark
+  kimi: "#1783FF",       // Kimi blue
+  moonshot: null,       // monochrome mark
+  zhipu: null,          // monochrome mark
 };
 
 /**

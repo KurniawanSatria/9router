@@ -134,7 +134,7 @@ export default function DashboardLayout({ children }) {
               key={pathname}
               className={cnx(
                 "page-enter",
-                isChat ? "flex h-full w-full flex-col" : "mx-auto w-full max-w-[1480px] p-4 sm:p-6 lg:p-8",
+                isChat ? "flex h-full w-full flex-col" : "mx-auto flex h-full w-full max-w-[1480px] flex-col p-4 sm:p-6 lg:p-8",
               )}
             >
               {children}

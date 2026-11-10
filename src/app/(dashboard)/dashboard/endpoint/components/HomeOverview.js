@@ -5,6 +5,14 @@ import Link from "next/link";
 import { Card, Skeleton } from "@/shared/components";
 import Icon from "@/shared/components/Icon";
 
+const TONES = {
+  primary: { chip: "bg-primary-500/10 text-primary-500", icon: "text-primary-500" },
+  info: { chip: "bg-info-500/10 text-info-500", icon: "text-info-500" },
+  success: { chip: "bg-success-500/10 text-success-500", icon: "text-success-500" },
+  warning: { chip: "bg-warning-500/10 text-warning-500", icon: "text-warning-500" },
+  error: { chip: "bg-error-500/10 text-error-500", icon: "text-error-500" },
+};
+
 const QUICK_LINKS = [
   { href: "/dashboard/providers", icon: "hub", label: "Providers", desc: "Connections" },
   { href: "/dashboard/usage", icon: "monitoring", label: "Usage", desc: "Tokens & requests" },
@@ -29,11 +37,11 @@ function formatUptime(seconds) {
   return `${m}m`;
 }
 
-function StatCard({ icon, label, value, note }) {
+function StatCard({ icon, label, value, note, tone }) {
   return (
     <div className="rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3.5 shadow-[var(--shadow-soft)]">
       <div className="flex items-center gap-2 text-text-tertiary">
-        <Icon name={icon} className="size-4" />
+        <Icon name={icon} className={`size-4 ${TONES[tone].icon}`} />
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">{label}</span>
       </div>
       <p className="mt-2 text-[22px] font-semibold leading-none tracking-tight text-text-primary tabular-nums">{value}</p>
@@ -42,13 +50,15 @@ function StatCard({ icon, label, value, note }) {
   );
 }
 
-function InfoTile({ icon, label, value, title }) {
+function InfoTile({ icon, label, value, title, tone }) {
   return (
-    <div className="flex items-start gap-3 py-1">
-      <Icon name={icon} className="mt-0.5 size-4 text-text-tertiary" />
+    <div className="flex items-center gap-3 rounded-[10px] border-[0.5px] border-card-border bg-background-soft-50 px-3.5 py-3">
+      <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${TONES[tone].chip}`}>
+        <Icon name={icon} className="size-4" />
+      </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-tertiary">{label}</p>
-        <p className="truncate text-[12.5px] font-medium text-text-primary tabular-nums" title={title || value}>{value}</p>
+        <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-text-tertiary">{label}</p>
+        <p className="mt-0.5 truncate text-[12.5px] font-medium text-text-primary tabular-nums" title={title || value}>{value}</p>
       </div>
     </div>
   );
@@ -98,24 +108,28 @@ export default function HomeOverview() {
     ? [
         {
           icon: "dns",
+          tone: "info",
           label: "Connections",
           value: `${info.connections.active}/${info.connections.total}`,
           note: "active provider connections",
         },
         {
           icon: "vpn_key",
+          tone: "warning",
           label: "API keys",
           value: `${info.apiKeys.active}/${info.apiKeys.total}`,
           note: "active access keys",
         },
         {
           icon: "memory",
+          tone: "primary",
           label: "Memory",
           value: `${memoryPercent}%`,
           note: `${formatBytes(info.memory.used)} of ${formatBytes(info.memory.total)}`,
         },
         {
           icon: "schedule",
+          tone: "success",
           label: "Uptime",
           value: formatUptime(info.app.uptime),
           note: `since ${new Date(info.app.startedAt).toLocaleString()}`,
@@ -125,20 +139,20 @@ export default function HomeOverview() {
 
   const systemTiles = info
     ? [
-        { icon: "deployed_code", label: "App version", value: `v${info.app.version}` },
-        { icon: "terminal", label: "Node.js", value: info.runtime.node },
-        { icon: "desktop_windows", label: "Platform", value: `${info.runtime.platform} · ${info.runtime.arch}`, title: info.runtime.release },
-        { icon: "dns", label: "Host", value: info.runtime.hostname },
-        { icon: "developer_board", label: "CPU", value: info.cpu.model, title: info.cpu.model },
-        { icon: "speed", label: "CPU load", value: `${info.cpu.load.toFixed(2)} · ${info.cpu.cores} cores` },
-        { icon: "storage", label: "Database", value: info.storage.dbSize == null ? "—" : formatBytes(info.storage.dbSize) },
-        { icon: "folder", label: "Data directory", value: info.storage.dataDir, title: info.storage.dataDir },
-        { icon: "data_usage", label: "Process RAM", value: formatBytes(info.memory.process) },
+        { icon: "deployed_code", tone: "primary", label: "App version", value: `v${info.app.version}` },
+        { icon: "terminal", tone: "success", label: "Node.js", value: info.runtime.node },
+        { icon: "desktop_windows", tone: "info", label: "Platform", value: `${info.runtime.platform} · ${info.runtime.arch}`, title: info.runtime.release },
+        { icon: "dns", tone: "primary", label: "Host", value: info.runtime.hostname },
+        { icon: "developer_board", tone: "warning", label: "CPU", value: info.cpu.model, title: info.cpu.model },
+        { icon: "speed", tone: "info", label: "CPU load", value: `${info.cpu.load.toFixed(2)} · ${info.cpu.cores} cores` },
+        { icon: "storage", tone: "primary", label: "Database", value: info.storage.dbSize == null ? "—" : formatBytes(info.storage.dbSize) },
+        { icon: "folder", tone: "warning", label: "Data directory", value: info.storage.dataDir, title: info.storage.dataDir },
+        { icon: "data_usage", tone: "success", label: "Process RAM", value: formatBytes(info.memory.process) },
       ]
     : [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       <Card padding="none" className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent" />
         <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
@@ -198,7 +212,7 @@ export default function HomeOverview() {
           subtitle="Runtime and host details for this instance"
           icon="monitor_heart"
         >
-          <div className="grid gap-x-6 gap-y-2.5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
             {systemTiles.map((tile) => (
               <InfoTile key={tile.label} {...tile} />
             ))}

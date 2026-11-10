@@ -274,7 +274,7 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
   // Compute rx so arc spacing between nodes >= nodeW + nodeGap
   const minRx = ((nodeW + nodeGap) * count) / (2 * Math.PI);
   const rx = Math.max(320, minRx);
-  const ry = Math.max(200, rx * 0.55); // ellipse ratio ~0.55
+  const ry = Math.min(rx * 0.55, 132); // keeps fitView near 1x on the 400px-tall card
   if (count === 0) {
     return {
       nodes: [{ id: "router", type: "router", position: { x: 0, y: 0 }, data: { activeCount: 0 }, draggable: false }],
@@ -484,7 +484,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
   }, [nodes.length, scheduleFit]);
 
   return (
-    <div ref={containerRef} className="h-[240px] w-full min-w-0 rounded-xl border-[0.5px] border-card-border bg-card-background p-5 sm:h-[300px]">
+    <div ref={containerRef} className="h-[480px] w-full min-w-0 rounded-xl border-[0.5px] border-card-border bg-card-background p-5 lg:h-auto lg:min-h-[580px]">
       {providers.length === 0 ? (
         <div className="h-full flex items-center justify-center text-sm text-text-secondary">
           No providers connected

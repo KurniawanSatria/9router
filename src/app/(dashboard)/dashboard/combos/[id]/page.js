@@ -175,7 +175,7 @@ export default function ComboDetailPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-1 sm:px-0">
+    <div className="flex w-full flex-col gap-5 px-1 sm:px-0">
       <div className="flex min-w-0 items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <Button variant="ghost" size="sm" icon="arrow_back" onClick={() => router.push("/dashboard/combos")}>
