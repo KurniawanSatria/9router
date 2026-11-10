@@ -1,5 +1,4 @@
 import { NOUS_CONFIG } from "../constants/oauth.js";
-import { mintNousAgentKey } from "open-sse/services/nous.js";
 
 const nous = {
   config: NOUS_CONFIG,
@@ -62,21 +61,14 @@ const nous = {
       data,
     };
   },
-  postExchange: async (tokens) => {
-    const minted = await mintNousAgentKey(tokens.access_token);
-    if (!minted.agentKey) console.warn(`[oauth] Nous agent key mint failed: ${minted.error}`);
-    return minted;
-  },
-  mapTokens: (tokens, extra) => ({
+  mapTokens: (tokens) => ({
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
     expiresIn: tokens.expires_in,
     scope: tokens.scope,
-    apiKey: extra?.agentKey || tokens.access_token,
+    apiKey: tokens.access_token,
     providerSpecificData: {
       inferenceBaseUrl: NOUS_CONFIG.inferenceBaseUrl,
-      ...(extra?.agentKeyId ? { agentKeyId: extra.agentKeyId } : {}),
-      ...(extra?.agentKeyExpiresAt ? { agentKeyExpiresAt: extra.agentKeyExpiresAt } : {}),
     },
   }),
 };

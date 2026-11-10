@@ -70,10 +70,10 @@ const HEADER_HOOKS = {
   // Model API keys already work without it
   museHeaders: (h, c) => { if (c?.accessToken && !c?.apiKey) h["x-api-version"] = "1.0.0"; },
   // free-pi gates completions on the official client version and groups traces
-  // by session id. A random id per request burns the 4 concurrent-session slots
-  // and then answers 409, so reuse one stable id per account.
+  // by session id. Each request gets its own session; concurrent_session 409
+  // rotates to another account (see errorConfig).
   freepiHeaders: (h, c) => {
-    h["x-session-id"] = c?.providerSpecificData?.sessionId || c?.providerSpecificData?.userId || randomUUID();
+    h["x-session-id"] = randomUUID();
     h["x-client-version"] = c?.providerSpecificData?.clientVersion || "0.6.2";
   },
   clineHeaders: (h, c) => Object.assign(h, buildClineHeaders(c.apiKey || c.accessToken)),
@@ -125,6 +125,19 @@ const REFRESH_GRANTS = Object.fromEntries(
 // Fall back to a minimal OpenAI-format transport instead.
 const COMPAT_FALLBACK_CONFIG = { format: "openai", baseUrl: OPENAI_COMPAT_BASE };
 
+// free-pi answers 413 context_too_long when the whole conversation no longer
+// fits. Drop older turns (system messages + the most recent user turn onward)
+// and retry once, so long chats keep going without a manual /compact.
+function dropOldFreepiTurns(body, keepLast = 8) {
+  const messages = body?.messages;
+  if (!Array.isArray(messages) || messages.length <= keepLast + 1) return null;
+  let start = messages.length - keepLast;
+  while (start < messages.length && messages[start]?.role !== "user") start++;
+  if (start >= messages.length) return null;
+  const system = messages.slice(0, start).filter((m) => m?.role === "system" || m?.role === "developer");
+  return { ...body, messages: [...system, ...messages.slice(start)] };
+}
+
 export class DefaultExecutor extends BaseExecutor {
   constructor(provider) {
     super(provider, PROVIDERS[provider] || PROVIDERS.openai || COMPAT_FALLBACK_CONFIG);
@@ -141,7 +154,18 @@ export class DefaultExecutor extends BaseExecutor {
       }
       await ensureFreepiAd(options.credentials);
     }
-    return super.execute(options);
+    const result = await super.execute(options);
+    if (this.provider !== "freepi" || result?.response?.status !== 413) return result;
+
+    const clone = result.response.clone?.();
+    const errorText = clone && typeof clone.text === "function"
+      ? await clone.text().catch(() => "")
+      : "";
+    if (!errorText.includes("context_too_long")) return result;
+
+    const compacted = dropOldFreepiTurns(options.body);
+    if (!compacted) return result;
+    return super.execute({ ...options, body: compacted });
   }
 
   transformRequest(model, body, stream, credentials) {

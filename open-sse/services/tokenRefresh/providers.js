@@ -2,7 +2,7 @@ import { PROVIDERS, PROVIDER_OAUTH } from "../../config/providers.js";
 import { OAUTH_ENDPOINTS, GITHUB_COPILOT, buildKimiHeaders } from "../../config/appConstants.js";
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { dedupRefresh } from "./dedup.js";
-import { NOUS_OAUTH_CLIENT_ID, NOUS_TOKEN_URL, mintNousAgentKey } from "../nous.js";
+import { NOUS_OAUTH_CLIENT_ID, NOUS_TOKEN_URL } from "../nous.js";
 import { buildExternalIdpRefreshParams } from "../../../src/lib/oauth/kiroExternalIdp.js";
 
 let _xaiServiceSingleton = null;
@@ -719,23 +719,11 @@ export async function refreshNousToken(refreshToken, log) {
         return null;
       }
 
-      const minted = await mintNousAgentKey(tokenData.access_token);
-      if (minted.agentKey) {
-        log?.info?.("TOKEN_REFRESH", "Nous agent key minted successfully");
-      } else {
-        log?.warn?.("TOKEN_REFRESH", "Failed to mint Nous agent key, falling back to access_token", { error: minted.error });
-      }
-
       return {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token || refreshToken,
         expiresIn: tokenData.expires_in,
-        apiKey: minted.agentKey || tokenData.access_token,
-        agentKey: minted.agentKey,
-        providerSpecificData: {
-          ...(minted.agentKeyId ? { agentKeyId: minted.agentKeyId } : {}),
-          ...(minted.agentKeyExpiresAt ? { agentKeyExpiresAt: minted.agentKeyExpiresAt } : {}),
-        },
+        apiKey: tokenData.access_token,
       };
     } catch (error) {
       log?.error?.("TOKEN_REFRESH", `Error refreshing Nous token: ${error.message}`);

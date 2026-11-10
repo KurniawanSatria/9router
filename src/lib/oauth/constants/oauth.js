@@ -165,14 +165,14 @@ export const ZED_HOSTED_CONFIG = {
   oauthTimeoutMs: 600_000,
 };
 
-// Nous Research Portal — OAuth 2.0 Device Code flow (RFC 8628) + agent key minting
+// Nous Research Portal — OAuth 2.0 Device Code flow (RFC 8628)
 export const NOUS_CONFIG = {
   clientId: "hermes-cli",
   portalBaseUrl: "https://portal.nousresearch.com",
   deviceCodeUrl: "https://portal.nousresearch.com/api/oauth/device/code",
   tokenUrl: "https://portal.nousresearch.com/api/oauth/token",
   inferenceBaseUrl: "https://inference-api.nousresearch.com/v1",
-  scope: "inference:invoke inference:mint_agent_key",
+  scope: "inference:invoke",
 };
 
 // free-pi — GitHub device flow brokered by api.freepi.ai, then a 90-day JWT

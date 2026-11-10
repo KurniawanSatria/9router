@@ -28,11 +28,39 @@ describe("freepi additions", () => {
     expect(versionFetch).toHaveBeenCalledTimes(1);
   });
 
-  it("reuses one stable session id per account", async () => {
+  it("gives every request its own session id", async () => {
     await execute();
     await execute();
     const ids = upstreamFetch.mock.calls.map(([, init]) => init.headers["x-session-id"]);
-    expect(ids).toEqual(["user-1", "user-1"]);
+    expect(ids[0]).toBeTruthy();
+    expect(ids[0]).not.toBe(ids[1]);
+  });
+
+  it("drops older turns and retries once on context_too_long", async () => {
+    const tooLong = {
+      status: 413,
+      headers: { get: () => "application/json" },
+      clone: () => ({ text: async () => '{"code":"context_too_long"}' }),
+    };
+    upstreamFetch.mockReset().mockResolvedValueOnce(tooLong).mockResolvedValue(ok);
+
+    const messages = [{ role: "system", content: "sys" }];
+    for (let i = 0; i < 6; i++) {
+      messages.push({ role: "user", content: `u${i}` }, { role: "assistant", content: `a${i}` });
+    }
+
+    await getExecutor("freepi").execute({
+      model: "particle",
+      body: { messages },
+      stream: false,
+      credentials: credentials("0.6.2"),
+    });
+
+    expect(upstreamFetch).toHaveBeenCalledTimes(2);
+    const sent = JSON.parse(upstreamFetch.mock.calls[1][1].body);
+    expect(sent.messages.length).toBeLessThan(messages.length);
+    expect(sent.messages[0].role).toBe("system");
+    expect(sent.messages[1].role).toBe("user");
   });
 
   it("strips the promo suffix from model names", () => {
