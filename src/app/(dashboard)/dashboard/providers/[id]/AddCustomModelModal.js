@@ -66,7 +66,7 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Custom Model">
+    <Modal isOpen={isOpen} onClose={onClose} title="Add Custom Model" showTrafficLights={false} showCloseButton>
       <div className="flex flex-col gap-4">
         <div>
           <label className="text-sm font-medium mb-1.5 block">Model ID</label>

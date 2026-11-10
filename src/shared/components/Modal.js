@@ -14,6 +14,7 @@ export default function Modal({
   size = "md",
   closeOnOverlay = true,
   showTrafficLights = true,
+  showCloseButton = false,
   className,
 }) {
   const sizes = {
@@ -87,11 +88,15 @@ export default function Modal({
                 <h2 className="text-lg font-semibold text-text-main">{title}</h2>
               )}
             </div>
-            {/* X button — mobile only */}
+            {/* X button — always when asked for, otherwise mobile only */}
             <button
               onClick={onClose}
               aria-label="Close"
-              className="md:hidden p-1.5 rounded-[10px] text-text-muted hover:bg-surface-2 hover:text-text-main transition-colors"
+              title="Close"
+              className={cn(
+                "p-1.5 rounded-[10px] text-text-muted hover:bg-surface-2 hover:text-text-main transition-colors",
+                !showCloseButton && "md:hidden"
+              )}
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>

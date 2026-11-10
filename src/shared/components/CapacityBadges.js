@@ -16,6 +16,8 @@ export default function CapacityBadges({ caps, className = "", colorOverride, si
       {active.map((k) => (
         <Tooltip key={k} text={`${CAPACITY_META[k].label} — ${CAPACITY_META[k].desc}`}>
           <span
+            role="img"
+            aria-label={CAPACITY_META[k].label}
             className={`material-symbols-outlined leading-none cursor-help ${colorOverride || CAPACITY_META[k].color}`}
             style={{ fontSize: `${size}px` }}
           >
