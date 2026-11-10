@@ -20,11 +20,19 @@ const BRAND_LABELS = {
   xiaomi: "Xiaomi",
   "alibaba-cloud": "Alibaba Qwen",
   meta: "Meta Llama",
+  muse: "Meta Muse",
   nvidia: "NVIDIA",
   cerebras: "Cerebras",
   cohere: "Cohere",
   poolside: "Poolside",
+  perplexity: "Perplexity",
   openrouter: "OpenRouter",
+  reflection: "Beam",
+  doubao: "ByteDance Doubao",
+  hunyuan: "Tencent Hunyuan",
+  upstage: "Upstage",
+  gemma: "Google Gemma",
+  devin: "Devin (Cognition)",
 };
 
 /**
@@ -40,9 +48,9 @@ const MASK_BRANDS = {
   nvidia: "#76B900",    // NVIDIA green
   openai: null,         // monochrome mark
   "xai-grok": null,     // monochrome mark
-  kimi: "#1783FF",       // Kimi blue
   moonshot: null,       // monochrome mark
   zhipu: null,          // monochrome mark
+  reflection: null,     // monochrome mark
 };
 
 /**

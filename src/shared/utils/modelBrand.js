@@ -9,12 +9,21 @@ const LOCAL_ICONS = {
   kimi: "/providers/kimi.svg",
   "alibaba-cloud": "/providers/qwen.svg",
   poolside: "/providers/poolside.svg",
+  reflection: "/providers/reflection.svg",
+  doubao: "/providers/doubao.svg",
+  hunyuan: "/providers/hunyuan.svg",
+  upstage: "/providers/upstage.svg",
+  perplexity: "/providers/perplexity.svg",
+  gemma: "/providers/gemma.svg",
+  muse: "/providers/muse.svg",
+  devin: "/providers/devin.svg",
 };
 
 const FAMILIES = [
   ["anthropic", /claude|fable|opus|sonnet|haiku/i],
   ["openai", /gpt-|chatgpt/i],
   ["google-gemini", /gemini/i],
+  ["gemma", /gemma/i],
   ["deepseek", /deepseek/i],
   ["xai-grok", /grok/i],
   ["kimi", /kimi/i],
@@ -27,11 +36,18 @@ const FAMILIES = [
   ["xiaomi", /mimo|xiaomi/i],
   ["alibaba-cloud", /qwen|qwq|alibaba/i],
   ["meta", /llama/i],
+  ["muse", /muse/i],
+  ["devin", /swe-\d/i],
   ["nvidia", /nemotron|nvidia/i],
   ["cerebras", /cerebras/i],
   ["cohere", /command|cohere/i],
-  ["poolside", /poolside/i],
+  ["poolside", /poolside|laguna/i],
+  ["reflection", /beam|reflection/i],
+  ["perplexity", /pplx|perplexity|sonar/i],
   ["openrouter", /openrouter/i],
+  ["doubao", /doubao/i],
+  ["hunyuan", /hunyuan|hy3/i],
+  ["upstage", /upstage|solar/i],
 ];
 
 export function resolveModelBrand(modelId) {
