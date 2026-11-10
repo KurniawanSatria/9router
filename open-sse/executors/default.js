@@ -163,9 +163,16 @@ export class DefaultExecutor extends BaseExecutor {
       : "";
     if (!errorText.includes("context_too_long")) return result;
 
-    const compacted = dropOldFreepiTurns(options.body);
-    if (!compacted) return result;
-    return super.execute({ ...options, body: compacted });
+    let current = result;
+    let currentBody = options.body;
+    for (const keepLast of [8, 4, 2, 1]) {
+      const compacted = dropOldFreepiTurns(currentBody, keepLast);
+      if (!compacted) break;
+      currentBody = compacted;
+      current = await super.execute({ ...options, body: currentBody });
+      if (current?.response?.status !== 413) return current;
+    }
+    return current;
   }
 
   transformRequest(model, body, stream, credentials) {

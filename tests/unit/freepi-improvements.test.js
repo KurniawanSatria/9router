@@ -36,31 +36,36 @@ describe("freepi additions", () => {
     expect(ids[0]).not.toBe(ids[1]);
   });
 
-  it("drops older turns and retries once on context_too_long", async () => {
-    const tooLong = {
+  it("keeps trimming and retrying while the conversation is still too long", async () => {
+    const tooLong = () => ({
       status: 413,
       headers: { get: () => "application/json" },
       clone: () => ({ text: async () => '{"code":"context_too_long"}' }),
-    };
-    upstreamFetch.mockReset().mockResolvedValueOnce(tooLong).mockResolvedValue(ok);
+    });
+    upstreamFetch.mockReset()
+      .mockResolvedValueOnce(tooLong())
+      .mockResolvedValueOnce(tooLong())
+      .mockResolvedValue(ok);
 
     const messages = [{ role: "system", content: "sys" }];
     for (let i = 0; i < 6; i++) {
       messages.push({ role: "user", content: `u${i}` }, { role: "assistant", content: `a${i}` });
     }
 
-    await getExecutor("freepi").execute({
+    const result = await getExecutor("freepi").execute({
       model: "particle",
       body: { messages },
       stream: false,
       credentials: credentials("0.6.2"),
     });
 
-    expect(upstreamFetch).toHaveBeenCalledTimes(2);
-    const sent = JSON.parse(upstreamFetch.mock.calls[1][1].body);
-    expect(sent.messages.length).toBeLessThan(messages.length);
-    expect(sent.messages[0].role).toBe("system");
-    expect(sent.messages[1].role).toBe("user");
+    expect(result.response.status).toBe(200);
+    expect(upstreamFetch).toHaveBeenCalledTimes(3);
+    const first = JSON.parse(upstreamFetch.mock.calls[1][1].body).messages;
+    const second = JSON.parse(upstreamFetch.mock.calls[2][1].body).messages;
+    expect(second.length).toBeLessThan(first.length);
+    expect(second[0].role).toBe("system");
+    expect(second[1].role).toBe("user");
   });
 
   it("strips the promo suffix from model names", () => {
