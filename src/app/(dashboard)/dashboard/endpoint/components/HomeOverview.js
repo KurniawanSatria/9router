@@ -31,11 +31,11 @@ function formatUptime(seconds) {
 function StatCard({ icon, label, value, note }) {
   return (
     <div className="rounded-[11px] border border-border-subtle bg-surface px-4 py-3.5 shadow-[var(--shadow-soft)]">
-      <div className="flex items-center gap-2 text-text-subtle">
+      <div className="flex items-center gap-2 text-text-muted">
         <span className="material-symbols-outlined text-[16px]">{icon}</span>
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">{label}</span>
       </div>
-      <p className="mt-2 text-[22px] font-semibold leading-none tracking-tight text-text-main">{value}</p>
+      <p className="mt-2 text-[22px] font-semibold leading-none tracking-tight text-text-main tabular-nums">{value}</p>
       {note && <p className="mt-1.5 truncate text-[11.5px] text-text-muted">{note}</p>}
     </div>
   );
@@ -43,11 +43,11 @@ function StatCard({ icon, label, value, note }) {
 
 function InfoTile({ icon, label, value, title }) {
   return (
-    <div className="flex items-start gap-3 rounded-[9px] border border-border-subtle bg-bg-alt/60 px-3 py-2.5">
-      <span className="material-symbols-outlined mt-0.5 text-[16px] text-text-subtle">{icon}</span>
+    <div className="flex items-start gap-3 py-1">
+      <span className="material-symbols-outlined mt-0.5 text-[16px] text-text-muted">{icon}</span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-subtle">{label}</p>
-        <p className="truncate text-[12.5px] font-medium text-text-main" title={title || value}>{value}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">{label}</p>
+        <p className="truncate text-[12.5px] font-medium text-text-main tabular-nums" title={title || value}>{value}</p>
       </div>
     </div>
   );
@@ -142,15 +142,15 @@ export default function HomeOverview() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
         <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-subtle">
+            <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
                 <span className="relative inline-flex size-2 rounded-full bg-success" />
               </span>
               <span>System online</span>
               {info && <span className="font-mono text-text-muted">v{info.app.version}</span>}
-              {info && <span className="text-text-muted">· {formatUptime(info.app.uptime)} uptime</span>}
-              {updatedLabel && <span className="normal-case tracking-normal text-text-subtle">· {updatedLabel}</span>}
+              {info && <span className="normal-case tracking-normal tabular-nums">{formatUptime(info.app.uptime)} uptime</span>}
+              {updatedLabel && <span className="normal-case tracking-normal tabular-nums">{updatedLabel}</span>}
             </div>
             <h1 className="text-[24px] font-semibold tracking-tight text-text-main">Saturia Proxy</h1>
             <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-text-muted">
@@ -168,7 +168,7 @@ export default function HomeOverview() {
                   {item.icon}
                 </span>
                 <span className="text-[12.5px] font-semibold text-text-main">{item.label}</span>
-                <span className="hidden text-[10.5px] leading-tight text-text-subtle sm:block">{item.desc}</span>
+                <span className="hidden text-[10.5px] leading-tight text-text-muted sm:block">{item.desc}</span>
               </Link>
             ))}
           </div>
@@ -199,7 +199,7 @@ export default function HomeOverview() {
           subtitle="Runtime and host details for this instance"
           icon="monitor_heart"
         >
-          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-x-6 gap-y-2.5 sm:grid-cols-2 xl:grid-cols-3">
             {systemTiles.map((tile) => (
               <InfoTile key={tile.label} {...tile} />
             ))}

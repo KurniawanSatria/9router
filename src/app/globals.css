@@ -139,6 +139,76 @@
   color-scheme: dark;
 }
 
+/* Accent variants — dark only; orange is the default from `.dark` above */
+.dark[data-accent="blue"] {
+  --color-brand-50: #0f1b2d;
+  --color-brand-100: #16263c;
+  --color-brand-200: #1d3550;
+  --color-brand-300: #8fc3ff;
+  --color-brand-400: #6aaeff;
+  --color-brand-500: #4d9bff;
+  --color-brand-600: #2f7fe0;
+  --color-brand-700: #2568b5;
+  --color-brand-800: #1e548f;
+  --color-brand-900: #163d69;
+
+  --color-primary: #6aaeff;
+  --color-primary-hover: #8fc3ff;
+  --color-primary-solid: #4d9bff;
+  --color-primary-solid-hover: #6aaeff;
+  --color-on-primary: #08111d;
+
+  --chart-requests: #4d9bff;
+  --shadow-warm: 0 2px 14px -2px rgba(77, 155, 255, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(77, 155, 255, 0.24);
+}
+
+.dark[data-accent="green"] {
+  --color-brand-50: #0c1c15;
+  --color-brand-100: #0f2a1f;
+  --color-brand-200: #14402f;
+  --color-brand-300: #7fe0b4;
+  --color-brand-400: #4fcf99;
+  --color-brand-500: #34c98a;
+  --color-brand-600: #23a872;
+  --color-brand-700: #1c875b;
+  --color-brand-800: #156945;
+  --color-brand-900: #0d4a30;
+
+  --color-primary: #4fcf99;
+  --color-primary-hover: #7fe0b4;
+  --color-primary-solid: #34c98a;
+  --color-primary-solid-hover: #4fcf99;
+  --color-on-primary: #04150d;
+
+  --chart-requests: #34c98a;
+  --shadow-warm: 0 2px 14px -2px rgba(52, 201, 138, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(52, 201, 138, 0.24);
+}
+
+.dark[data-accent="purple"] {
+  --color-brand-50: #191229;
+  --color-brand-100: #221837;
+  --color-brand-200: #31224d;
+  --color-brand-300: #c3a6ff;
+  --color-brand-400: #ab8bff;
+  --color-brand-500: #9a75ff;
+  --color-brand-600: #7f56e8;
+  --color-brand-700: #6845bf;
+  --color-brand-800: #533799;
+  --color-brand-900: #3d2870;
+
+  --color-primary: #ab8bff;
+  --color-primary-hover: #c3a6ff;
+  --color-primary-solid: #9a75ff;
+  --color-primary-solid-hover: #ab8bff;
+  --color-on-primary: #100a1d;
+
+  --chart-requests: #9a75ff;
+  --shadow-warm: 0 2px 14px -2px rgba(154, 117, 255, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(154, 117, 255, 0.24);
+}
+
 /* ============================================================
    Fix native select dropdowns in dark mode
    ============================================================ */
@@ -409,7 +479,8 @@ input[type="range"]::-moz-range-thumb {
 
 /* Global focus-visible for keyboard users */
 :focus-visible {
-  outline-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 70%, transparent);
+  outline-offset: 1px;
 }
 
 /* Scrollbar (custom-scrollbar utility kept for compat) */

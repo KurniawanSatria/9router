@@ -7,23 +7,15 @@ import { THEME_CONFIG } from "@/shared/constants/config";
 const useThemeStore = create(
   persist(
     (set, get) => ({
-      theme: THEME_CONFIG.defaultTheme,
+      accent: THEME_CONFIG.defaultAccent,
 
-      setTheme: (theme) => {
-        set({ theme });
-        applyTheme(theme);
-      },
-
-      toggleTheme: () => {
-        const currentTheme = get().theme;
-        const newTheme = currentTheme === "dark" ? "light" : "dark";
-        set({ theme: newTheme });
-        applyTheme(newTheme);
+      setAccent: (accent) => {
+        set({ accent });
+        applyAccent(accent);
       },
 
       initTheme: () => {
-        const theme = get().theme;
-        applyTheme(theme);
+        applyAccent(get().accent);
       },
     }),
     {
@@ -32,23 +24,18 @@ const useThemeStore = create(
   )
 );
 
-// Apply theme to document
-function applyTheme(theme) {
+// Dark mode is always on; the accent only swaps the brand token set.
+function applyAccent(accent) {
   if (typeof window === "undefined") return;
 
   const root = document.documentElement;
-  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  root.classList.add("dark");
 
-  const effectiveTheme = theme === "system" ? systemTheme : theme;
-
-  if (effectiveTheme === "dark") {
-    root.classList.add("dark");
+  if (accent && accent !== THEME_CONFIG.defaultAccent) {
+    root.dataset.accent = accent;
   } else {
-    root.classList.remove("dark");
+    root.removeAttribute("data-accent");
   }
 }
 
 export default useThemeStore;
-

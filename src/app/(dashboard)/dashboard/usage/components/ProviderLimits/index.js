@@ -1109,7 +1109,7 @@ export default function ProviderLimits() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {sortedConnections.map((conn) => {
           const quota = quotaData[conn.id];
           const isLoading = loading[conn.id];
@@ -1363,10 +1363,10 @@ export default function ProviderLimits() {
                     </span>
                     <p className="mt-1.5 text-xs text-text-muted">{error}</p>
                   </div>
-                ) : quota?.message ? (
-                  <div className="text-center py-5">
-                    <p className="text-xs text-text-muted">{quota.message}</p>
-                  </div>
+                ) : quota?.message && visibleQuotas.length === 0 ? (
+                  <p className="px-1 py-2 text-[11px] leading-relaxed text-text-muted">
+                    {quota.message}
+                  </p>
                 ) : (
                   <QuotaTable
                     quotas={visibleQuotas}
@@ -1378,7 +1378,7 @@ export default function ProviderLimits() {
                     onHideQuota={(quotaRow) => handleHideQuota(conn.provider, quotaRow)}
                   />
                 )}
-                {quota?.message && !error && !isLoading && (
+                {quota?.message && visibleQuotas.length > 0 && !error && !isLoading && (
                   <p className="mt-2 px-1 text-[10px] leading-relaxed text-text-muted">
                     {quota.message}
                   </p>

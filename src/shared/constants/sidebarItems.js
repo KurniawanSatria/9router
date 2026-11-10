@@ -1,5 +1,5 @@
 export const SIDEBAR_ITEMS = [
-  { key: "endpoint", href: "/dashboard/endpoint", label: "Home", icon: "home", group: "main" },
+  { key: "endpoint", href: "/dashboard", label: "Home", icon: "home", group: "main" },
   { key: "providers", href: "/dashboard/providers", label: "Providers", icon: "hub", group: "main" },
   { key: "combos", href: "/dashboard/combos", label: "Combos", icon: "layers", group: "main" },
   { key: "usage", href: "/dashboard/usage", label: "Usage", icon: "monitoring", group: "main" },

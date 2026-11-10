@@ -3,12 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, Button, Toggle, Input } from "@/shared/components";
 import Modal, { ConfirmModal } from "@/shared/components/Modal";
-import LanguageSwitcher from "@/shared/components/LanguageSwitcher";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { useClientValue } from "@/shared/hooks/useClientValue";
 import { cn } from "@/shared/utils/cn";
-import { APP_CONFIG } from "@/shared/constants/config";
-import { LOCALE_COOKIE, LOCALE_NAMES, normalizeLocale } from "@/i18n/config";
+import { ACCENT_SWATCHES, APP_CONFIG, THEME_CONFIG } from "@/shared/constants/config";
 import { resolveSidebarItems, SIDEBAR_ITEMS } from "@/shared/constants/sidebarItems";
 import useSettingsStore from "@/store/settingsStore";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -16,19 +14,8 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 
-function getLocaleFromCookie() {
-  if (typeof document === "undefined") return "en";
-  const cookie = document.cookie
-    .split(";")
-    .find((c) => c.trim().startsWith(`${LOCALE_COOKIE}=`));
-  const value = cookie ? decodeURIComponent(cookie.split("=")[1]) : "en";
-  return normalizeLocale(value);
-}
-
 export default function ProfilePage() {
-  const { theme, setTheme, isDark } = useTheme();
-  const [locale, setLocale] = useState(() => getLocaleFromCookie());
-  const [langOpen, setLangOpen] = useState(false);
+  const { accent, setAccent } = useTheme();
   const [shutdownOpen, setShutdownOpen] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
   const [settings, setSettings] = useState({ fallbackStrategy: "fill-first" });
@@ -914,23 +901,29 @@ export default function ProfilePage() {
           title="Local Mode"
           subtitle="Running on your machine"
           action={
-            <div className="inline-flex p-0.5 rounded-[8px] bg-bg-alt border border-border-subtle">
-              {["light", "dark", "system"].map((option) => (
+            <div className="inline-flex items-center gap-0.5 rounded-[8px] border border-border-subtle bg-bg-alt p-0.5">
+              {THEME_CONFIG.accents.map((option) => (
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setTheme(option)}
+                  onClick={() => setAccent(option)}
                   title={option}
+                  aria-label={`${option} accent`}
+                  aria-pressed={accent === option}
                   className={cn(
-                    "flex items-center justify-center rounded-[6px] px-2 py-1.5 transition-colors",
-                    theme === option
-                      ? "bg-surface text-text-main shadow-[var(--shadow-soft)]"
-                      : "text-text-muted hover:text-text-main"
+                    "pressable flex items-center justify-center rounded-[6px] p-1.5 transition-colors",
+                    accent === option
+                      ? "bg-surface shadow-[var(--shadow-soft)]"
+                      : "hover:bg-black/10 dark:hover:bg-white/10"
                   )}
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {option === "light" ? "light_mode" : option === "dark" ? "dark_mode" : "contrast"}
-                  </span>
+                  <span
+                    className={cn(
+                      "size-4 rounded-full ring-1 ring-black/20 transition-transform duration-200",
+                      accent === option && "scale-110"
+                    )}
+                    style={{ background: ACCENT_SWATCHES[option] }}
+                  />
                 </button>
               ))}
             </div>
@@ -1017,21 +1010,6 @@ export default function ProfilePage() {
               </SortableContext>
             </DndContext>
           </div>
-        </Card>
-
-        {/* Language */}
-        <Card id="language" className="scroll-mt-6" icon="language" title="Language">
-          <button
-            onClick={() => setLangOpen(true)}
-            className="flex items-center justify-between w-full p-3 rounded-lg bg-bg border border-border hover:border-primary/50 transition-colors"
-            data-i18n-skip="true"
-          >
-            <span className="text-sm text-text-muted">Display language</span>
-            <span className="flex items-center gap-2 text-sm font-medium text-text-main">
-              {LOCALE_NAMES[locale] || locale}
-              <span className="material-symbols-outlined text-[18px] text-text-muted">expand_more</span>
-            </span>
-          </button>
         </Card>
 
         {/* Security */}
@@ -1859,14 +1837,6 @@ export default function ProfilePage() {
         <p className="mt-1">{isRemoteHost ? "Remote Mode" : "Local Mode - All data stored on your machine"}</p>
       </div>
 
-      <LanguageSwitcher
-        hideTrigger
-        isOpen={langOpen}
-        onClose={(next) => {
-          setLangOpen(false);
-          setLocale(next);
-        }}
-      />
       <ConfirmModal
         isOpen={shutdownOpen}
         onClose={() => setShutdownOpen(false)}

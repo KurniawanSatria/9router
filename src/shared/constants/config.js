@@ -35,7 +35,15 @@ export const UPDATER_CONFIG = {
 // Theme configuration
 export const THEME_CONFIG = {
   storageKey: "theme",
-  defaultTheme: "system", // "light" | "dark" | "system"
+  defaultAccent: "orange",
+  accents: ["orange", "blue", "green", "purple"],
+};
+
+export const ACCENT_SWATCHES = {
+  orange: "#ff7a4d",
+  blue: "#4d9bff",
+  green: "#34c98a",
+  purple: "#9a75ff",
 };
 
 // Subscription

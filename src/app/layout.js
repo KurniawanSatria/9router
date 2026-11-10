@@ -39,14 +39,13 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        {/* Apply persisted theme before first paint so a reload does not flash the
-            default (light) theme before the client store hydrates. Mirrors the
-            zustand-persist "theme" key and the `dark` class applyTheme() sets. */}
+        {/* Dark is forced; apply the persisted accent before first paint. Mirrors
+            the zustand-persist "theme" key read by themeStore.applyAccent(). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('theme');var t=s?(JSON.parse(s).state||{}).theme:'system';t=t||'system';var m=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(t==='system'&&m)){document.documentElement.classList.add('dark')}}catch(e){}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('theme');var a=s?(JSON.parse(s).state||{}).accent:'';if(a&&a!=='orange'){document.documentElement.dataset.accent=a}}catch(e){}})();`,
           }}
         />
         <script
