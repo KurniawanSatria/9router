@@ -107,6 +107,35 @@ describe("freepi additions", () => {
     expect(trimmed[1].role).not.toBe("tool");
   });
 
+  it("keeps the opening turn when trimming the middle", async () => {
+    const tooLong = () => ({
+      status: 413,
+      headers: { get: () => "application/json" },
+      clone: () => ({ text: async () => '{"code":"context_too_long"}' }),
+    });
+    upstreamFetch.mockReset()
+      .mockResolvedValueOnce(tooLong())
+      .mockResolvedValue(ok);
+
+    const messages = [{ role: "system", content: "sys" }];
+    for (let i = 0; i < 20; i++) {
+      messages.push({ role: "user", content: `u${i}` }, { role: "assistant", content: `a${i}` });
+    }
+
+    await getExecutor("freepi").execute({
+      model: "particle",
+      body: { messages },
+      stream: false,
+      credentials: credentials("0.6.2"),
+    });
+
+    const trimmed = JSON.parse(upstreamFetch.mock.calls[1][1].body).messages;
+    expect(trimmed.length).toBeLessThan(messages.length);
+    expect(trimmed[0]).toEqual({ role: "system", content: "sys" });
+    expect(trimmed[1]).toEqual({ role: "user", content: "u0" });
+    expect(trimmed.at(-1).content).toBe("a19");
+  });
+
   it("strips the promo suffix from model names", () => {
     const out = FILTERS.freepi([
       { id: "particle", name: "Particle · 🔥 Free Unlimited: limited time" },
