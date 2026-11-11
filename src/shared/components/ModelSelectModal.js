@@ -137,7 +137,6 @@ export default function ModelSelectModal({
   const [combos, setCombos] = useState([]);
   const [providerNodes, setProviderNodes] = useState([]);
   const [customModels, setCustomModels] = useState([]);
-  const [disabledModels, setDisabledModels] = useState({});
   // Providers render collapsed by default; a search overrides collapsed state.
   const [expandedProviders, setExpandedProviders] = useState(() => new Set());
   // Cursor and Cline expose the usable catalog per account, so the static catalog is
@@ -208,22 +207,6 @@ export default function ModelSelectModal({
 
   useEffect(() => {
     if (isOpen) queueMicrotask(fetchCustomModels);
-  }, [isOpen]);
-
-  const fetchDisabledModels = async () => {
-    try {
-      const res = await fetch("/api/models/disabled");
-      if (!res.ok) throw new Error(`Failed to fetch disabled models: ${res.status}`);
-      const data = await res.json();
-      setDisabledModels(data.disabled || {});
-    } catch (error) {
-      console.error("Error fetching disabled models:", error);
-      setDisabledModels({});
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) queueMicrotask(fetchDisabledModels);
   }, [isOpen]);
 
   const allProviders = useMemo(() => ({ ...OAUTH_PROVIDERS, ...FREE_PROVIDERS, ...FREE_TIER_PROVIDERS, ...APIKEY_PROVIDERS }), []);
@@ -470,18 +453,6 @@ export default function ModelSelectModal({
       }
     });
 
-    // Filter out disabled models per provider (disabled keyed by storage alias OR providerId)
-    Object.entries(groups).forEach(([providerId, group]) => {
-      const aliasKey = getProviderAlias(providerId);
-      const disabledIds = new Set([
-        ...(disabledModels[aliasKey] || []),
-        ...(disabledModels[providerId] || []),
-      ]);
-      if (disabledIds.size === 0) return;
-      group.models = group.models.filter((m) => !disabledIds.has(m.id));
-      if (group.models.length === 0) delete groups[providerId];
-    });
-
     // Filter by enabledModels if explicitly configured on any active connection for this provider
     Object.entries(groups).forEach(([providerId, group]) => {
       const providerConns = filteredActiveProviders.filter((p) => p.provider === providerId);
@@ -505,7 +476,7 @@ export default function ModelSelectModal({
     });
 
     return groups;
-  }, [filteredActiveProviders, modelAliases, allProviders, providerNodes, customModels, disabledModels, kindFilter, effectiveConnections, deactivatedProviderIds, cursorModels, clineModels, clinepassModels, zedModels]);
+  }, [filteredActiveProviders, modelAliases, allProviders, providerNodes, customModels, kindFilter, effectiveConnections, deactivatedProviderIds, cursorModels, clineModels, clinepassModels, zedModels]);
 
   // Parse search query into structured query (regex, positive tokens, negative tokens)
   const parsedQuery = useMemo(() => parseSearchQuery(searchQuery), [searchQuery]);

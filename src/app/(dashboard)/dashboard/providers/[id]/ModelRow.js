@@ -3,7 +3,7 @@ import { CapacityBadges } from "@/shared/components";
 import ModelIcon from "@/shared/components/ModelIcon";
 import Icon from "@/shared/components/Icon";
 
-export default function ModelRow({ model, fullModel, alias, copied, onCopy, testStatus, isCustom, isFree, onDeleteAlias, onTest, isTesting, onDisable, caps, thinkingSuffix }) {
+export default function ModelRow({ model, fullModel, alias, copied, onCopy, testStatus, isCustom, isFree, onDeleteAlias, onTest, isTesting, caps, thinkingSuffix }) {
   const displayModel = thinkingSuffix ? `${fullModel}(${thinkingSuffix})` : fullModel;
   const borderColor = testStatus === "ok"
     ? "border-success-500/40"
@@ -59,14 +59,6 @@ export default function ModelRow({ model, fullModel, alias, copied, onCopy, test
             >
               <Icon name="close" className="size-3.5" />
             </button>
-          ) : onDisable ? (
-            <button
-              onClick={onDisable}
-              className="rounded p-0.5 text-text-secondary opacity-100 transition-opacity hover:bg-error-500/10 hover:text-error-500 sm:opacity-0 sm:group-hover:opacity-100"
-              title="Disable this model"
-            >
-              <Icon name="close" className="size-3.5" />
-            </button>
           ) : null}
         </div>
       </div>
@@ -88,7 +80,6 @@ ModelRow.propTypes = {
   onDeleteAlias: PropTypes.func,
   onTest: PropTypes.func,
   isTesting: PropTypes.bool,
-  onDisable: PropTypes.func,
   caps: PropTypes.object,
   thinkingSuffix: PropTypes.string,
 };

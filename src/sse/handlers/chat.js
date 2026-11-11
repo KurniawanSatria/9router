@@ -9,7 +9,6 @@ import {
 } from "../services/auth.js";
 import { handleAntigravityQuotaError, clearAntigravityStrikes } from "../services/antigravityQuota.js";
 import { getSettings } from "@/lib/localDb";
-import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { getProviderAlias } from "@/shared/constants/providers";
 import { saveRequestFailure } from "@/lib/usageDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
@@ -240,14 +239,6 @@ async function handleChatInternal(request, clientRawRequest = null) {
  */
 async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null, requestedModel = null, signal = null) {
   const modelInfo = await getModelInfo(modelStr);
-
-  if (modelInfo.provider) {
-    const disabled = await getDisabledModels();
-    const alias = getProviderAlias(modelInfo.provider);
-    if (disabled[modelInfo.provider]?.includes(modelInfo.model) || disabled[alias]?.includes(modelInfo.model)) {
-      return errorResponse(HTTP_STATUS.NOT_FOUND, `Model "${modelStr}" is disabled`);
-    }
-  }
 
   // If provider is null, this might be a combo name - check and handle
   if (!modelInfo.provider) {

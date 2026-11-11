@@ -80,7 +80,6 @@ export default function ProviderDetailPage() {
   // Live-catalog fetch warning/error (surfaced for zed only; cursor behavior unchanged).
   const [liveModelsError, setLiveModelsError] = useState(null);
   const [kiloFreeModels, setKiloFreeModels] = useState([]);
-  const [disabledModelIds, setDisabledModelIds] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
   const [showAgRiskModal, setShowAgRiskModal] = useState(false);
   const [oneByOneRunning, setOneByOneRunning] = useState(false);
@@ -207,68 +206,6 @@ export default function ProviderDetailPage() {
   const providerDisplayAlias = isCompatible
     ? (providerNode?.prefix || providerId)
     : providerAlias;
-
-  const fetchDisabledModels = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/models/disabled?providerAlias=${encodeURIComponent(providerStorageAlias)}`, { cache: "no-store" });
-      const data = await res.json();
-      if (res.ok) setDisabledModelIds(data.ids || []);
-    } catch (error) {
-      console.log("Error fetching disabled models:", error);
-    }
-  }, [providerStorageAlias]);
-
-  const handleDisableModel = async (modelId) => {
-    try {
-      const res = await fetch("/api/models/disabled", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerAlias: providerStorageAlias, ids: [modelId] }),
-      });
-      if (res.ok) await fetchDisabledModels();
-    } catch (error) {
-      console.log("Error disabling model:", error);
-    }
-  };
-
-  const handleEnableModel = async (modelId) => {
-    try {
-      const res = await fetch(`/api/models/disabled?providerAlias=${encodeURIComponent(providerStorageAlias)}&id=${encodeURIComponent(modelId)}`, { method: "DELETE" });
-      if (res.ok) await fetchDisabledModels();
-    } catch (error) {
-      console.log("Error enabling model:", error);
-    }
-  };
-
-  const handleDisableAll = async (ids) => {
-    if (!ids.length) return;
-    setConfirmState({
-      title: "Disable All Models",
-      message: `Disable all ${ids.length} model(s)?`,
-      onConfirm: async () => {
-        setConfirmState(null);
-        try {
-          const res = await fetch("/api/models/disabled", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ providerAlias: providerStorageAlias, ids }),
-          });
-          if (res.ok) await fetchDisabledModels();
-        } catch (error) {
-          console.log("Error disabling all models:", error);
-        }
-      }
-    });
-  };
-
-  const handleEnableAll = async () => {
-    try {
-      const res = await fetch(`/api/models/disabled?providerAlias=${encodeURIComponent(providerStorageAlias)}`, { method: "DELETE" });
-      if (res.ok) await fetchDisabledModels();
-    } catch (error) {
-      console.log("Error enabling all models:", error);
-    }
-  };
 
   // Define callbacks BEFORE the useEffect that uses them
   const fetchAliases = useCallback(async () => {
@@ -474,9 +411,8 @@ export default function ProviderDetailPage() {
       fetchConnections();
       fetchAliases();
       fetchCustomModels();
-      fetchDisabledModels();
     });
-  }, [fetchConnections, fetchAliases, fetchCustomModels, fetchDisabledModels]);
+  }, [fetchConnections, fetchAliases, fetchCustomModels]);
 
   // Live per-connection catalogs (cursor, zed): the static registry carries
   // no usable list, so resolve from the active connection. Fires only when
@@ -1233,9 +1169,7 @@ export default function ProviderDetailPage() {
       ...models,
       ...kiloFreeModels.filter((fm) => !models.some((m) => m.id === fm.id)),
     ].filter((m) => { const k = getModelKind(m); return !k || k === "llm"; });
-    const disabledSet = new Set(disabledModelIds);
-    const displayModels = allModels.filter((m) => !disabledSet.has(m.id));
-    const disabledDisplayModels = allModels.filter((m) => disabledSet.has(m.id));
+    const displayModels = allModels;
     const customModelRows = getProviderCustomModelRows({
       customModels,
       modelAliases,
@@ -1293,7 +1227,6 @@ export default function ProviderDetailPage() {
               onTest={connections.length > 0 || isFreeNoAuth ? () => handleTestModel(model.id) : undefined}
               isTesting={testingModelIds.has(model.id)}
               isFree={model.isFree}
-              onDisable={() => handleDisableModel(model.id)}
               caps={getCaps(`${providerId}/${model.id}`)}
               thinkingSuffix={resolveThinkingSuffix(model.id)}
             />
@@ -1380,25 +1313,6 @@ export default function ProviderDetailPage() {
           );
         })()}
 
-        {/* Disabled models — restorable */}
-        {disabledDisplayModels.length > 0 && (
-          <div className="mt-2 w-full">
-            <p className="mb-2 text-xs text-text-secondary">Disabled models ({disabledDisplayModels.length}):</p>
-            <div className="flex flex-wrap gap-2">
-              {disabledDisplayModels.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => handleEnableModel(m.id)}
-                  className="flex items-center gap-1 rounded-lg border border-dashed border-card-border px-2.5 py-1.5 text-xs text-text-secondary transition-colors hover:border-primary-500/40 hover:bg-primary-500/5 hover:text-primary-500"
-                  title="Restore model"
-                >
-                  <Icon name="add" className="size-[13px]" />
-                  {m.id}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -1851,27 +1765,6 @@ export default function ProviderDetailPage() {
               />
             )}
           </div>
-          {!isCompatible && (() => {
-            const allIds = [
-              ...models,
-              ...kiloFreeModels.filter((fm) => !models.some((m) => m.id === fm.id)),
-            ].filter((m) => { const k = getModelKind(m); return !k || k === "llm"; }).map((m) => m.id);
-            const activeIds = allIds.filter((id) => !disabledModelIds.includes(id));
-            return (
-              <div className="flex gap-2">
-                {disabledModelIds.length > 0 && (
-                  <Button size="sm" variant="secondary" icon="restart_alt" onClick={handleEnableAll}>
-                    Active All
-                  </Button>
-                )}
-                {activeIds.length > 0 && (
-                  <Button size="sm" variant="secondary" icon="block" onClick={() => handleDisableAll(activeIds)}>
-                    Disable All
-                  </Button>
-                )}
-              </div>
-            );
-          })()}
         </div>
         {!!modelsTestError && (
           <div className="mb-3">
