@@ -238,11 +238,11 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
           <div className="flex min-w-0 flex-col gap-3">
             <RecentRequests requests={stats.recentRequests || []} />
             {stats.byModel && <TopUsage byModel={stats.byModel} />}
-            <UsageChart period={period} />
           </div>
         </div>
       )}
 
+      {loading ? spinner : <UsageChart period={period} />}
     </div>
   );
 }

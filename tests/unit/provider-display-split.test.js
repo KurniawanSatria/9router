@@ -14,8 +14,8 @@ describe("provider display split (E1)", () => {
     expect(kiro.id).toBe("kiro");
     expect(kiro.alias).toBe("kr");
     // transport-heavy provider keeps its config
-    expect(AI_PROVIDERS.gemini.serviceKinds).toContain("tts");
-    expect(AI_PROVIDERS.gemini.ttsConfig).toBeTruthy();
+    expect(AI_PROVIDERS.openrouter.serviceKinds).toContain("tts");
+    expect(AI_PROVIDERS.openrouter.ttsConfig).toBeTruthy();
   });
 
   it("display fields source from providersDisplay.js", async () => {
@@ -32,9 +32,9 @@ describe("provider display split (E1)", () => {
     expect(m.getProvidersByKind("tts").length).toBeGreaterThan(0);
   });
 
-  it("Cloudflare exposes API-key authentication on its free-tier card", async () => {
+  it("NVIDIA exposes API-key authentication on its free-tier card", async () => {
     const { FREE_TIER_PROVIDERS } = await import("../../src/shared/constants/providers.js");
-    expect(FREE_TIER_PROVIDERS["cloudflare-ai"].authType).toBe("apikey");
-    expect(FREE_TIER_PROVIDERS["cloudflare-ai"].authModes).toEqual(["apikey"]);
+    expect(FREE_TIER_PROVIDERS["nvidia"].authType).toBe("apikey");
+    expect(FREE_TIER_PROVIDERS["nvidia"].authModes).toEqual(["apikey"]);
   });
 });

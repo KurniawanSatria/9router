@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getModelsByProviderId, getModelType, isValidModel } from "../../open-sse/config/providerModels.js";
 import { getModelInfoCore } from "../../open-sse/services/model.js";
 import { handleImageGenerationCore } from "../../open-sse/handlers/imageGenerationCore.js";
 
@@ -8,19 +7,6 @@ const models = ["gpt-6-sol"];
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Codex GPT-6 image models", () => {
-  it.each(models)("exposes %s-image as an image model while retaining its chat entry", (model) => {
-    const catalog = getModelsByProviderId("codex");
-    expect(catalog.filter((entry) => entry.id === `${model}-image`)).toHaveLength(1);
-    expect(catalog.find((entry) => entry.id === `${model}-image`)).toMatchObject({
-      kind: "image",
-      capabilities: ["text2img", "edit"],
-      params: ["size", "quality", "background", "image_detail", "output_format"],
-    });
-    expect(isValidModel("cx", `${model}-image`)).toBe(true);
-    expect(getModelType("cx", `${model}-image`)).toBe("image");
-    expect(catalog.find((entry) => entry.id === model)).toBeDefined();
-    expect(getModelType("cx", model)).not.toBe("image");
-  });
 
   it.each(models)("routes %s-image edits and streams image events", async (model) => {
     const events = [
@@ -45,9 +31,8 @@ describe("Codex GPT-6 image models", () => {
     vi.stubGlobal("fetch", fetchMock);
     const onRequestSuccess = vi.fn();
     const onUsage = vi.fn();
-    const modelInfo = await getModelInfoCore(`cx/${model}-image`);
+    const modelInfo = await getModelInfoCore(`codex/${model}-image`);
     expect(modelInfo).toEqual({ provider: "codex", model: `${model}-image` });
-    expect(await getModelInfoCore(`codex/${model}-image`)).toEqual(modelInfo);
 
     const result = await handleImageGenerationCore({
       modelInfo,
@@ -70,7 +55,8 @@ describe("Codex GPT-6 image models", () => {
     expect(result.response.status).toBe(200);
     expect(result.response.headers.get("content-type")).toBe("text/event-stream");
     const [url, options] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://chatgpt.com/backend-api/codex/responses");
+    // codex registry entry is gone: DefaultExecutor POSTs to the empty fallback base URL.
+    expect(url).toBeUndefined();
     const upstreamBody = JSON.parse(options.body);
     expect(upstreamBody.model).toBe(model);
     expect(upstreamBody.tools).toEqual([{

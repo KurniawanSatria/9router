@@ -52,15 +52,16 @@ describe("AUDIT-002: API key masking", () => {
     expect(livePath.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("byApiKey object keys should use masked key, not raw key", () => {
+  it("byApiKey object keys carry masked key for display, full key only for grouping", () => {
     const source = fs.readFileSync(
       path.resolve(REPO_ROOT, "src/lib/db/repos/usageRepo.js"),
       "utf-8"
     );
-    // The 24h path should use apiKeyMasked in the akKey template
-    expect(source).toContain("${apiKeyMasked}|${r.model}|${r.provider");
-    // Should NOT use raw r.apiKey in the key
-    expect(source).not.toContain("${r.apiKey}|${r.model}|${r.provider");
+    // a406381f: buckets must be keyed by the FULL key, since every key shares
+    // the sk-{machineId} prefix and masking collapsed them into one bucket.
+    expect(source).toContain("${r.apiKey}|${r.model}|${r.provider");
+    // The visible label on each bucket stays masked.
+    expect(source).toContain("apiKeyMasked, keyName");
   });
 });
 

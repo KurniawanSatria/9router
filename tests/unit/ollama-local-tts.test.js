@@ -156,23 +156,17 @@ describe("Ollama Local TTS", () => {
     expect(deVoices.map((v) => v.id)).toEqual(["default"]);
   });
 
-  it("wires ollama-local into media-providers TTS (serviceKind, adapter, UI config)", () => {
-    expect(AI_PROVIDERS["ollama-local"].serviceKinds).toContain("tts");
-    expect(AI_PROVIDERS["ollama-local"].ttsConfig.baseUrl).toBe("http://localhost:11434/v1/audio/speech");
-    expect(getTtsAdapter("ollama-local")).toBeTruthy();
+  it("wires selfhosted-tts into media-providers TTS (serviceKind, adapter, UI config)", () => {
+    expect(AI_PROVIDERS["selfhosted-tts"].serviceKinds).toContain("tts");
+    expect(AI_PROVIDERS["selfhosted-tts"].ttsConfig.baseUrl).toBe("http://localhost:8880");
+    expect(getTtsAdapter("selfhosted-tts")).toBeTruthy();
 
     const ttsProviders = getProvidersByKind("tts");
-    const ollamaEntry = ttsProviders.find((p) => p.id === "ollama-local");
-    expect(ollamaEntry).toBeTruthy();
+    const entry = ttsProviders.find((p) => p.id === "selfhosted-tts");
+    expect(entry).toBeTruthy();
 
-    expect(TTS_PROVIDER_CONFIG["ollama-local"].hasModelSelector).toBe(true);
-    expect(TTS_PROVIDER_CONFIG["ollama-local"].hasVoiceIdInput).toBe(true);
-    expect(TTS_PROVIDER_CONFIG["ollama-local"].defaultVoiceId).toBe("default");
-    expect(TTS_PROVIDER_CONFIG["ollama-local"].voicesPerModel).toBe(true);
-    expect(TTS_PROVIDER_CONFIG["ollama-local"].defaultFormat).toBe("wav");
-    expect(TTS_PROVIDER_CONFIG["ollama-local"].formatOptions).toEqual([
-      { value: "wav", label: "WAV (Binary)" },
-      { value: "pcm", label: "PCM (Raw)" },
-    ]);
+    expect(TTS_PROVIDER_CONFIG["selfhosted-tts"].hasModelSelector).toBe(true);
+    expect(TTS_PROVIDER_CONFIG["selfhosted-tts"].hasVoiceIdInput).toBe(true);
+    expect(TTS_PROVIDER_CONFIG["selfhosted-tts"].voiceSource).toBe("manual");
   });
 });

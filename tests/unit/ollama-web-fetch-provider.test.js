@@ -5,7 +5,7 @@ import { handleFetchCore } from "../../open-sse/handlers/fetch/index.js";
 import { AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers.js";
 
 const CONFIG = {
-  baseUrl: "https://ollama.com/api/web_fetch",
+  baseUrl: "https://api.fetch.tinyfish.ai",
   timeoutMs: 30000,
 };
 
@@ -13,29 +13,26 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("Ollama Cloud web fetch provider", () => {
-  it("registers web fetch on the existing Ollama Cloud connection", () => {
-    const entry = REGISTRY.find((candidate) => candidate.id === "ollama");
+describe("TinyFish web fetch provider", () => {
+  it("registers web fetch on its own connection", () => {
+    const entry = REGISTRY.find((candidate) => candidate.id === "tinyfish");
 
     expect(entry).toMatchObject({
-      category: "freeTier",
-      serviceKinds: ["llm", "webFetch", "systemone"],
+      serviceKinds: ["webSearch", "webFetch"],
       fetchConfig: {
-        baseUrl: "https://ollama.com/api/web_fetch",
+        baseUrl: "https://api.fetch.tinyfish.ai",
         method: "POST",
-        authHeader: "bearer",
-        formats: ["markdown"],
+        authHeader: "x-api-key",
+        formats: ["markdown", "html"],
       },
     });
-    expect(AI_PROVIDERS.ollama?.fetchConfig).toEqual(entry.fetchConfig);
-    expect(getProvidersByKind("webFetch").map((provider) => provider.id)).toContain("ollama");
+    expect(AI_PROVIDERS.tinyfish?.fetchConfig).toEqual(entry.fetchConfig);
+    expect(getProvidersByKind("webFetch").map((provider) => provider.id)).toContain("tinyfish");
   });
 
-  it("calls Ollama with bearer auth and normalizes the response", async () => {
+  it("calls TinyFish with api-key auth and normalizes the response", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-      title: "Example Domain",
-      content: "Hello from Ollama",
-      links: ["https://www.iana.org/domains/example"],
+      results: [{ url: "https://example.com", title: "Example Domain", text: "Hello from TinyFish", links: ["https://www.iana.org/domains/example"] }],
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -45,40 +42,39 @@ describe("Ollama Cloud web fetch provider", () => {
       url: "https://example.com",
       format: "markdown",
       maxCharacters: 5,
-      provider: "ollama",
+      provider: "tinyfish",
       providerConfig: CONFIG,
-      credentials: { apiKey: "ollama-test-key" },
+      credentials: { apiKey: "tinyfish-test-key" },
     });
 
     expect(result.success).toBe(true);
     expect(global.fetch).toHaveBeenCalledTimes(1);
     const [requestUrl, init] = global.fetch.mock.calls[0];
-    expect(requestUrl).toBe("https://ollama.com/api/web_fetch");
+    expect(requestUrl).toBe("https://api.fetch.tinyfish.ai");
     expect(init.method).toBe("POST");
-    expect(init.headers).toEqual({
+    expect(init.headers).toMatchObject({
       "content-type": "application/json",
-      authorization: "Bearer ollama-test-key",
+      "X-API-Key": "tinyfish-test-key",
     });
-    expect(JSON.parse(init.body)).toEqual({ url: "https://example.com" });
+    expect(JSON.parse(init.body)).toEqual({ urls: ["https://example.com"], format: "markdown" });
     expect(result.data).toMatchObject({
-      provider: "ollama",
+      provider: "tinyfish",
       url: "https://example.com",
       title: "Example Domain",
       content: { format: "markdown", text: "Hello", length: 5 },
       links: ["https://www.iana.org/domains/example"],
-      usage: { fetch_cost_usd: null },
     });
   });
 
   it("returns the upstream status and error message", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(
-      JSON.stringify({ error: "invalid API key" }),
+      JSON.stringify({ error: { message: "invalid API key" } }),
       { status: 401, headers: { "Content-Type": "application/json" } },
     )));
 
     const result = await handleFetchCore({
       url: "https://example.com",
-      provider: "ollama",
+      provider: "tinyfish",
       providerConfig: CONFIG,
       credentials: { apiKey: "bad-key" },
     });
@@ -98,15 +94,15 @@ describe("Ollama Cloud web fetch provider", () => {
 
     const result = await handleFetchCore({
       url: "https://example.com",
-      provider: "ollama",
+      provider: "tinyfish",
       providerConfig: CONFIG,
-      credentials: { apiKey: "ollama-test-key" },
+      credentials: { apiKey: "tinyfish-test-key" },
     });
 
     expect(result).toEqual({
       success: false,
       status: 502,
-      error: "Ollama returned an empty or invalid web fetch response",
+      error: "TinyFish returned no extractable content",
     });
   });
 });

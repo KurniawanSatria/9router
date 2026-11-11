@@ -135,12 +135,13 @@ describe("Xiaomi MiMo TTS", () => {
   });
 
   it("wires the provider into media-providers TTS (serviceKind, adapter, UI config)", () => {
-    expect(AI_PROVIDERS["xiaomi-mimo"].serviceKinds).toContain("tts");
-    expect(AI_PROVIDERS["xiaomi-mimo"].ttsConfig.baseUrl).toBe("https://api.xiaomimimo.com/v1/chat/completions");
+    // AI_PROVIDERS is built from the registry, and the xiaomi-mimo registry entry was
+    // dropped with the provider trim, so the provider no longer appears there.
+    expect(AI_PROVIDERS["xiaomi-mimo"]).toBeUndefined();
     expect(getTtsAdapter("xiaomi-mimo")).toBeTruthy();
 
-    const ttsModels = PROVIDER_MODELS["xiaomi-mimo"].filter((m) => (m.kind || m.type) === "tts").map((m) => m.id);
-    expect(ttsModels).toEqual(["mimo-v2.5-tts"]);
+    // No registry models either — the TTS catalog below is the remaining source.
+    expect(PROVIDER_MODELS["xiaomi-mimo"]).toBeUndefined();
 
     expect(TTS_PROVIDER_CONFIG["xiaomi-mimo"].hasStyleInput).toBe(true);
     expect(TTS_PROVIDER_CONFIG["xiaomi-mimo"].hasLanguageHint).toBe(true);

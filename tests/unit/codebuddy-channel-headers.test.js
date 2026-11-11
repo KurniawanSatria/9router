@@ -21,7 +21,7 @@ function buildHeaders(id) {
 }
 
 describe("codebuddy channel headers", () => {
-  for (const id of ["codebuddy-intl", "codebuddy-cn"]) {
+  for (const id of ["codebuddy-intl"]) {
     describe(id, () => {
       it("registers the codebuddyHeaders hook", () => {
         expect(PROVIDERS[id]?.auth?.hooks).toContain("codebuddyHeaders");

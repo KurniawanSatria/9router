@@ -6,6 +6,7 @@ const db = vi.hoisted(() => ({
   getCombos: vi.fn(),
   getCustomModels: vi.fn(async () => []),
   getModelAliases: vi.fn(async () => ({})),
+  getSettings: vi.fn(async () => ({})),
 }));
 
 vi.mock("@/lib/localDb", () => db);
@@ -39,9 +40,9 @@ async function modelsWithCombo(providerId, modelId, combos) {
 
 describe("/v1/models combo limits", () => {
   it.each([
-    ["ocg", "opencode-go", "mimo-v2.5"],
-    ["ps", "poolside", "custom-model"],
-    ["ds", "deepseek", "deepseek-chat"],
+    ["oc", "opencode", "union-alpha"],
+    ["samba", "sambanova", "MiniMax-M2.7"],
+    ["mmf", "mimo-free", "mimo-auto"],
   ])("uses the real provider for a %s UI-alias seat", async (uiAlias, providerId, modelId) => {
     const combo = { name: "ui-alias-combo", models: [`${uiAlias}/${modelId}`] };
     const models = await modelsWithCombo(providerId, modelId, [combo]);
@@ -55,8 +56,8 @@ describe("/v1/models combo limits", () => {
   });
 
   it("carries provider-scoped limits through a nested combo", async () => {
-    const models = await modelsWithCombo("opencode-go", "mimo-v2.5", [
-      { name: "inner-combo", models: ["ocg/mimo-v2.5"] },
+    const models = await modelsWithCombo("opencode", "union-alpha", [
+      { name: "inner-combo", models: ["oc/union-alpha"] },
       { name: "outer-combo", models: ["inner-combo"] },
     ]);
     const outer = models.find((model) => model.id === "outer-combo");
@@ -78,5 +79,19 @@ describe("/v1/models combo limits", () => {
       context_length: 200000,
       capabilities: { contextWindow: 200000 },
     });
+  });
+
+  it("returns combos only in combo-only mode", async () => {
+    db.getSettings.mockResolvedValue({ comboOnlyMode: true });
+    try {
+      const models = await modelsWithCombo("devin-cli", "gpt-5.5-high", [
+        { name: "only-combo", models: ["dv/gpt-5.5-high"] },
+      ]);
+
+      expect(models.map((model) => model.id)).toEqual(["only-combo"]);
+      expect(models[0].owned_by).toBe("combo");
+    } finally {
+      db.getSettings.mockResolvedValue({});
+    }
   });
 });

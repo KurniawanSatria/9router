@@ -22,15 +22,6 @@ describe("antigravity oauth client (deduped)", () => {
     expect(ag.transport.clientSecret).toBe(EXPECTED.clientSecret);
   });
 
-  it("google client shared by gemini + gemini-cli", async () => {
-    const { GOOGLE_OAUTH_CLIENT } = await import("../../open-sse/providers/shared.js");
-    expect(GOOGLE_OAUTH_CLIENT).toEqual(GOOGLE);
-    const gemini = (await import("../../open-sse/providers/registry/gemini.js")).default;
-    const gc = (await import("../../open-sse/providers/registry/gemini-cli.js")).default;
-    expect(gemini.transport.clientSecret).toBe(GOOGLE.clientSecret);
-    expect(gc.transport.clientSecret).toBe(GOOGLE.clientSecret);
-  });
-
   // Guard: oauth.js must spread shared clients + derive from registry (PROVIDER_OAUTH).
   it("src oauth.js imports shared client + keeps full shape", async () => {
     const { readFileSync } = await import("node:fs");

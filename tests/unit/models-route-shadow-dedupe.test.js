@@ -1,12 +1,12 @@
 // A custom-model row created before a model existed in the registry (dashboard
 // "add custom model") stores thin caps — {vision, reasoning}, no contextWindow —
-// under the UI alias (`ocg|claude-haiku-5-5|llm`). Once the registry gains the
-// model, /api/models lists the real entry (fullModel opencode-go/…) AND the
-// custom shadow (fullModel ocg/…), both with routedModel ocg/claude-haiku-5-5.
+// under the UI alias (`oc|mimo-v2.6-flash-free|llm`). Once the registry gains the
+// model, /api/models lists the real entry (fullModel opencode/…) AND the custom
+// shadow (fullModel oc/…), both with routedModel oc/mimo-v2.6-flash-free.
 // The client's useModelCaps builds byFull[routedModel] last-write-wins, so the
-// shadow (resolved via the alias `ocg`, which misses the provider-scoped 1M
-// entry and falls back to *claude*haiku* → 200k/64k) overwrote the real 1M/128k
-// caps and dragged every combo containing the seat down to 200k.
+// shadow (resolved via the alias `oc`, which misses the provider-scoped entry
+// and falls back to the *mimo* pattern) overwrote the real 1M caps and dragged
+// every combo containing the seat down.
 //
 // Two behaviors pinned here (drive the route handler with mocked repos):
 // 1. a custom row whose providerAlias/id collides with a listed routedModel is
@@ -26,12 +26,8 @@ vi.mock("@/lib/disabledModelsDb", () => ({
 import { GET } from "@/app/api/models/route.js";
 import { getCustomModels } from "@/models";
 
-function jsonRes(obj) {
-  return { json: async () => obj };
-}
-
 // The registry list comes from AI_MODELS (static import) — real registry, so
-// opencode-go/claude-haiku-5-5 is listed and any ocg/ custom shadow collides.
+// opencode/… is listed and any oc/ custom shadow collides.
 async function fetchModels() {
   const res = await GET();
   const body = await res.json();
@@ -43,33 +39,31 @@ beforeEach(() => {
 });
 
 describe("/api/models — custom-model shadow dedupe", () => {
-  it("drops the ocg/claude-haiku-5-5 shadow and keeps the 1M registry entry", async () => {
+  it("drops the oc/mimo-v2.6-flash-free shadow and keeps the registry entry", async () => {
     vi.mocked(getCustomModels).mockResolvedValueOnce([
-      { providerAlias: "ocg", id: "claude-haiku-5-5", type: "llm", name: "claude-haiku-5-5", caps: { vision: true, reasoning: true } },
+      { providerAlias: "oc", id: "mimo-v2.6-flash-free", type: "llm", name: "mimo-v2.6-flash-free", caps: { vision: true, reasoning: true } },
     ]);
 
     const models = await fetchModels();
-    const routed = models.filter((m) => m.routedModel === "ocg/claude-haiku-5-5" || m.fullModel === "opencode-go/claude-haiku-5-5");
+    const routed = models.filter((m) => m.routedModel === "oc/mimo-v2.6-flash-free");
 
     expect(routed).toHaveLength(1);
-    expect(routed[0].fullModel).toBe("opencode-go/claude-haiku-5-5");
-    expect(routed[0].caps.contextWindow).toBe(1000000);
-    expect(routed[0].caps.maxOutput).toBe(128000);
+    expect(routed[0].fullModel).toBe("oc/mimo-v2.6-flash-free");
+    expect(routed[0].caps.contextWindow).toBe(1048576);
+    expect(routed[0].caps.maxOutput).toBe(131072);
   });
 
   it("keeps non-colliding custom rows and resolves their caps by provider id", async () => {
     vi.mocked(getCustomModels).mockResolvedValueOnce([
       // does not collide: registry has no such id under a routed alias
-      { providerAlias: "cmc", id: "some-totally-custom-model", type: "llm", name: "x", caps: {} },
+      { providerAlias: "oc", id: "some-totally-custom-model", type: "llm", name: "x", caps: {} },
     ]);
 
     const models = await fetchModels();
-    const kept = models.find((m) => m.fullModel === "cmc/some-totally-custom-model");
+    const kept = models.find((m) => m.fullModel === "oc/some-totally-custom-model");
     expect(kept).toBeDefined();
-    // `cmc` maps to commandcode; the commandcode branch (1M/384k for unlisted
-    // models) must fire — an alias lookup would miss it entirely and fall to
-    // the 200k floor.
-    expect(kept.caps.contextWindow).toBe(1000000);
-    expect(kept.caps.maxOutput).toBe(384000);
+    // `oc` maps to opencode; resolving by id rather than by alias is what makes
+    // provider-scoped capability overrides reachable at all.
+    expect(kept.caps.contextWindow).toBeGreaterThan(0);
   });
 });

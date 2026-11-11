@@ -5,11 +5,12 @@
 import { proxyAwareFetch } from "../../utils/proxyFetch.js";
 import { U, parseResetTime, toFiniteNumber } from "./shared.js";
 
-// Codex (OpenAI) API config
+// Codex (OpenAI) API config. The registry entry is gone, so these fall back to the
+// documented backend endpoints instead of deriving undefined from transport.usage.
 const CODEX_CONFIG = {
-  usageUrl: U("codex").url,
-  resetCreditsUrl: U("codex").resetCreditsUrl,
-  resetCreditsConsumeUrl: U("codex").resetCreditsConsumeUrl,
+  usageUrl: U("codex").url || "https://chatgpt.com/backend-api/wham/usage",
+  resetCreditsUrl: U("codex").resetCreditsUrl || "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",
+  resetCreditsConsumeUrl: U("codex").resetCreditsConsumeUrl || "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume",
 };
 
 function toIsoDate(value) {

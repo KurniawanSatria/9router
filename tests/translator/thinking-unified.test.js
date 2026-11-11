@@ -7,6 +7,7 @@ import {
   applyThinking,
 } from "../../open-sse/translator/concerns/thinkingUnified.js";
 import { extractReasoningText } from "../../open-sse/translator/concerns/reasoning.js";
+import { PROVIDERS } from "../../open-sse/config/providers.js";
 
 const apply = (targetFormat, model, body, provider) => {
   const b = JSON.parse(JSON.stringify(body));
@@ -198,10 +199,10 @@ describe("applyThinking per provider format", () => {
     const out = apply("openai", "gpt-4o", { reasoning_effort: "high" }, "openai");
     expect(out.reasoning_effort).toBeUndefined();
   });
-  it("aggregator (siliconflow) GLM model → forced openai reasoning_effort", () => {
-    const out = apply("openai", "zai-org/GLM-5", { reasoning_effort: "high" }, "siliconflow");
+  it("aggregator (nvidia) GLM model → forced openai reasoning_effort", () => {
+    const out = apply("openai", "z-ai/glm-5.2", { reasoning_effort: "high" }, "nvidia");
     expect(out.reasoning_effort).toBe("high");
-    expect(out.enable_thinking).toBeUndefined();
+    expect(out.thinking).toBeUndefined();
   });
   it("suffix overrides body", () => {
     const out = apply("openai", "gpt-5(low)", { reasoning_effort: "high" }, "openai");
@@ -314,39 +315,20 @@ describe("OpenCode Free ids with no capabilities entry (#2690)", () => {
   });
 });
 
-// Refs #3014. A multi-endpoint provider declares, per transports[] entry, the thinking shape that
-// endpoint accepts. OpenCode Go's /responses 503s ("Endpoint is unavailable") on the Chat-shaped
-// fields the deepseek format emits (thinking:{type} + reasoning_effort), while its /chat/completions
-// needs exactly those. Muse (Meta) used to be a hardcoded special case of the same rule.
-describe("transport-declared thinkingFormat (Responses endpoints)", () => {
-  const responsesBody = (effort) => ({ input: [{ role: "user", content: "hi" }], reasoning: { effort } });
+// A transport can declare the thinking shape its endpoint accepts; it wins over the
+// model's own thinkingFormat, which describes the Chat wire. tokenrouter declares
+// thinkingFormat:"tokenrouter" and openrouter "openai" on the transport.
+describe("transport-declared thinkingFormat", () => {
   const chatBody = (effort) => ({ messages: [{ role: "user", content: "hi" }], reasoning_effort: effort });
 
-  it("opencode-go /responses nests reasoning:{effort,summary} and drops Chat-shaped fields", () => {
-    const out = apply("openai-responses", "deepseek-v4.1-flash", responsesBody("high"), "opencode-go");
-    expect(out.reasoning).toEqual({ effort: "high", summary: "auto" });
+  it("tokenrouter transport shape drops unsupported levels instead of the model's own", () => {
+    const out = apply("openai", "z-ai/glm-5.2", chatBody("none"), "tokenrouter");
     expect(out.reasoning_effort).toBeUndefined();
     expect(out.thinking).toBeUndefined();
   });
 
-  it("opencode-go /chat/completions still gets the model's own (deepseek) shape", () => {
-    const out = apply("openai", "deepseek-v4.1-flash", chatBody("high"), "opencode-go");
-    expect(out.thinking).toEqual({ type: "enabled" });
-    expect(out.reasoning_effort).toBe("high");
-    expect(out.reasoning).toBeUndefined();
-  });
-
-  it("opencode-go /responses expresses 'none' by omitting reasoning", () => {
-    const out = apply("openai-responses", "deepseek-v4.1-flash", responsesBody("none"), "opencode-go");
-    expect(out.reasoning).toBeUndefined();
-    expect(out.reasoning_effort).toBeUndefined();
-    expect(out.thinking).toBeUndefined();
-  });
-
-  it("muse /responses keeps the nested shape now that it is declared on the transport", () => {
-    const out = apply("openai-responses", "muse-spark-1.3", responsesBody("high"), "muse");
-    expect(out.reasoning).toEqual({ effort: "high", summary: "auto" });
-    expect(out.reasoning_effort).toBeUndefined();
+  it("tokenrouter declares thinkingFormat on its transport", () => {
+    expect(PROVIDERS.tokenrouter.thinkingFormat).toBe("tokenrouter");
   });
 
   it("a provider without the declaration keeps its existing Responses behaviour (control)", () => {

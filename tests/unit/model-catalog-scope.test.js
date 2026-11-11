@@ -17,6 +17,7 @@ const upstream = {
   zhipuai: { models: { "glm-5-canary": { modalities: { input: ["text", "image", "pdf"] } } } },
   moonshotai: { models: { "kimi-k3": { modalities: { input: ["text"] } } } },
   kilo: { models: { "kilo-auto/efficient": { modalities: { input: ["text", "image"] } } } },
+  openrouter: { models: { "laguna-9-preview": { modalities: { input: ["text", "image"] } } } },
 };
 // The registry snapshot the sync feeds build(): local ids, with the capabilities
 // the tables resolve on their own.
@@ -170,7 +171,9 @@ describe("catalog schema", () => {
     expect(sent[0]["if-none-match"]).toBeUndefined();
     const written = JSON.parse(fs.readFileSync(catalogFile, "utf8"));
     expect(written.v).toBe(2);
-    expect(written.models["glm:glm-4.6v"]).toEqual({ vision: true });
+    // "openrouter" is a registry provider, so collectEntries() feeds it in and
+    // the upstream record is filed under that local id.
+    expect(written.models["openrouter:laguna-9-preview"]).toEqual({ vision: true });
   });
 
   it("asks upstream for a 304 once the file is current", async () => {

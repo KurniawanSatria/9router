@@ -27,7 +27,7 @@ vi.mock("@/lib/localDb", () => ({
 vi.mock("@/lib/disabledModelsDb", () => ({ getDisabledModels: async () => ({}) }));
 vi.mock("@/lib/db/repos/combosRepo.js", () => ({ getCombos: async () => fx.combos }));
 vi.mock("@/lib/db/repos/apiKeysRepo.js", () => ({ getApiKeyByKey: async (k) => fx.keys[k] || null }));
-vi.mock("@/lib/usageDb.js", () => ({ saveRequestUsage: vi.fn() }));
+vi.mock("@/lib/usageDb.js", () => ({ saveRequestUsage: vi.fn(), saveRequestFailure: vi.fn(async () => {}) }));
 vi.mock("@/sse/services/auth.js", () => ({
   getProviderCredentials: mocks.getProviderCredentials,
   markAccountUnavailable: vi.fn(async () => ({ shouldFallback: false })),
@@ -83,8 +83,8 @@ beforeEach(() => {
       id: "m", name: "media", isActive: true,
       access: {
         restricted: true,
-        allow: ["openai/text-embedding-3-small", "openai/dall-e-3", "openai/tts-1", "openai/whisper-1",
-          "xai/grok-imagine-video", "tavily", "openai/gpt-4o", "gemini/gemini-2.5-flash-preview-tts"],
+        allow: ["openai/text-embedding-3-small", "openai/dall-e-3", "nvidia/fastpitch", "deepgram/nova-3",
+          "openrouter/google/veo-3.1", "tavily", "openai/gpt-4o", "gemini/gemini-2.5-flash-preview-tts"],
       },
     },
   };
@@ -158,14 +158,14 @@ describe("chat (/v1/chat/completions, /v1/messages, /v1/responses all use handle
 const handlers = [
   ["embeddings", (m, k) => handleEmbeddings(post("/v1/embeddings", { model: m, input: "x" }, k)), "openai/text-embedding-3-small", "openai/text-embedding-3-large"],
   ["image", (m, k) => handleImageGeneration(post("/v1/images/generations", { model: m, prompt: "x" }, k)), "openai/dall-e-3", "openai/gpt-image-1"],
-  ["tts", (m, k) => handleTts(post("/v1/audio/speech", { model: m, input: "x" }, k)), "openai/tts-1", "openai/tts-1-hd"],
+  ["tts", (m, k) => handleTts(post("/v1/audio/speech", { model: m, input: "x" }, k)), "nvidia/fastpitch", "openrouter/openai/tts-1"],
   ["stt", (m, k) => {
     const fd = new FormData();
     fd.set("model", m);
     fd.set("file", new Blob([new Uint8Array(4)], { type: "audio/wav" }), "a.wav");
     return handleStt(new Request("http://localhost/v1/audio/transcriptions", { method: "POST", headers: auth(k), body: fd }));
-  }, "openai/whisper-1", "groq/whisper-large-v3"],
-  ["video", (m, k) => handleVideoCreate(post("/v1/videos/generations", { model: m, prompt: "x" }, k), "generations"), "xai/grok-imagine-video", "xai/grok-imagine-video-pro"],
+  }, "deepgram/nova-3", "assemblyai/universal-3-pro"],
+  ["video", (m, k) => handleVideoCreate(post("/v1/videos/generations", { model: m, prompt: "x" }, k), "generations"), "openrouter/google/veo-3.1", "openrouter/openai/sora-2-pro"],
   ["search", (m, k) => handleSearch(post("/v1/search", { model: m, query: "x" }, k)), "tavily", "exa"],
   ["fetch", (m, k) => handleFetch(post("/v1/web/fetch", { model: m, url: "https://example.com" }, k)), "tavily", "firecrawl"],
   ["systemone", (m, k) => handleSystemone(post("/v1/systemone", { model: m, state: {}, questions: { q: "?" } }, k)), "openai/gpt-4o", "openai/gpt-4.1"],
@@ -213,9 +213,9 @@ describe("/v1/models routes filter by key", () => {
   it("unrestricted sees the full catalog; restricted keys see only their entries", async () => {
     const all = await list("sk-open");
     expect(all).toContain("Main");
-    const someModel = all.find((id) => id.startsWith("openai/"));
+    const someModel = all.find((id) => id.includes("/"));
     expect(someModel).toBeTruthy();
-    fx.keys["sk-mix"] = { id: "x", name: "mix", isActive: true, access: { restricted: true, allow: ["Main", someModel.toUpperCase()] } };
+    fx.keys["sk-mix"] = { id: "x", name: "mix", isActive: true, access: { restricted: true, allow: ["Main", someModel.toUpperCase().replace(/^[^/]+\//, (p) => p.toLowerCase())] } };
     expect(await list("sk-mix")).toEqual(["Main", someModel]);
     expect(await list("sk-combo")).toEqual(["Main"]);
     expect(await list("sk-empty")).toEqual([]);

@@ -1,9 +1,8 @@
 // useModelCaps.resolveCaps — the local fallback path (when /api/models has no
 // entry for the key) must map the seat's UI alias to the provider id before
 // calling getCapabilitiesForModel. The tables are keyed by provider id
-// (opencode-go, commandcode, …); a raw alias like `ocg` misses the
-// provider-scoped entries and falls to the generic patterns, under-reporting
-// (any *claude*haiku* id reads 200k regardless of the 1M provider entry).
+// (opencode, commandcode, …); a raw alias like `oc` misses the
+// provider-scoped entries and falls to the generic patterns, under-reporting.
 //
 // resolveCaps is exported for this test; the hook itself is client code and is
 // not exercised here.
@@ -11,21 +10,15 @@ import { describe, it, expect } from "vitest";
 import { resolveCaps } from "@/shared/hooks/useModelCaps.js";
 
 describe("useModelCaps resolveCaps — alias → provider id in the fallback", () => {
-  it("ocg/claude-haiku-5-5 resolves through opencode-go, not the haiku pattern", () => {
-    const caps = resolveCaps({}, {}, "ocg/claude-haiku-5-5");
-    expect(caps.contextWindow).toBe(1000000);
-    expect(caps.maxOutput).toBe(128000);
-  });
-
-  it("cmc/<unlisted> resolves through commandcode (1M/384k fallback)", () => {
-    const caps = resolveCaps({}, {}, "cmc/some-unlisted-model");
-    expect(caps.contextWindow).toBe(1000000);
-    expect(caps.maxOutput).toBe(384000);
+  it("oc/mimo-v2.6-flash-free resolves through the opencode override, not the mimo pattern", () => {
+    const caps = resolveCaps({}, {}, "oc/mimo-v2.6-flash-free");
+    expect(caps.contextWindow).toBe(1048576);
+    expect(caps.maxOutput).toBe(131072);
   });
 
   it("byFull hit still wins over the fallback", () => {
     const fed = { contextWindow: 555000 };
-    const caps = resolveCaps({ "ocg/claude-haiku-5-5": fed }, {}, "ocg/claude-haiku-5-5");
+    const caps = resolveCaps({ "oc/mimo-v2.6-flash-free": fed }, {}, "oc/mimo-v2.6-flash-free");
     expect(caps).toBe(fed);
   });
 

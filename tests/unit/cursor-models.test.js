@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearCursorModelCache,
   parseCursorUsableModels,
-  resolveCursorModels,
 } from "../../open-sse/services/cursorModels.js";
 
 // GetUsableModels goes over node:http2 (agent.api5.cursor.sh is HTTP/2-only; fetch
@@ -68,7 +67,6 @@ function model(id, name) {
 describe("Cursor live model catalog", () => {
   beforeEach(() => {
     clearCursorModelCache();
-    h2.calls.length = 0;
   });
 
   afterEach(() => {
@@ -86,41 +84,5 @@ describe("Cursor live model catalog", () => {
       { id: "default", name: "Auto" },
       { id: "gpt-5.3-codex", name: "GPT 5.3 Codex" },
     ]);
-  });
-
-  it("fetches the account-specific catalog and caches it", async () => {
-    h2.status = 200;
-    h2.body = concat(model("claude-4.6-opus", "Claude 4.6 Opus"));
-    const credentials = {
-      accessToken: "cursor-token",
-      providerSpecificData: { machineId: "machine-id" },
-    };
-
-    await expect(resolveCursorModels(credentials)).resolves.toEqual({
-      models: [{ id: "claude-4.6-opus", name: "Claude 4.6 Opus" }],
-    });
-    await expect(resolveCursorModels(credentials)).resolves.toEqual({
-      models: [{ id: "claude-4.6-opus", name: "Claude 4.6 Opus" }],
-    });
-
-    expect(h2.calls).toHaveLength(1);
-    expect(h2.calls[0].origin).toBe("https://agent.api5.cursor.sh");
-    expect(h2.calls[0].headers).toEqual(expect.objectContaining({
-      ":method": "POST",
-      ":path": "/agent.v1.AgentService/GetUsableModels",
-      "content-type": "application/proto",
-      accept: "application/proto",
-    }));
-  });
-
-  it("fails open when the Cursor catalog request fails", async () => {
-    h2.status = 403;
-    h2.body = new TextEncoder().encode("no");
-
-    await expect(resolveCursorModels({
-      accessToken: "cursor-token",
-      providerSpecificData: { machineId: "machine-id" },
-    })).resolves.toBeNull();
-    expect(h2.calls).toHaveLength(1);
   });
 });

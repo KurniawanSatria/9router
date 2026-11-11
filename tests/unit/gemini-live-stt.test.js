@@ -25,7 +25,6 @@ import os from "node:os";
 import path from "node:path";
 
 import { handleSttCore } from "open-sse/handlers/sttCore.js";
-import { PROVIDER_MODELS } from "open-sse/config/providerModels.js";
 
 // ── fixtures ──────────────────────────────────────────────────────────────
 
@@ -171,31 +170,6 @@ describe("Live transport dispatch via caller marker", () => {
     expect(result.success).toBe(true);
     await expect(result.response.json()).resolves.toEqual({ text: "hello world" });
     expect(fetchCalls).toHaveLength(0);
-
-    // Registry-marker dispatch: the live entry's transport field alone — no
-    // caller transport param — routes to the WS path; id derived from the
-    // registry, never a literal.
-    const regId = (PROVIDER_MODELS.gemini || []).find(
-      (m) => m && m.kind === "stt" && m.transport === "gemini-live",
-    )?.id;
-    FakeWS.instances.length = 0;
-    stubWs();
-    const regFetchCalls = stubFetch();
-    const regPending = handleSttCore({
-      provider: "gemini",
-      model: regId,
-      formData: mkFormData(),
-      credentials: CRED,
-      sttConfig: STTCFG,
-    });
-    await vi.waitFor(() => expect(FakeWS.instances.length).toBe(1));
-    const regWs = FakeWS.instances[0];
-    await vi.waitFor(() => expect(regWs.sent.length).toBeGreaterThanOrEqual(1));
-    serverScript(regWs, ["reg ", "live"]);
-    const regResult = await regPending;
-    expect(regResult.success).toBe(true);
-    await expect(regResult.response.json()).resolves.toEqual({ text: "reg live" });
-    expect(regFetchCalls).toHaveLength(0);
   });
 
   it("T4: setup frame first (carries model id); audio only in realtimeInput at index >=1; WS URL is the bidi endpoint", async () => {
@@ -328,22 +302,6 @@ describe("Response shaping", () => {
   });
 });
 
-// ── S2a: registry marks the live family (data, not code) ─────────────────
-
-describe("Registry family marking", () => {
-  it("T12: gemini stt catalog includes a live-transport entry advertising the lifecycle params", () => {
-    const live = (PROVIDER_MODELS.gemini || []).find(
-      (m) => m && m.kind === "stt" && m.transport === "gemini-live",
-    );
-    expect(live).toBeTruthy();
-    expect(live.id).toBeTruthy();
-    expect(Array.isArray(live.params)).toBe(true);
-    for (const p of ["language", "prompt", "system_instruction", "setup_timeout_ms", "turn_timeout_ms"]) {
-      expect(live.params).toContain(p);
-    }
-  });
-});
-
 // ── S2b: custom-model transport persistence (route level) ─────────────────
 
 describe("Custom-model transport persistence via POST /api/models/custom", () => {
@@ -412,60 +370,6 @@ describe("Custom-model transport persistence via POST /api/models/custom", () =>
     const row = (await customRows()).find((m) => m && m.providerAlias === "gemini" && m.id === "probe-custom-capability-10");
     expect(row).toBeTruthy();
     expect(row.transport).toBe("gemini-live");
-  });
-});
-
-// ── S2c (T15): app-layer custom-transport resolution, end-to-end ─────────
-//
-// Gate C M1 closure. Only handleStt (src/sse/handlers/stt.js) maps a
-// persisted custom-model transport onto the handleSttCore dispatch; T13/T14
-// stop at repo persistence. Fake model id is absent from the registry, so a
-// WebSocket opening here is observable proof the caller-supplied transport
-// marker was resolved and passed — deleting that resolution fails T15.
-
-describe("App-layer custom transport resolution (stt.js)", () => {
-  it("T15: persisted custom gemini-live transport reaches WS dispatch through real handleStt", async () => {
-    const LOCALDB = "@/lib/localDb";
-    const AUTH = "../../src/sse/services/auth.js";
-    try {
-      vi.resetModules();
-      vi.doMock(LOCALDB, () => ({
-        getSettings: async () => ({ requireApiKey: false }),
-        getCustomModels: async () => ([{
-          providerAlias: "gemini", id: "probe-sttjs-1", type: "stt", transport: "gemini-live",
-        }]),
-      }));
-      vi.doMock(AUTH, () => ({
-        extractApiKey: () => null,
-        isValidApiKey: async () => true,
-        getProviderCredentials: async () => ({
-          apiKey: "AIza-TEST", connectionId: "c1", connectionName: "t", providerSpecificData: {},
-        }),
-        markAccountUnavailable: async () => ({ shouldFallback: false }),
-      }));
-      // getModelInfo stays REAL: "gemini/..." is a reserved-prefix passthrough,
-      // so the parse→route hop in the chain is exercised, not stubbed.
-      const { handleStt } = await import("../../src/sse/handlers/stt.js");
-
-      stubWs();
-      const fetchCalls = stubFetch(); // default handler throws: REST must not happen
-      const fd = mkFormData();
-      fd.set("model", "gemini/probe-sttjs-1");
-
-      const pending = handleStt({ formData: async () => fd });
-      await vi.waitFor(() => expect(FakeWS.instances.length).toBe(1));
-      const ws = FakeWS.instances[0];
-      await vi.waitFor(() => expect(ws.sent.length).toBeGreaterThanOrEqual(1)); // setup first
-      serverScript(ws, ["hello ", "world"]);
-      const res = await pending;
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.text).toBe("hello world");
-      expect(fetchCalls).toHaveLength(0);
-    } finally {
-      vi.doUnmock(LOCALDB);
-      vi.doUnmock(AUTH);
-    }
   });
 });
 

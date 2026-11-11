@@ -47,7 +47,7 @@ beforeEach(() => {
   key("combo", { restricted: true, allow: ["main"] }); // case differs from combo "Main" on purpose
   key("b", { restricted: true, allow: ["openai/MODEL-B"] });
   key("empty", { restricted: true, allow: [] });
-  key("cx", { restricted: true, allow: ["cx/gpt-5"] });
+  key("oc", { restricted: true, allow: ["oc/some-model"] });
   key("node", { restricted: true, allow: ["mock/glm-4"] });
   key("tavily", { restricted: true, allow: ["tavily", "Main"] });
 });
@@ -102,10 +102,10 @@ describe("resolution cannot be used to bypass", () => {
     expect(await status("sk-b", "bee")).toBe(200); // bee -> openai/model-b: same target, same answer
   });
   it("provider alias and full provider id are one target", async () => {
-    expect(await status("sk-cx", "cx/gpt-5")).toBe(200);
-    expect(await status("sk-cx", "codex/gpt-5")).toBe(200);
-    expect(await status("sk-cx", "cx/gpt-5-mini")).toBe(403);
-    expect(await status("sk-cx", "openai/gpt-5")).toBe(403); // same model name, other provider
+    expect(await status("sk-oc", "oc/some-model")).toBe(200);
+    expect(await status("sk-oc", "opencode/some-model")).toBe(200);
+    expect(await status("sk-oc", "oc/other-model")).toBe(403);
+    expect(await status("sk-oc", "iflow/some-model")).toBe(403); // same model name, other provider
   });
   it("custom-node prefix and node id are one target", async () => {
     expect(await status("sk-node", "mock/glm-4")).toBe(200);
@@ -178,7 +178,7 @@ describe("/v1/models filtering", () => {
     { id: "other", object: "model", owned_by: "combo" },
     { id: "openai/model-a", object: "model", owned_by: "openai" },
     { id: "openai/model-b", object: "model", owned_by: "openai" },
-    { id: "cx/gpt-5", object: "model", owned_by: "cx" },
+    { id: "oc/some-model", object: "model", owned_by: "oc" },
     { id: "mock/glm-4", object: "model", owned_by: "mock" },
     { id: "tavily/search", object: "model", kind: "webSearch", owned_by: "tavily" },
     { id: "exa/search", object: "model", kind: "webSearch", owned_by: "exa" },
@@ -187,7 +187,7 @@ describe("/v1/models filtering", () => {
   it("lists only the allowed combos and models for each key", async () => {
     expect(await ids("sk-combo")).toEqual(["Main"]);
     expect(await ids("sk-b")).toEqual(["openai/model-b"]);
-    expect(await ids("sk-cx")).toEqual(["cx/gpt-5"]);
+    expect(await ids("sk-oc")).toEqual(["oc/some-model"]);
     expect(await ids("sk-node")).toEqual(["mock/glm-4"]);
     expect(await ids("sk-tavily")).toEqual(["Main", "tavily/search"]);
     expect(await ids("sk-empty")).toEqual([]);

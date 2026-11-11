@@ -84,62 +84,53 @@ describe("injectReasoningContent — DeepSeek thinking round-trip", () => {
   });
 });
 
-describe("injectReasoningContent — MiniMax thinking round-trip", () => {
-  const minimaxAssistantMsg = { role: "assistant", content: "here is a response", reasoning_content: "" };
-  const minimaxAssistantWithToolCall = {
+describe("injectReasoningContent — OpenCode provider rule (scope all)", () => {
+  const assistantMsg = { role: "assistant", content: "here is a response", reasoning_content: "" };
+  const assistantWithToolCallOnly = {
     role: "assistant",
     content: "",
     tool_calls: [{ id: "call_x", type: "function", function: { name: "get_weather", arguments: "{}" } }],
     reasoning_content: "",
   };
 
-  it("injects reasoning_content on a minimax assistant message that lacks it", () => {
+  it("injects reasoning_content on an assistant message that lacks it", () => {
     const out = injectReasoningContent({
-      provider: "minimax",
-      model: "MiniMax-M2.7",
-      body: bodyWith([{ role: "user", content: "hi" }, minimaxAssistantMsg]),
+      provider: "opencode",
+      model: "muse-spark-1.3-contributor-free",
+      body: bodyWith([{ role: "user", content: "hi" }, assistantMsg]),
     });
     const assistant = out.messages.find((m) => m.role === "assistant");
     expect(typeof assistant.reasoning_content).toBe("string");
     expect(assistant.reasoning_content.length).toBeGreaterThan(0);
   });
 
-  it("injects reasoning_content on minimax assistant message with tool_calls but no reasoning_content", () => {
+  it("injects reasoning_content on an assistant message with tool_calls but no reasoning_content", () => {
     const out = injectReasoningContent({
-      provider: "minimax",
-      model: "MiniMax-M2.7",
-      body: bodyWith([{ role: "user", content: "hi" }, minimaxAssistantWithToolCall]),
+      provider: "opencode",
+      model: "muse-spark-1.3-contributor-free",
+      body: bodyWith([{ role: "user", content: "hi" }, assistantWithToolCallOnly]),
     });
     const assistant = out.messages.find((m) => m.role === "assistant");
     expect(typeof assistant.reasoning_content).toBe("string");
     expect(assistant.reasoning_content.length).toBeGreaterThan(0);
   });
 
-  it("applies provider-level rule for provider 'minimax-cn' (scope all)", () => {
-    const out = injectReasoningContent({
-      provider: "minimax-cn",
-      model: "MiniMax-M2.5",
-      body: bodyWith([{ role: "assistant", content: "answer" }]),
-    });
-    expect(out.messages[0].reasoning_content).toBeDefined();
-  });
-
-  it("preserves an existing reasoning_content on minimax instead of overwriting", () => {
+  it("preserves an existing reasoning_content on opencode instead of overwriting", () => {
     const original = "MiniMax chain of thought reasoning";
     const out = injectReasoningContent({
-      provider: "minimax",
-      model: "MiniMax-M2.7",
-      body: bodyWith([{ ...minimaxAssistantMsg, reasoning_content: original }]),
+      provider: "opencode",
+      model: "muse-spark-1.3-contributor-free",
+      body: bodyWith([{ ...assistantMsg, reasoning_content: original }]),
     });
     expect(out.messages[0].reasoning_content).toBe(original);
   });
 
-  it("DefaultExecutor transformRequest runs the injector for minimax", () => {
+  it("DefaultExecutor transformRequest runs the injector for opencode", () => {
     const { DefaultExecutor } = require("../../open-sse/executors/default.js");
-    const executor = new DefaultExecutor("minimax");
+    const executor = new DefaultExecutor("opencode");
     const out = executor.transformRequest(
-      "MiniMax-M2.7",
-      bodyWith([{ role: "user", content: "hi" }, minimaxAssistantMsg]),
+      "muse-spark-1.3-contributor-free",
+      bodyWith([{ role: "user", content: "hi" }, assistantMsg]),
     );
     const assistant = out.messages.find((m) => m.role === "assistant");
     expect(typeof assistant.reasoning_content).toBe("string");

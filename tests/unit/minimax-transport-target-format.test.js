@@ -1,9 +1,6 @@
 /**
- * Multi-transport providers must keep the request body and selected endpoint on
- * the same wire format. MiniMax-M3 declares a Claude target for compatibility,
- * but an OpenAI client should use MiniMax's matching OpenAI transport without
- * an OpenAI -> Claude translation.
- * Regression: https://github.com/decolua/9router/issues/3418
+ * Single-transport providers must pass the client body to the wire it declares,
+ * without translating it to the model's targetFormat.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -107,7 +104,7 @@ vi.mock("@/lib/usageDb.js", () => ({
 function makeOptions(body) {
   return {
     body,
-    modelInfo: { provider: "minimax-cn", model: "MiniMax-M3" },
+    modelInfo: { provider: "nvidia", model: "minimaxai/minimax-m3" },
     credentials: { apiKey: "test-api-key", providerSpecificData: {} },
     clientRawRequest: {
       endpoint: "/v1/chat/completions",
@@ -119,7 +116,7 @@ function makeOptions(body) {
   };
 }
 
-describe("MiniMax-M3 multi-transport routing", () => {
+describe("Minimax-M3 transport targetFormat", () => {
   beforeEach(() => {
     executeMock.mockReset();
     translateRequestMock.mockClear();
@@ -135,13 +132,13 @@ describe("MiniMax-M3 multi-transport routing", () => {
     });
   });
 
-  it("keeps OpenAI image blocks on the matching OpenAI transport", async () => {
+  it("keeps OpenAI image blocks on the OpenAI wire", async () => {
     const imageBlock = {
       type: "image_url",
       image_url: { url: "data:image/png;base64,AAAB" },
     };
     const body = {
-      model: "minimax-cn/MiniMax-M3",
+      model: "nvidia/minimaxai/minimax-m3",
       stream: false,
       messages: [{
         role: "user",
@@ -155,11 +152,11 @@ describe("MiniMax-M3 multi-transport routing", () => {
     expect(translateRequestMock).toHaveBeenCalledWith(
       "openai",
       "openai",
-      "MiniMax-M3",
+      "minimaxai/minimax-m3",
       expect.any(Object),
       false,
       expect.any(Object),
-      "minimax-cn",
+      "nvidia",
       expect.any(Object),
       expect.anything(),
       "test-connection",
@@ -170,6 +167,6 @@ describe("MiniMax-M3 multi-transport routing", () => {
     expect(requestBody.messages[0].content).toContainEqual(imageBlock);
     expect(requestBody._translatedTo).toBe("openai");
     expect(requestBody).not.toHaveProperty("system");
-    expect(executeMock.mock.calls[0][0].credentials.runtimeTransport.format).toBe("openai");
+    expect(executeMock.mock.calls[0][0].credentials.runtimeTransport).toBeUndefined();
   });
 });

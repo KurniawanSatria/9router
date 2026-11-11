@@ -34,7 +34,11 @@ describe("quota watcher", () => {
       quotaAutoResetAt: "2026-11-10T22:21:00.000Z",
     }));
     expect(deps.notifyDiscordError).toHaveBeenCalledWith(expect.objectContaining({
-      title: "Quota exhausted: tokenharbor (account@example.com)",
+      title: "⚠️ QUOTA EXHAUSTED",
+      fields: expect.arrayContaining([
+        { name: "Provider", value: "`tokenharbor`" },
+        { name: "Account", value: "`account@example.com`" },
+      ]),
     }));
   });
 
@@ -51,7 +55,11 @@ describe("quota watcher", () => {
       quotaAutoDisabledAt: null,
     }));
     expect(deps.notifyDiscordError).toHaveBeenCalledWith(expect.objectContaining({
-      title: "Quota available: tokenharbor (account@example.com)",
+      title: "✅ QUOTA AVAILABLE",
+      fields: expect.arrayContaining([
+        { name: "Provider", value: "`tokenharbor`" },
+        { name: "Account", value: "`account@example.com`" },
+      ]),
     }));
   });
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { getModelsByProviderId } from "../../open-sse/config/providerModels.js";
 import { getCapabilitiesForModel } from "../../open-sse/providers/capabilities.js";
 import { getPricingForModel } from "../../open-sse/providers/pricing.js";
 import { getThinkingLevels } from "../../open-sse/providers/thinkingLevels.js";
@@ -15,10 +14,6 @@ import "../translator/registerAll.js";
 const OPUS_55_IDS = ["claude-opus-5-5", "claude-opus-5-5-high", "claude-opus-5-5-medium", "claude-opus-5-5-low"];
 
 describe("Claude Opus 5.5", () => {
-  it("is listed for the claude provider", () => {
-    expect(getModelsByProviderId("claude").some((model) => model.id === "claude-opus-5-5")).toBe(true);
-  });
-
   it.each(OPUS_55_IDS)("%s resolves to always-on adaptive thinking without forced tools", (model) => {
     expect(getCapabilitiesForModel("claude", model)).toMatchObject({
       reasoning: true,

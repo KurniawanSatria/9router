@@ -45,16 +45,16 @@ describe("model routing", () => {
     await ctx.createProviderNode({
       id: "openai-compatible-chat-test",
       type: "openai-compatible",
-      name: "Compatible CF Collision",
-      prefix: "cf",
+      name: "Compatible OC Collision",
+      prefix: "oc",
       apiType: "chat",
       baseUrl: "https://compatible.test/v1",
     });
 
-    await expect(ctx.getModelInfo("cf/@cf/black-forest-labs/flux-2-klein-9b"))
+    await expect(ctx.getModelInfo("oc/some-model"))
       .resolves.toEqual({
-        provider: "cloudflare-ai",
-        model: "@cf/black-forest-labs/flux-2-klein-9b",
+        provider: "opencode",
+        model: "some-model",
       });
   });
 

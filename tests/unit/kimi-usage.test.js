@@ -42,14 +42,15 @@ const ACTIVE_USAGE = {
 };
 
 describe("kimi registry usage flags", () => {
-  it("exposes usage + usageApikey so OAuth and apikey cards appear on /quota", () => {
-    expect(USAGE_SUPPORTED_PROVIDERS).toContain("kimi");
-    expect(USAGE_APIKEY_PROVIDERS).toContain("kimi");
+  // The kimi registry entry was dropped with the provider trim, so it no longer
+  // declares features.usage and cannot surface on /quota.
+  it("is absent from the usage provider lists", () => {
+    expect(USAGE_SUPPORTED_PROVIDERS).not.toContain("kimi");
+    expect(USAGE_APIKEY_PROVIDERS).not.toContain("kimi");
   });
 
-  it("registers transport.usage url when present (optional)", () => {
-    // Provider may or may not put usage url on transport; handler has its own constant.
-    expect(PROVIDERS.kimi).toBeTruthy();
+  it("has no registry transport", () => {
+    expect(PROVIDERS.kimi).toBeUndefined();
   });
 });
 

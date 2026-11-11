@@ -2,9 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   getDefaultModel,
-  getModelQuotaFamily,
-  getModelUpstreamId,
-  getProviderModels,
 } from "../../open-sse/config/providerModels.js";
 import { getModelInfoCore } from "../../open-sse/services/model.js";
 
@@ -19,26 +16,9 @@ describe("codex auto-review routing (#1398)", () => {
     });
   });
 
-  it("exposes Codex auto-review as a review-quota Codex model", () => {
-    const autoReview = getProviderModels("cx").find(
-      (model) => model.id === "codex-auto-review",
-    );
-
-    expect(autoReview).toBeTruthy();
-    expect(autoReview.name).toBe("Codex Auto Review");
-    expect(getModelQuotaFamily("cx", "codex-auto-review")).toBe("review");
-  });
-
-  // getModelUpstreamId strips CODEX_REVIEW_SUFFIX from unregistered "cx" ids, which would send
-  // "codex-auto" upstream. This model is not a derived review variant, so it must go out verbatim.
-  it("forwards the id upstream without stripping the -review suffix", () => {
-    expect(getModelUpstreamId("cx", "codex-auto-review")).toBe(
-      "codex-auto-review",
-    );
-  });
-
-  // Registering it must not push it to the front of the cx list — getDefaultModel takes models[0].
-  it("does not become the default Codex model", () => {
+  // The codex model catalog was dropped with the provider registry trim, so only the
+  // prefix-inference contract above still has code to exercise.
+  it("does not shadow the bare id with a registered Codex model", () => {
     expect(getDefaultModel("cx")).not.toBe("codex-auto-review");
   });
 });
