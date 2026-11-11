@@ -9,6 +9,7 @@ export async function POST(request) {
     const result = await pingModelByKind(model, kind || "llm");
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    console.error("[ModelsTest] Ping failed:", err);
+    return NextResponse.json({ ok: false, error: "Failed to ping model" }, { status: 500 });
   }
 }

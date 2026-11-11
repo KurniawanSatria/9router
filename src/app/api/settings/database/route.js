@@ -2,18 +2,22 @@ import { NextResponse } from "next/server";
 import { exportDb, getSettings, importDb } from "@/lib/localDb";
 import { applyOutboundProxyEnv } from "@/lib/network/outboundProxy";
 import { verifyDashboardPassword } from "@/lib/auth/dashboardSession";
+import { getConsistentMachineId } from "@/shared/utils/machineId";
 
 const CLI_TOKEN_HEADER = "x-9r-cli-token";
+const CLI_TOKEN_SALT = "9r-cli-auth";
 const PASSWORD_HEADER = "x-9r-password";
 
 // CLI token requests are already trusted (local machine); skip password re-auth.
-function isCliRequest(request) {
-  return Boolean(request.headers.get(CLI_TOKEN_HEADER));
+async function isCliRequest(request) {
+  const token = request.headers.get(CLI_TOKEN_HEADER);
+  if (!token) return false;
+  return token === await getConsistentMachineId(CLI_TOKEN_SALT);
 }
 
 export async function GET(request) {
   try {
-    if (!isCliRequest(request) && !(await verifyDashboardPassword(request.headers.get(PASSWORD_HEADER)))) {
+    if (!(await isCliRequest(request)) && !(await verifyDashboardPassword(request.headers.get(PASSWORD_HEADER)))) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
     const payload = await exportDb();
@@ -27,7 +31,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const { password, ...payload } = await request.json();
-    if (!isCliRequest(request) && !(await verifyDashboardPassword(password))) {
+    if (!(await isCliRequest(request)) && !(await verifyDashboardPassword(password))) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
     await importDb(payload);
@@ -43,9 +47,9 @@ export async function POST(request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log("Error importing database:", error);
-    return NextResponse.json(
-      { error: error?.message || "Failed to import database" },
-      { status: 400 }
-    );
+    if (error instanceof SyntaxError || error?.name === "ValidationError") {
+      return NextResponse.json({ error: "Invalid database payload" }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Failed to import database" }, { status: 500 });
   }
 }

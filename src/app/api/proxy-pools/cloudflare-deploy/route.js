@@ -76,6 +76,7 @@ export async function POST(request) {
         Authorization: `Bearer ${apiToken}`,
       },
       body: formData,
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!uploadRes.ok) {
@@ -95,6 +96,7 @@ export async function POST(request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ enabled: true }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!enableSubdomainRes.ok) {
@@ -111,6 +113,7 @@ export async function POST(request) {
         Authorization: `Bearer ${apiToken}`,
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(15000),
     });
 
     if (subdomainRes.ok) {

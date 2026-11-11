@@ -42,7 +42,6 @@ export default function CombosPage() {
   const [comboStrategies, setComboStrategies] = useState({});
   const { getCaps } = useModelCaps();
   const [confirmState, setConfirmState] = useState(null);
-  const [presetLoading, setPresetLoading] = useState(null); // "cursor" | "claude" | null
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,66 +85,6 @@ export default function CombosPage() {
   };
 
   const clearSelection = () => setSelectedIds([]);
-
-  const handleGeneratePresets = async (source) => {
-    const label = source === "cursor" ? "Cursor Default" : "Claude Default";
-    setPresetLoading(source);
-    try {
-      const previewRes = await fetch(`/api/combos/presets?source=${source}`);
-      const preview = await previewRes.json();
-      if (!previewRes.ok) {
-        alert(preview.error || `Failed to preview ${label}`);
-        return;
-      }
-
-      const toCreate = preview.toCreate ?? (preview.items || []).filter((i) => !i.exists).length;
-      const toSkip = preview.toSkip ?? (preview.items || []).filter((i) => i.exists).length;
-      const total = (preview.items || []).length;
-
-      if (total === 0) {
-        alert(`No ${label} models available to generate.`);
-        return;
-      }
-
-      if (toCreate === 0) {
-        alert(`All ${total} ${label} combos already exist. Nothing to create.`);
-        return;
-      }
-
-      setConfirmState({
-        title: `Generate ${label}`,
-        message: `Create ${toCreate} combo${toCreate === 1 ? "" : "s"} named like ${source === "cursor" ? "Cursor" : "Claude"} model IDs (seeded with cu/… or cc/…). ${toSkip} already exist and will be skipped. You can edit any combo afterward to add fallbacks.`,
-        confirmText: "Generate",
-        variant: "primary",
-        onConfirm: async () => {
-          setConfirmState((prev) => prev ? { ...prev, loading: true } : null);
-          try {
-            const res = await fetch("/api/combos/presets", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ source }),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-              alert(data.error || `Failed to generate ${label}`);
-              return;
-            }
-            await fetchData();
-            setConfirmState(null);
-          } catch (error) {
-            console.log(`Error generating ${label}:`, error);
-            alert(`Failed to generate ${label}`);
-            setConfirmState((prev) => prev ? { ...prev, loading: false } : null);
-          }
-        },
-      });
-    } catch (error) {
-      console.log(`Error previewing ${label}:`, error);
-      alert(`Failed to preview ${label}`);
-    } finally {
-      setPresetLoading(null);
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -381,28 +320,6 @@ export default function CombosPage() {
             Create Combo
           </Button>
           <div className="hidden">
-            <Button
-              variant="secondary"
-              size="sm"
-              icon="edit_note"
-              loading={presetLoading === "cursor"}
-              disabled={!!presetLoading}
-              onClick={() => handleGeneratePresets("cursor")}
-              className="w-full whitespace-nowrap"
-            >
-              Cursor Default
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon="smart_toy"
-              loading={presetLoading === "claude"}
-              disabled={!!presetLoading}
-              onClick={() => handleGeneratePresets("claude")}
-              className="w-full whitespace-nowrap"
-            >
-              Claude Default
-            </Button>
           </div>
         </div>
       </div>

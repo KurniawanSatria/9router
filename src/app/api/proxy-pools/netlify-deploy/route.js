@@ -44,6 +44,7 @@ export async function POST(request) {
       method: "POST",
       headers,
       body: JSON.stringify({ name: siteName }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!siteRes.ok) {
@@ -74,6 +75,7 @@ export async function POST(request) {
         files: { "/index.html": sha1 },
         functions: { [NETLIFY_FUNCTION_NAME]: sha256 },
       }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!deployRes.ok) {
@@ -98,6 +100,7 @@ export async function POST(request) {
         method: "PUT",
         headers: { ...netlifyHeaders(netlifyToken), "Content-Type": "application/octet-stream" },
         body: Buffer.from(indexContent),
+        signal: AbortSignal.timeout(15000),
       });
       if (!fileRes.ok) {
         return NextResponse.json(
@@ -114,6 +117,7 @@ export async function POST(request) {
           method: "PUT",
           headers: { ...netlifyHeaders(netlifyToken), "Content-Type": "application/octet-stream" },
           body: zip,
+          signal: AbortSignal.timeout(15000),
         }
       );
       if (!fnRes.ok) {

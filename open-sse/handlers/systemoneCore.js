@@ -65,12 +65,13 @@ export async function handleSystemoneCore({
   if (body.state === undefined || body.state === null) {
     return createErrorResult(HTTP_STATUS.BAD_REQUEST, "Missing required field: state");
   }
-  if (!body.questions || typeof body.questions !== "object" || Array.isArray(body.questions)) {
+  if (!body.questions || typeof body.questions !== "object") {
     return createErrorResult(HTTP_STATUS.BAD_REQUEST, "Missing required field: questions");
   }
 
-  // noAuth free lanes carry accessToken "public" from the credential stub.
-  const token = credentials?.apiKey || credentials?.accessToken;
+  // noAuth free lanes carry accessToken "public" from the credential stub; lanes
+  // that take no auth at all must not receive it (some public APIs reject it).
+  const token = cfg?.authType === "none" ? null : credentials?.apiKey || credentials?.accessToken;
   const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -80,6 +81,7 @@ export async function handleSystemoneCore({
   };
   // Cloudflare validates the body model as a short selector (e.g. "clef-flash"), not the full id.
   const requestBody = { ...body, model: getModelUpstreamId(provider, model) || model };
+  if (cfg?.omitModel) delete requestBody.model;
 
   log?.debug?.("SYSTEMONE", `${provider.toUpperCase()} | ${model}`);
 

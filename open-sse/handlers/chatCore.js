@@ -55,7 +55,7 @@ export function stripContinuityFields(body) {
   return body;
 }
 
-export async function handleChatCore({ body, modelInfo, credentials, log, onCredentialsRefreshed, onRequestSuccess, onDisconnect, clientRawRequest, connectionId, userAgent, apiKey, ccFilterNaming, sourceFormatOverride, providerThinking, providerOverrides }) {
+export async function handleChatCore({ body, modelInfo, credentials, log, onCredentialsRefreshed, onRequestSuccess, onDisconnect, clientRawRequest, connectionId, userAgent, apiKey, ccFilterNaming, sourceFormatOverride, providerThinking, providerOverrides, signal }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
   // Stable per-session color so all lines of one CLI conversation share a tag
@@ -266,6 +266,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     onError: () => trackPendingRequest(model, provider, connectionId, false),
     log, provider, model, reqTag
   });
+  const requestSignal = signal ? AbortSignal.any([signal, streamController.signal]) : streamController.signal;
 
   const proxyOptions = {
     connectionProxyEnabled: credentials?.providerSpecificData?.connectionProxyEnabled === true,
@@ -317,7 +318,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
       credentials,
       providerSessionId: sessionSeed,
       clientTool,
-      signal: streamController.signal,
+      signal: requestSignal,
       log,
       proxyOptions,
       providerOverrides,
@@ -385,7 +386,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
             credentials,
             providerSessionId: sessionSeed,
             clientTool,
-            signal: streamController.signal,
+            signal: requestSignal,
             log,
             proxyOptions,
             providerOverrides,
@@ -394,6 +395,8 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
             providerResponse = retryResult.response;
             providerUrl = retryResult.url;
             providerResponseFormat = retryResult.responseFormat || targetFormat;
+          } else {
+            retryResult.response?.body?.cancel?.().catch(() => { });
           }
         } catch { log?.warn?.("TOKEN", `${provider.toUpperCase()} | retry after refresh failed`); }
       } else {
@@ -449,8 +452,8 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   }
 
   // Streaming response
-  const { onStreamComplete, streamDetailId } = buildOnStreamComplete({ ...sharedCtx });
-  return handleStreamingResponse({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, userAgent, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, streamDetailId, credentials });
+  const { onStreamComplete, streamDetailId, onStreamAbort } = buildOnStreamComplete({ ...sharedCtx });
+  return handleStreamingResponse({ ...sharedCtx, providerResponse, sourceFormat, targetFormat: providerResponseFormat, userAgent, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, onStreamAbort, streamDetailId, credentials });
 }
 
 export function isTokenExpiringSoon(expiresAt, bufferMs = 5 * 60 * 1000) {

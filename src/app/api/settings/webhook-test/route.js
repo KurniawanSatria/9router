@@ -4,6 +4,7 @@ import {
   sendDiscordTestMessage,
   getDiscordWebhookStatus,
 } from "@/sse/services/discordWebhook.js";
+import { assertPublicUrlResolved } from "@/shared/utils/ssrfGuard.js";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,11 +30,22 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const url = typeof body?.url === "string" ? body.url.trim() : "";
 
-    if (url && !isDiscordWebhookUrl(url)) {
+    if (url && (!isDiscordWebhookUrl(url) || !url.startsWith("https://"))) {
       return NextResponse.json(
-        { ok: false, error: "Invalid webhook URL (must start with http:// or https://)" },
+        { ok: false, error: "Invalid webhook URL (must start with https://)" },
         { status: 400, headers: NO_STORE },
       );
+    }
+
+    if (url) {
+      try {
+        await assertPublicUrlResolved(url);
+      } catch {
+        return NextResponse.json(
+          { ok: false, error: "URL not allowed" },
+          { status: 400, headers: NO_STORE },
+        );
+      }
     }
 
     const result = await sendDiscordTestMessage({ url: url || undefined });

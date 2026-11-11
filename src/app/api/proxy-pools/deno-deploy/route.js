@@ -31,6 +31,7 @@ const DENO_RELAY_CODE = `Deno.serve(async (request) => {
   }
 
   try {
+    init.signal = AbortSignal.timeout(15000);
     const response = await fetch(targetUrl, init);
     return new Response(response.body, {
       status: response.status,
@@ -78,6 +79,7 @@ export async function POST(request) {
           },
         },
       }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!createAppRes.ok) {
@@ -108,6 +110,7 @@ export async function POST(request) {
           },
         },
       }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!deployRes.ok) {
@@ -116,6 +119,7 @@ export async function POST(request) {
       await fetch(`${DENO_V2_API}/apps/${app.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${denoToken}` },
+        signal: AbortSignal.timeout(15000),
       }).catch(() => {});
       return NextResponse.json(
         { error: `Deploy failed (${deployRes.status}): ${text}` },
@@ -136,6 +140,7 @@ export async function POST(request) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const statusRes = await fetch(`${DENO_V2_API}/revisions/${revisionId}`, {
         headers: { Authorization: `Bearer ${denoToken}` },
+        signal: AbortSignal.timeout(15000),
       });
       if (!statusRes.ok) break;
       const statusData = await statusRes.json();
@@ -147,6 +152,7 @@ export async function POST(request) {
       await fetch(`${DENO_V2_API}/apps/${app.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${denoToken}` },
+        signal: AbortSignal.timeout(15000),
       }).catch(() => {});
       return NextResponse.json(
         { error: `Deploy failed with status: ${status}` },

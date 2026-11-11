@@ -46,6 +46,14 @@ export async function POST(request) {
       return NextResponse.redirect(new URL("/login?error=saml_not_configured", origin));
     }
 
+    const ssoType = settings.ssoType || (settings.authMode === "saml" ? "saml" : "oidc");
+    const samlActive =
+      (settings.authMode === "sso" || settings.authMode === "saml") && ssoType === "saml";
+    if (!samlActive) {
+      recordFail(ip);
+      return NextResponse.redirect(new URL("/login?error=saml_disabled", origin));
+    }
+
     const profile = await validateSamlResponse(request, { SAMLResponse }, storedRequestId, settings);
 
     const samlEmail = pickSamlEmail(profile, settings) || null;

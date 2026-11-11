@@ -108,6 +108,7 @@ export default function RequestDetailsTab() {
     totalPages: 0
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -132,7 +133,10 @@ export default function RequestDetailsTab() {
   }, []);
 
   const fetchDetails = useCallback(async () => {
+    const controller = new AbortController();
+    let cancelled = false;
     setLoading(true);
+    setError("");
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
@@ -142,16 +146,25 @@ export default function RequestDetailsTab() {
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
 
-      const res = await fetch(`/api/usage/request-details?${params}`);
+      const res = await fetch(`/api/usage/request-details?${params}`, { signal: controller.signal });
+      if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
       const data = await res.json();
+      if (cancelled) return;
 
       setDetails(data.details || []);
       setPagination(prev => ({ ...prev, ...data.pagination }));
-    } catch (error) {
-      console.error("Failed to fetch request details:", error);
+    } catch (err) {
+      if (cancelled || controller.signal.aborted) return;
+      console.error("Failed to fetch request details:", err);
+      setError("Failed to load request details");
+      setDetails([]);
     } finally {
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [pagination.page, pagination.pageSize, filters]);
 
   useEffect(() => {
@@ -159,7 +172,9 @@ export default function RequestDetailsTab() {
   }, [fetchProviders]);
 
   useEffect(() => {
-    queueMicrotask(fetchDetails);
+    let cleanup;
+    queueMicrotask(() => { cleanup = fetchDetails(); });
+    return () => cleanup?.();
   }, [fetchDetails]);
 
   const handleViewDetail = (detail) => {
@@ -262,6 +277,12 @@ export default function RequestDetailsTab() {
                       <Icon name="progress_activity" className="animate-spin size-5" />
                       Loading...
                     </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-12 text-center text-sm text-error-500">
+                    {error}
                   </td>
                 </tr>
               ) : details.length === 0 ? (

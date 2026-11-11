@@ -373,40 +373,43 @@ export default function BasicChatPageClient() {
     }
   }, [isHydrated, sessions, activeSessionId, activeProviderId, draft]);
 
-  if (isHydrated && !loadingData && !initialized && providerGroups.length > 0) {
-    setInitialized(true);
+  useEffect(() => {
+    if (!(isHydrated && !loadingData && !initialized && providerGroups.length > 0)) return;
+    queueMicrotask(() => {
+      setInitialized(true);
 
-    const savedProvider = providerGroups.find((group) => group.providerId === activeProviderId) || providerGroups[0];
-    const savedModel = activeModelId && modelIndex.has(activeModelId)
-      ? modelIndex.get(activeModelId)
-      : savedProvider.models[0];
+      const savedProvider = providerGroups.find((group) => group.providerId === activeProviderId) || providerGroups[0];
+      const savedModel = activeModelId && modelIndex.has(activeModelId)
+        ? modelIndex.get(activeModelId)
+        : savedProvider.models[0];
 
-    if (sessions.length > 0) {
-      const session = sessions.find((item) => item.id === activeSessionId) || sessions[0];
-      const sessionModel = session?.modelId && modelIndex.has(session.modelId)
-        ? modelIndex.get(session.modelId)
-        : savedModel;
-      setActiveSessionId(session.id);
-      setActiveProviderId(sessionModel?.providerId || savedProvider.providerId);
-      setActiveModelId(sessionModel?.id || savedModel.id);
-    } else {
-      const session = {
-        id: createId(),
-        title: "New chat",
-        providerId: savedProvider.providerId,
-        providerName: savedProvider.providerName,
-        modelId: savedModel.id,
-        modelName: savedModel.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        messages: [],
-      };
-      setSessions([session]);
-      setActiveSessionId(session.id);
-      setActiveProviderId(savedProvider.providerId);
-      setActiveModelId(savedModel.id);
-    }
-  }
+      if (sessions.length > 0) {
+        const session = sessions.find((item) => item.id === activeSessionId) || sessions[0];
+        const sessionModel = session?.modelId && modelIndex.has(session.modelId)
+          ? modelIndex.get(session.modelId)
+          : savedModel;
+        setActiveSessionId(session.id);
+        setActiveProviderId(sessionModel?.providerId || savedProvider.providerId);
+        setActiveModelId(sessionModel?.id || savedModel.id);
+      } else {
+        const session = {
+          id: createId(),
+          title: "New chat",
+          providerId: savedProvider.providerId,
+          providerName: savedProvider.providerName,
+          modelId: savedModel.id,
+          modelName: savedModel.name,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          messages: [],
+        };
+        setSessions([session]);
+        setActiveSessionId(session.id);
+        setActiveProviderId(savedProvider.providerId);
+        setActiveModelId(savedModel.id);
+      }
+    });
+  }, [isHydrated, loadingData, initialized, providerGroups, activeProviderId, activeModelId, modelIndex, sessions, activeSessionId]);
 
   const updateSession = (sessionId, updater) => {
     setSessions((prev) => prev.map((session) => (session.id === sessionId ? updater(cloneSession(session)) : session)));

@@ -1,6 +1,8 @@
 import { getApiKeys } from "@/lib/localDb";
 import { resolveProviderId } from "@/shared/constants/providers.js";
 import { unwrapClineEnvelope } from "open-sse/shared/clineEnvelope.js";
+import { parseModel } from "open-sse/services/model.js";
+import { PROVIDER_MEDIA } from "open-sse/providers/index.js";
 import { UPDATER_CONFIG } from "@/shared/constants/config";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
 
@@ -136,16 +138,20 @@ export async function pingModelByKind(model, kind, baseUrl = `http://127.0.0.1:$
   }
 
   if (kind === "systemone") {
+    const { provider } = parseModel(model);
+    const probe = PROVIDER_MEDIA[provider]?.systemoneConfig?.probeBody;
     const res = await fetch(`${baseUrl}/api/v1/systemone`, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        model,
-        state: "Customer: I was charged twice for my order this morning.",
-        questions: {
-          probe: { type: "noul", instructions: "Is the customer reporting a billing problem?" },
-        },
-      }),
+      body: JSON.stringify(
+        probe || {
+          model,
+          state: "Customer: I was charged twice for my order this morning.",
+          questions: {
+            probe: { type: "noul", instructions: "Is the customer reporting a billing problem?" },
+          },
+        }
+      ),
       signal: AbortSignal.timeout(15000),
     });
     const latencyMs = Date.now() - start;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 import Button from "./Button";
 import Icon from "@/shared/components/Icon";
@@ -15,6 +15,8 @@ export default function Modal({
   closeOnOverlay = true,
   className,
 }) {
+  const titleId = useId();
+  const panelRef = useRef(null);
   const sizes = {
     sm: "max-w-sm",
     md: "max-w-md",
@@ -40,6 +42,15 @@ export default function Modal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement;
+    const panel = panelRef.current;
+    const target = panel?.querySelector("button") || panel;
+    target?.focus();
+    return () => previouslyFocused?.focus?.();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -52,6 +63,11 @@ export default function Modal({
 
       {/* Modal content */}
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        tabIndex={-1}
         className={cn(
           "relative w-full bg-card-background",
           "border-[0.5px] border-card-border",
@@ -64,7 +80,7 @@ export default function Modal({
         {/* Header */}
         <div className="flex items-center justify-between gap-3 p-5 border-b border-card-border">
           {title ? (
-            <h2 className="text-base font-semibold text-text-primary">{title}</h2>
+            <h2 id={titleId} className="text-base font-semibold text-text-primary">{title}</h2>
           ) : <span />}
           <button
             onClick={onClose}

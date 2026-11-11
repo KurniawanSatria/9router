@@ -107,6 +107,10 @@ export class BaseExecutor {
     // Merge default retry config with provider-specific config
     const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...this.config.retry };
 
+    const discard = (response) => {
+      try { response?.body?.cancel?.()?.catch?.(() => { }); } catch { /* ignore */ }
+    };
+
     // Schedule retry via retryConfig[statusKey]. Returns true when caller should `urlIndex--; continue`
     // response (optional) lets a subclass hook compute a dynamic delay (e.g. antigravity Retry-After).
     const tryRetry = async (urlIndex, statusKey, reason, response = null) => {
@@ -164,6 +168,7 @@ export class BaseExecutor {
         if (await tryRetry(urlIndex, response.status, `status ${response.status}`, response)) {
           // A 502 from an edge is typically a poisoned keep-alive socket — retry fresh.
           if (response.status === HTTP_STATUS.BAD_GATEWAY) forceFreshSocketByUrl[urlIndex] = true;
+          discard(response);
           urlIndex--;
           continue;
         }
@@ -171,6 +176,7 @@ export class BaseExecutor {
         if (this.shouldRetry(response.status, urlIndex)) {
           log?.debug?.("RETRY", `${response.status} on ${url}, trying fallback ${urlIndex + 1}`);
           lastStatus = response.status;
+          discard(response);
           continue;
         }
 

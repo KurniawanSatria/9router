@@ -142,7 +142,7 @@ export default function ComboFormModal({ isOpen, combo, onClose, onSave, activeP
             ) : (
               <div className="flex max-h-[55vh] min-w-0 flex-col gap-1 overflow-y-auto sm:max-h-[350px]">
                 {models.map((model, index) => (
-                  <ModelItem key={index} index={index} model={model}
+                  <ModelItem key={model} index={index} model={model}
                     isFirst={index === 0} isLast={index === models.length - 1}
                     onEdit={(v) => { const a = [...models]; a[index] = v; setModels(a); }}
                     onMoveUp={() => handleMoveUp(index)}

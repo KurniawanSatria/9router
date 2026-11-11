@@ -48,7 +48,7 @@ function buildTransformStream({ provider, sourceFormat, targetFormat, userAgent,
 /**
  * Handle streaming response — pipe provider SSE through transform stream to client.
  */
-export async function handleStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, userAgent, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, streamDetailId, reqTag, log, credentials }) {
+export async function handleStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, userAgent, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, customToolNames, streamController, onStreamComplete, onStreamAbort, streamDetailId, reqTag, log, credentials }) {
   if (onRequestSuccess) {
     Promise.resolve()
       .then(onRequestSuccess)
@@ -95,7 +95,7 @@ export async function handleStreamingResponse({ providerResponse, provider, mode
     ? buildAbortedResponsesTerminalBytes
     : (message) => buildStreamErrorBytes(HTTP_STATUS.GATEWAY_TIMEOUT, message, sourceFormat);
   const stallTimeoutMs = PROVIDERS[provider]?.stallTimeoutMs || STREAM_STALL_TIMEOUT_MS;
-  const transformedBody = pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal, stallTimeoutMs);
+  const transformedBody = pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal, stallTimeoutMs, onStreamAbort);
 
   saveRequestDetail(buildRequestDetail({
     provider, model, connectionId,
@@ -148,5 +148,23 @@ export function buildOnStreamComplete({ provider, model, connectionId, apiKey, r
     if (log?.line) log.line(reqTag, "📊", formatDoneLine({ usage, latency }));
   };
 
-  return { onStreamComplete, streamDetailId };
+  const onStreamAbort = (reason) => {
+    const latency = { ttft: 0, total: Date.now() - requestStartTime };
+    const safeContent = "[Aborted streaming response]";
+
+    saveRequestDetail(buildRequestDetail({
+      provider, model, connectionId,
+      latency,
+      tokens: { prompt_tokens: 0, completion_tokens: 0 },
+      request: extractRequestConfig(body, stream),
+      providerRequest: finalBody || translatedBody || null,
+      providerResponse: safeContent,
+      response: { error: reason || "aborted", content: safeContent, thinking: null, type: "streaming" },
+      status: "error"
+    }, { id: streamDetailId })).catch(err => {
+      console.error("[RequestDetail] Failed to save aborted streaming request:", err.message);
+    });
+  };
+
+  return { onStreamComplete, onStreamAbort, streamDetailId };
 }

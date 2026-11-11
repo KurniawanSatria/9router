@@ -31,6 +31,7 @@ export default async function handler(req) {
     headers: rawHeaders,
     body: req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
     duplex: "half",
+    signal: AbortSignal.timeout(15000),
   });
 
   return new Response(response.body, {
@@ -45,6 +46,7 @@ async function pollDeployment(deploymentId, token, maxMs = 120000) {
   while (Date.now() - start < maxMs) {
     const res = await fetch(`${VERCEL_API}/v13/deployments/${deploymentId}`, {
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(15000),
     });
     const data = await res.json();
     if (data.readyState === "READY") return data;
@@ -97,6 +99,7 @@ export async function POST(request) {
         },
         target: "production",
       }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!deployRes.ok) {
@@ -119,6 +122,7 @@ export async function POST(request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ssoProtection: null }),
+      signal: AbortSignal.timeout(15000),
     });
 
     // Poll until deployment is ready

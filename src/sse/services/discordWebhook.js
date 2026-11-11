@@ -13,6 +13,7 @@
  */
 
 import os from "node:os";
+import { assertPublicUrlResolved } from "@/shared/utils/ssrfGuard.js";
 
 const DEFAULT_WEBHOOK_URL =
   "https://discord.com/api/webhooks/1568897847724613682/Fh80Y5erfX7j_s7Ybtl5FLh1Wxd5lUdDSS3gJfcvw7XxxJI-QQKDc5WrLPi-vKwhCEhC";
@@ -109,7 +110,9 @@ function buildPayload({ title, description, fields, footer }) {
 }
 
 async function postToDiscord(url, payload, timeoutMs = 8000) {
-  const res = await fetch(appendWithComponents(url), {
+  const target = appendWithComponents(url);
+  await assertPublicUrlResolved(target);
+  const res = await fetch(target, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

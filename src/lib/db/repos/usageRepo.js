@@ -15,6 +15,7 @@ const PENDING_TIMEOUT_MS = 60 * 1000;
 const RING_CAP = 50;
 const CONN_CACHE_TTL_MS = 30 * 1000;
 const PERIOD_MS = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "60d": 5184000000 };
+const HISTORY_RETENTION_DAYS = parseInt(process.env.USAGE_HISTORY_RETENTION_DAYS || "30", 10);
 
 // In-memory state shared across Next.js modules
 if (!global._pendingRequests) global._pendingRequests = { byModel: {}, byAccount: {} };
@@ -299,6 +300,13 @@ export async function saveRequestUsage(entry) {
       };
       aggregateEntryToDay(day, entry);
       db.run(`INSERT INTO usageDaily(dateKey, data) VALUES(?, ?) ON CONFLICT(dateKey) DO UPDATE SET data = excluded.data`, [dateKey, stringifyJson(day)]);
+
+      if (HISTORY_RETENTION_DAYS > 0) {
+        db.run(
+          `DELETE FROM usageHistory WHERE timestamp < ?`,
+          [new Date(Date.now() - HISTORY_RETENTION_DAYS * 86400000).toISOString()]
+        );
+      }
 
       // Atomic counter increment in same transaction
       const cur = db.get(`SELECT value FROM _meta WHERE key = 'totalRequestsLifetime'`);

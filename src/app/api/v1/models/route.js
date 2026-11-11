@@ -7,7 +7,7 @@ import {
   isAnthropicCompatibleProvider,
   isOpenAICompatibleProvider,
 } from "@/shared/constants/providers";
-import { getProviderConnections, getCombos, getCustomModels, getModelAliases } from "@/lib/localDb";
+import { getProviderConnections, getCombos, getCustomModels, getModelAliases, getSettings } from "@/lib/localDb";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { getKeyAccessContext, filterModelsListForKey } from "@/sse/services/keyAccess.js";
 import { resolveKiroModels } from "open-sse/services/kiroModels.js";
@@ -314,6 +314,17 @@ function comboSeatLimits(combo, combosByName, visiting = new Set()) {
   };
 }
 
+function dedupeModels(models) {
+  const dedupedModels = [];
+  const seenModelIds = new Set();
+  for (const model of models) {
+    if (!model?.id || seenModelIds.has(model.id)) continue;
+    seenModelIds.add(model.id);
+    dedupedModels.push(model);
+  }
+  return dedupedModels;
+}
+
 /**
  * Build OpenAI-format models list filtered by service kinds.
  * @param {string[]} kindFilter - List of service kinds to include (e.g. ["llm"], ["webSearch","webFetch"]).
@@ -359,6 +370,13 @@ export async function buildModelsList(kindFilter, options = {}) {
     console.log("Could not fetch disabled models");
   }
   const isDisabled = (alias, modelId) => Array.isArray(disabledByAlias[alias]) && disabledByAlias[alias].includes(modelId);
+
+  let comboOnlyMode = false;
+  try {
+    comboOnlyMode = (await getSettings()).comboOnlyMode === true;
+  } catch (e) {
+    console.log("Could not fetch settings for combo-only mode");
+  }
 
   const activeConnectionByProvider = new Map();
   for (const conn of connections) {
@@ -411,6 +429,11 @@ export async function buildModelsList(kindFilter, options = {}) {
     models.push(entry);
   }
 
+  if (comboOnlyMode) {
+    // Combo-only mode: provider models are hidden, combos stay listed.
+    return dedupeModels(models);
+  }
+
   if (connections.length === 0) {
     // DB unavailable -> return static models, filtered by per-model kind
     for (const [alias, providerModels] of Object.entries(PROVIDER_MODELS)) {
@@ -437,6 +460,8 @@ export async function buildModelsList(kindFilter, options = {}) {
 
       const modelId = String(customModel.id).trim();
       if (!modelId) continue;
+      const providerId = ALIAS_TO_PROVIDER_ID[providerAlias] || providerAlias;
+      if (isDisabled(providerAlias, modelId) || isDisabled(providerId, modelId)) continue;
 
       models.push({
         id: `${providerAlias}/${modelId}`,
@@ -633,15 +658,7 @@ export async function buildModelsList(kindFilter, options = {}) {
     }
   }
 
-  const dedupedModels = [];
-  const seenModelIds = new Set();
-  for (const model of models) {
-    if (!model?.id || seenModelIds.has(model.id)) continue;
-    seenModelIds.add(model.id);
-    dedupedModels.push(model);
-  }
-
-  return dedupedModels;
+  return dedupeModels(models);
 }
 
 /**
@@ -675,7 +692,7 @@ export async function GET(request) {
   } catch (error) {
     console.log("Error fetching models:", error);
     return Response.json(
-      { error: { message: error.message, type: "server_error" } },
+      { error: { message: "Failed to fetch models", type: "server_error" } },
       { status: 500 }
     );
   }

@@ -143,7 +143,7 @@ export default function QuotaTable({
         )}
       </div>
 
-      <div className="space-y-px">
+      <div className="space-y-px" role="table" aria-label="Quotas">
         {currentPageRows.map((quota) => {
           const isUnlimited = quota.unlimited === true;
           const isCreditBalance = quota.isCreditBalance === true;
@@ -194,10 +194,11 @@ export default function QuotaTable({
           return (
             <div
               key={`${quota.name}-${quota.index}`}
+              role="row"
               className={`flex items-center gap-2 border-b border-card-border last:border-b-0 hover:bg-background-gray-primary transition-colors ${cellPad}`}
             >
               {/* Name */}
-              <div className="flex w-36 min-w-0 items-center gap-1.5">
+              <div role="cell" className="flex w-36 min-w-0 items-center gap-1.5">
                 {isCreditBalance ? (
                   <Icon name="paid" className="shrink-0 size-[13px] text-primary-500" />
                 ) : (
@@ -214,7 +215,7 @@ export default function QuotaTable({
               </div>
 
               {/* Progress + used/total */}
-              <div className={`min-w-0 flex-1 ${compact ? "space-y-1" : "space-y-1.5"}`}>
+              <div role="cell" className={`min-w-0 flex-1 ${compact ? "space-y-1" : "space-y-1.5"}`}>
                 {!isUnlimited && !isCreditBalance && (
                 <div className={`${compact ? "h-1" : "h-1.5"} rounded-full overflow-hidden bg-primary-500/10`}>
                   <div
@@ -250,7 +251,7 @@ export default function QuotaTable({
               </div>
 
               {/* Reset time */}
-              <div className="min-w-0 shrink">
+              <div role="cell" className="min-w-0 shrink">
                 {countdown !== "-" || resetDisplay ? (
                   compact ? (
                     <div
@@ -280,7 +281,8 @@ export default function QuotaTable({
 
               {/* Hide action */}
               {hasHideAction && (
-                <button
+                <div role="cell">
+                  <button
                   type="button"
                   onClick={() => onHideQuota(quota)}
                   className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-background-soft-50 hover:text-text-primary"
@@ -288,7 +290,8 @@ export default function QuotaTable({
                   aria-label={`Hide quota ${quota.name}`}
                 >
                   <Icon name="visibility_off" className="size-[15px]" />
-                </button>
+                  </button>
+                </div>
               )}
             </div>
           );

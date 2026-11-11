@@ -9,6 +9,8 @@ import {
 } from "../services/auth.js";
 import { handleAntigravityQuotaError, clearAntigravityStrikes } from "../services/antigravityQuota.js";
 import { getSettings } from "@/lib/localDb";
+import { getDisabledModels } from "@/lib/disabledModelsDb";
+import { getProviderAlias } from "@/shared/constants/providers";
 import { saveRequestFailure } from "@/lib/usageDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
@@ -146,13 +148,13 @@ async function handleChatInternal(request, clientRawRequest = null) {
       return handleFusionChat({
         body,
         models: comboModels,
-        handleSingleModel: (b, m, isPanel) => {
+        handleSingleModel: (b, m, isPanel, signal) => {
           let cleanRawReq = clientRawRequest;
           if (isPanel && clientRawRequest) {
             const { tools, tool_choice, ...cleanBody } = clientRawRequest.body || {};
             cleanRawReq = { ...clientRawRequest, body: cleanBody };
           }
-          return handleSingleModelChat(b, m, cleanRawReq, request, apiKey);
+          return handleSingleModelChat(b, m, cleanRawReq, request, apiKey, null, signal);
         },
         log,
         comboName: modelStr,
@@ -197,6 +199,13 @@ async function handleChatInternal(request, clientRawRequest = null) {
     });
   }
 
+  // Combo-only mode: provider models are hidden, so only combos may be called
+  // directly. Combo members bypass this because they route through the combo above.
+  if (settings.comboOnlyMode) {
+    log.warn("CHAT", `Model "${modelStr}" is disabled (combo-only mode)`);
+    return errorResponse(HTTP_STATUS.NOT_FOUND, `Model "${modelStr}" is disabled`);
+  }
+
   // Single model request — may still switch to a capacity-adapter model if the
   // target lacks a capability the request needs (e.g. no vision, request has an image).
   const soloAugmented = await filterAdapterModels(keyAccess, augmentModelsWithCapacityAdapter([modelStr], requiredCapabilities, settings), [modelStr]);
@@ -229,8 +238,16 @@ async function handleChatInternal(request, clientRawRequest = null) {
 /**
  * Handle single model chat request
  */
-async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null, requestedModel = null) {
+async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null, requestedModel = null, signal = null) {
   const modelInfo = await getModelInfo(modelStr);
+
+  if (modelInfo.provider) {
+    const disabled = await getDisabledModels();
+    const alias = getProviderAlias(modelInfo.provider);
+    if (disabled[modelInfo.provider]?.includes(modelInfo.model) || disabled[alias]?.includes(modelInfo.model)) {
+      return errorResponse(HTTP_STATUS.NOT_FOUND, `Model "${modelStr}" is disabled`);
+    }
+  }
 
   // If provider is null, this might be a combo name - check and handle
   if (!modelInfo.provider) {
@@ -253,13 +270,13 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         return handleFusionChat({
           body,
           models: comboModels,
-          handleSingleModel: (b, m, isPanel) => {
+          handleSingleModel: (b, m, isPanel, signal) => {
             let cleanRawReq = clientRawRequest;
             if (isPanel && clientRawRequest) {
               const { tools, tool_choice, ...cleanBody } = clientRawRequest.body || {};
               cleanRawReq = { ...clientRawRequest, body: cleanBody };
             }
-            return handleSingleModelChat(b, m, cleanRawReq, request, apiKey);
+            return handleSingleModelChat(b, m, cleanRawReq, request, apiKey, null, signal);
           },
           log,
           comboName: modelStr,
@@ -363,6 +380,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       credentials: refreshedCredentials,
       log,
       clientRawRequest,
+      signal,
       connectionId: credentials.connectionId,
       userAgent,
       apiKey,

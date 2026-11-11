@@ -99,7 +99,7 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
  * @param {function} [onAbortTerminal] - Receives a human-readable abort
  * message and returns terminal SSE bytes to emit downstream.
  */
-export function createDisconnectAwareStream(transformStream, streamController, onAbortTerminal = null) {
+export function createDisconnectAwareStream(transformStream, streamController, onAbortTerminal = null, onAbort = null) {
   const reader = transformStream.readable.getReader();
   const writer = transformStream.writable.getWriter();
   let terminalEmitted = false;
@@ -112,6 +112,10 @@ export function createDisconnectAwareStream(transformStream, streamController, o
       const bytes = onAbortTerminal();
       if (bytes) controller.enqueue(bytes);
     } catch { /* best-effort terminal */ }
+  };
+
+  const finalizeAbort = (reason) => {
+    try { onAbort?.(reason || "aborted"); } catch { /* best-effort accounting */ }
   };
 
   return new ReadableStream({
@@ -160,8 +164,10 @@ export function createDisconnectAwareStream(transformStream, streamController, o
         try {
           if (!wasConnected || isNetworkClose || onAbortTerminal) {
             emitTerminal(controller);
+            if (isNetworkClose || !wasConnected) finalizeAbort(error?.message || "aborted");
             controller.close();
           } else {
+            finalizeAbort(error?.message || "error");
             controller.error(error);
           }
         } catch (e) { /* already closed or cancelled */ }
@@ -170,6 +176,7 @@ export function createDisconnectAwareStream(transformStream, streamController, o
 
     cancel(reason) {
       streamController.handleDisconnect(reason || "cancelled");
+      finalizeAbort(reason || "cancelled");
       reader.cancel();
       writer.abort();
     }
@@ -192,7 +199,7 @@ export function createDisconnectAwareStream(transformStream, streamController, o
  * @param {TransformStream} transformStream - Transform stream for SSE
  * @param {object} streamController - Stream controller from createStreamController
  */
-export function pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal = null, stallTimeoutMs = STREAM_STALL_TIMEOUT_MS) {
+export function pipeWithDisconnect(providerResponse, transformStream, streamController, onAbortTerminal = null, stallTimeoutMs = STREAM_STALL_TIMEOUT_MS, onAbort = null) {
   let stallTimer = null;
   let chunkCount = 0;
   let totalBytes = 0;
@@ -254,7 +261,8 @@ export function pipeWithDisconnect(providerResponse, transformStream, streamCont
   return createDisconnectAwareStream(
     { readable: transformedBody, writable: { getWriter: () => ({ abort: () => Promise.resolve() }) } },
     wrappedController,
-    onAbortTerminal ? () => onAbortTerminal(abortMessage) : null
+    onAbortTerminal ? () => onAbortTerminal(abortMessage) : null,
+    onAbort
   );
 }
 

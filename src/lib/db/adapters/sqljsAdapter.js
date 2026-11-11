@@ -19,19 +19,29 @@ export async function createSqlJsAdapter(filePath) {
 
   let dirty = false;
   let saveTimer = null;
+  let firstScheduledAt = 0;
   const SAVE_DEBOUNCE_MS = 100;
+  const SAVE_MAX_DELAY_MS = 1000;
+  const tmpPath = `${filePath}.tmp`;
 
   function persist() {
     const data = db.export();
-    fs.writeFileSync(filePath, Buffer.from(data));
+    fs.writeFileSync(tmpPath, Buffer.from(data));
+    fs.renameSync(tmpPath, filePath);
     dirty = false;
   }
 
   function scheduleSave() {
     dirty = true;
-    if (saveTimer) clearTimeout(saveTimer);
+    const now = Date.now();
+    if (!firstScheduledAt) firstScheduledAt = now;
+    if (saveTimer) {
+      if (now - firstScheduledAt < SAVE_MAX_DELAY_MS) return;
+      clearTimeout(saveTimer);
+    }
     saveTimer = setTimeout(() => {
       saveTimer = null;
+      firstScheduledAt = 0;
       if (dirty) {
         try { persist(); } catch (e) { console.error("[sqljs] save failed:", e); }
       }
@@ -101,6 +111,7 @@ export async function createSqlJsAdapter(filePath) {
 
   function close() {
     if (saveTimer) clearTimeout(saveTimer);
+    firstScheduledAt = 0;
     if (dirty) persist();
     db.close();
   }

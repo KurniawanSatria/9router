@@ -89,10 +89,11 @@ async function flushToDatabase() {
   if (isFlushing) return;
   if (writeBuffer.length === 0) return;
   isFlushing = true;
+  let items = [];
   try {
     // Drain entire buffer (loop in case more pushed during await)
     while (writeBuffer.length > 0) {
-      const items = writeBuffer.splice(0, writeBuffer.length);
+      items = writeBuffer.splice(0, writeBuffer.length);
       const db = await getAdapter();
       const config = await getObservabilityConfig();
 
@@ -133,10 +134,16 @@ async function flushToDatabase() {
       });
     }
   } catch (e) {
+    writeBuffer.unshift(...items);
     console.error("[requestDetailsRepo] Batch write failed:", e);
   } finally {
     isFlushing = false;
   }
+}
+
+export async function flushRequestDetails() {
+  if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+  await flushToDatabase();
 }
 
 export async function saveRequestDetail(detail) {

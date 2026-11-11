@@ -98,10 +98,15 @@ export function reorderByCapabilities(models, required) {
   };
 
   // Stable sort by tier (Array.prototype.sort is stable in modern engines).
-  return models
+  let reordered = false;
+  const out = models
     .map((m, i) => ({ m, i, t: tierOf(m) }))
     .sort((a, b) => a.t - b.t || a.i - b.i)
-    .map((x) => x.m);
+    .map((x, i) => {
+      if (x.i !== i) reordered = true;
+      return x.m;
+    });
+  return reordered ? out : models;
 }
 
 /**
@@ -882,7 +887,11 @@ export async function handleFusionChat({ body, models, handleSingleModel, log, c
   }
 
   const t0 = Date.now();
-  const calls = panel.map((m) => withTimeout(handleSingleModel(panelBody, m, true), cfg.panelHardTimeoutMs));
+  const panelCtrls = panel.map(() => new AbortController());
+  const calls = panel.map((m, i) => withTimeout(
+    Promise.resolve().then(() => handleSingleModel(panelBody, m, true, panelCtrls[i].signal)),
+    cfg.panelHardTimeoutMs
+  ));
   const settled = await collectPanel(calls, { ...cfg, minPanel });
   log.info("FUSION", `fan-out collected in ${Date.now() - t0}ms`);
 
@@ -891,6 +900,11 @@ export async function handleFusionChat({ body, models, handleSingleModel, log, c
   for (let i = 0; i < settled.length; i++) {
     const res = settled[i];
     const model = panel[i];
+    const settleOrCancel = (response) => {
+      panelCtrls[i].abort();
+      response?.body?.cancel?.().catch(() => { });
+    };
+    if (!res || !res.ok) settleOrCancel(calls[i]);
     if (!res) { log.warn("FUSION", `Panel ${model} dropped (straggler/timeout)`); continue; }
     if (res.__timeout) { log.warn("FUSION", `Panel ${model} timed out`); continue; }
     if (res.__error) { log.warn("FUSION", `Panel ${model} threw`, { error: res.__error?.message || String(res.__error) }); continue; }
@@ -905,6 +919,8 @@ export async function handleFusionChat({ body, models, handleSingleModel, log, c
         log.warn("FUSION", `Panel ${model} returned empty content`);
       }
     } catch (e) {
+      panelCtrls[i].abort();
+      res.body?.cancel?.().catch(() => { });
       log.warn("FUSION", `Panel ${model} unparseable`, { error: e.message || String(e) });
     }
   }
@@ -919,6 +935,11 @@ export async function handleFusionChat({ body, models, handleSingleModel, log, c
   }
   if (answers.length === 1) {
     log.info("FUSION", `Only ${answers[0].model} succeeded — answering directly (no fusion)`);
+    settled.forEach((res, i) => {
+      if (!res || panel[i] === answers[0].model) return;
+      panelCtrls[i].abort();
+      res.body?.cancel?.().catch(() => { });
+    });
     return handleSingleModel(body, answers[0].model);
   }
 

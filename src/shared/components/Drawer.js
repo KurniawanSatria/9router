@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 import Icon from "@/shared/components/Icon";
 
@@ -12,6 +12,8 @@ export default function Drawer({
   width = "md",
   className
 }) {
+  const titleId = useId();
+  const panelRef = useRef(null);
   const widths = {
     sm: "w-[400px]",
     md: "w-[500px]",
@@ -37,6 +39,15 @@ export default function Drawer({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement;
+    const panel = panelRef.current;
+    const target = panel?.querySelector("button") || panel;
+    target?.focus();
+    return () => previouslyFocused?.focus?.();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -49,7 +60,13 @@ export default function Drawer({
       />
 
       {/* Drawer panel */}
-      <div className={cn(
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        tabIndex={-1}
+        className={cn(
         "absolute right-0 top-0 h-full bg-card-background flex flex-col",
         "shadow-[var(--shadow-elev)]",
         "slide-in-right",
@@ -61,7 +78,7 @@ export default function Drawer({
         <div className="flex items-center justify-between gap-3 p-5 border-b border-card-border shrink-0">
           <div className="flex items-center gap-3">
             {title && (
-              <h2 className="text-base font-semibold text-text-primary">{title}</h2>
+              <h2 id={titleId} className="text-base font-semibold text-text-primary">{title}</h2>
             )}
           </div>
           <button

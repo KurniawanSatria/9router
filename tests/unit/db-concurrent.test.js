@@ -66,7 +66,7 @@ describe("DB Concurrency — atomic safety", () => {
     await Promise.all(promises);
 
     // Wait for any timer-based flush
-    await new Promise((r) => setTimeout(r, 6000));
+    await db.flushRequestDetails();
 
     const list = await db.getRequestDetails({ provider: "openai", pageSize: 500 });
     expect(list.pagination.totalItems).toBeGreaterThanOrEqual(N);
