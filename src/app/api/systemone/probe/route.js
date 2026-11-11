@@ -19,7 +19,7 @@ export async function POST(request) {
   if (state === undefined || state === null) {
     return NextResponse.json({ ok: false, error: "Missing required field: state" }, { status: 400 });
   }
-  if (!questions || typeof questions !== "object" || Array.isArray(questions)) {
+  if (!questions || typeof questions !== "object") {
     return NextResponse.json({ ok: false, error: "Missing required field: questions" }, { status: 400 });
   }
 

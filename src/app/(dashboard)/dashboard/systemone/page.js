@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge, Button, Card, ModelSelectModal } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { getProvidersByKind } from "@/shared/constants/providers";
@@ -55,6 +56,7 @@ export default function SystemOnePage() {
   const [error, setError] = useState("");
   const [origin, setOrigin] = useState("");
   const { copied, copy } = useCopyToClipboard();
+  const router = useRouter();
 
   const lanes = useMemo(() => {
     return getProvidersByKind("systemone").map((provider) => {
@@ -91,9 +93,18 @@ export default function SystemOnePage() {
   const isConnected = (providerId) =>
     connectedIds.has(providerId) || noAuthIds.has(providerId);
 
+  // Only lanes we can actually route to: an active connection or a no-auth lane.
+  const usableLanes = useMemo(
+    () =>
+      lanes.filter(
+        (lane) => connectedIds.has(lane.provider.id) || noAuthIds.has(lane.provider.id)
+      ),
+    [lanes, connectedIds, noAuthIds]
+  );
+
   // Number of lanes the virtual "Auto" combo would round-robin right now.
-  const connectedLaneCount = lanes.reduce(
-    (total, lane) => total + (isConnected(lane.provider.id) ? lane.models.length : 0),
+  const connectedLaneCount = usableLanes.reduce(
+    (total, lane) => total + lane.models.length,
     0
   );
 
@@ -193,14 +204,24 @@ export default function SystemOnePage() {
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:h-[calc(100svh-35.75rem)] lg:grid-cols-[1fr_1.15fr]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.15fr] lg:items-start">
         <Card
           title="Available lanes"
-          subtitle="Providers that expose System One models"
+          subtitle="Connected System One providers, plus free lanes that need no key"
           icon="hub"
-          className="lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden"
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              icon="add"
+              className="shrink-0 whitespace-nowrap"
+              onClick={() => router.push("/dashboard/providers")}
+            >
+              Add provider
+            </Button>
+          }
         >
-          <div className="custom-scrollbar flex flex-col gap-3 pr-1 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+          <div className="flex flex-col gap-3">
             <div className="rounded-xl border border-primary-500/40 bg-primary-500/5 p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -217,7 +238,7 @@ export default function SystemOnePage() {
                   </p>
                 </div>
                 {connectedLaneCount > 0 && (
-                  <Badge size="sm">{connectedLaneCount} lane</Badge>
+                  <Badge size="sm" className="shrink-0 whitespace-nowrap">{connectedLaneCount} lane</Badge>
                 )}
               </div>
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -235,10 +256,12 @@ export default function SystemOnePage() {
                 </button>
               </div>
             </div>
-            {lanes.length === 0 && (
-              <p className="text-sm text-text-secondary">No System One lanes in the registry yet.</p>
+            {usableLanes.length === 0 && (
+              <p className="text-sm text-text-secondary">
+                No System One provider connected yet. Add one from Providers.
+              </p>
             )}
-            {lanes.map(({ provider, models }) => (
+            {usableLanes.map(({ provider, models }) => (
               <div
                 key={provider.id}
                 className="rounded-xl border border-card-border bg-background-soft-50 p-3"
@@ -258,7 +281,7 @@ export default function SystemOnePage() {
                     </p>
                   </div>
                   {models.length > 0 && (
-                    <Badge size="sm">{models.length} model</Badge>
+                    <Badge size="sm" className="shrink-0 whitespace-nowrap">{models.length} model</Badge>
                   )}
                 </div>
 
@@ -300,9 +323,8 @@ export default function SystemOnePage() {
           title="Interactive probe"
           subtitle="Send a real request through the internal endpoint"
           icon="play_circle"
-          className="lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden"
         >
-          <div className="custom-scrollbar flex flex-col gap-4 pr-1 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-text-primary">Model</span>
               <div className="flex items-center gap-2">

@@ -20,6 +20,7 @@ import StatusAlert from "./components/StatusAlert";
 import Tooltip from "./components/Tooltip";
 import SecurityWarning from "./components/SecurityWarning";
 import KeyAccessControls from "./components/KeyAccessControls";
+import ModelsCard from "./components/ModelsCard";
 import Icon from "@/shared/components/Icon";
 export default function APIPageClient({ machineId }) {
   const [keys, setKeys] = useState([]);
@@ -723,8 +724,8 @@ export default function APIPageClient({ machineId }) {
   const currentEndpoint = baseUrl;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid items-start gap-6 xl:grid-cols-2">
+    <div className="flex flex-col gap-6 xl:min-h-0 xl:flex-1">
+      <div className="grid shrink-0 items-start gap-6 xl:grid-cols-2">
       {/* Endpoint Card */}
       <Card>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -1092,6 +1093,8 @@ export default function APIPageClient({ machineId }) {
         )}
       </Card>
       </div>
+
+      <ModelsCard />
 
       {/* Add Key Modal */}
       <Modal

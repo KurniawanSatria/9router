@@ -25,6 +25,9 @@ const DEFAULT_SETTINGS = {
   requireLogin: true,
   requireApiKey: true,
   tunnelDashboardAccess: true,
+  // Hide every provider model from /v1/models and reject direct model calls;
+  // only combos stay callable.
+  comboOnlyMode: false,
   authMode: "password",
   ssoType: "oidc",
   oidcIssuerUrl: "",

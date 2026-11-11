@@ -484,7 +484,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
   }, [nodes.length, scheduleFit]);
 
   return (
-    <div ref={containerRef} className="h-[480px] w-full min-w-0 rounded-xl border-[0.5px] border-card-border bg-card-background p-5 lg:h-auto lg:min-h-[580px]">
+    <div ref={containerRef} className="h-[480px] w-full min-w-0 rounded-xl border-[0.5px] border-card-border bg-card-background p-5 lg:h-auto lg:min-h-[420px]">
       {providers.length === 0 ? (
         <div className="h-full flex items-center justify-center text-sm text-text-secondary">
           No providers connected
