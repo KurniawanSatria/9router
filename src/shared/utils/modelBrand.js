@@ -1,79 +1,156 @@
-const CDN = "https://cdn.jsdelivr.net/gh/glincker/thesvg@v0.6.0/public/icons";
-const LOCAL_ICONS = {
-  anthropic: "/providers/claude.svg",
-  "google-gemini": "/providers/gemini.svg",
-  zhipu: "/providers/zai.svg",
-  stepfun: "/providers/stepfun.svg",
-  longcat: "/providers/longcat.svg",
-  moonshot: "/providers/moonshot.svg",
-  kimi: "/providers/kimi.svg",
-  "alibaba-cloud": "/providers/qwen.svg",
-  poolside: "/providers/poolside.svg",
-  reflection: "/providers/reflection.svg",
-  doubao: "/providers/doubao.svg",
-  hunyuan: "/providers/hunyuan.svg",
-  upstage: "/providers/upstage.svg",
-  perplexity: "/providers/perplexity.svg",
-  gemma: "/providers/gemma.svg",
-  muse: "/providers/muse.svg",
-  devin: "/providers/devin.svg",
-};
+// Model brand table vendored from @lobehub/icons-static-svg v1.102.0, with the
+// keyword list and order taken from lobehub's modelConfig (first match wins).
+// Assets live in /public/model-icons. Mono files are fill="currentColor"
+// silhouettes, so ModelIcon paints them as a mask and they follow the theme.
+// shortcut: lobehub's per-variant GPT marks (gpt3/gpt4/gpt5/o1) share one asset.
 
-const FAMILIES = [
-  ["anthropic", /claude|fable|opus|sonnet|haiku/i],
-  ["openai", /gpt-|chatgpt/i],
-  ["google-gemini", /gemini/i],
-  ["gemma", /gemma/i],
-  ["deepseek", /deepseek/i],
-  ["xai-grok", /grok/i],
-  ["kimi", /kimi/i],
-  ["moonshot", /moonshot/i],
-  ["zhipu", /glm|zhipu|chatglm/i],
-  ["mistral", /mistral|mixtral|codestral|magistral|devstral/i],
-  ["minimax", /minimax/i],
-  ["longcat", /longcat/i],
-  ["stepfun", /stepfun|step-\d/i],
-  ["xiaomi", /mimo|xiaomi/i],
-  ["alibaba-cloud", /qwen|qwq|alibaba/i],
-  ["meta", /llama/i],
-  ["muse", /muse/i],
-  ["devin", /swe-\d/i],
-  ["nvidia", /nemotron|nvidia/i],
-  ["cerebras", /cerebras/i],
-  ["cohere", /command|cohere/i],
-  ["poolside", /poolside|laguna/i],
-  ["reflection", /beam|reflection/i],
-  ["perplexity", /pplx|perplexity|sonar/i],
-  ["openrouter", /openrouter/i],
-  ["doubao", /doubao/i],
-  ["hunyuan", /hunyuan|hy3/i],
-  ["upstage", /upstage|solar/i],
+export const MODEL_ICONS = [
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["gpt-3"] },
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["gpt-4"] },
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["gpt-5"] },
+  { slug: "sora", label: "Sora", color: true, keywords: ["sora"] },
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["gpt-oss"] },
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["o1-","^o1","/o1","o3-","^o3","/o3","o4-","^o4","/o4"] },
+  { slug: "dalle", label: "DALL-E", color: true, keywords: ["dalle","dall-e"] },
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["text-embedding-","tts-","whisper-","codex","davinci","babbage","omni-moderation","text-moderation","text-adb","text-ada","computer-use"] },
+  { slug: "openai", label: "OpenAI", color: false, keywords: ["^gpt-","/gpt-","openai"] },
+  { slug: "glmv", label: "GLM-V", color: true, keywords: ["^glm-(.*)v","/glm-(.*)v","-glm-(.*)v"] },
+  { slug: "zai", label: "Z.ai", color: false, keywords: ["^glm-5","/glm-5","/glm5","-glm-4","^glm-4","/glm-4","/glm4","-glm-5"] },
+  { slug: "chatglm", label: "ChatGLM", color: true, keywords: ["^glm-","/glm-","chatglm","-glm-"] },
+  { slug: "codegeex", label: "CodeGeeX", color: true, keywords: ["^codegeex","/codegeex"] },
+  { slug: "claude", label: "Claude", color: true, keywords: ["claude"] },
+  { slug: "anthropic", label: "Anthropic", color: false, keywords: ["anthropic"] },
+  { slug: "aws", label: "AWS", color: false, keywords: ["titan"] },
+  { slug: "fireworks", label: "Fireworks", color: true, keywords: ["accounts/fireworks/models/fire"] },
+  { slug: "internlm", label: "InternLM", color: true, keywords: ["internlm","internvl"] },
+  { slug: "nousresearch", label: "NousResearch", color: false, keywords: ["deephermes","hermes","genstruct","minos"] },
+  { slug: "nvidia", label: "Nvidia", color: true, keywords: ["nemotron","openreasoning","nemoretriever","neva-","nv-"] },
+  { slug: "meta", label: "Meta", color: true, keywords: ["llama","/l3"] },
+  { slug: "llava", label: "LLaVA", color: true, keywords: ["llava"] },
+  { slug: "nanobanana", label: "NanoBanana", color: true, keywords: ["gemini-3.1-flash-image-preview","gemini-3-pro-image-preview","gemini-\\\\d+(?:\\\\.\\\\d+)?-(?:flash(?:-lite)?|pro)-image(?:-preview)?(?::|$)","nanobanana","nano-banana"] },
+  { slug: "gemini", label: "Gemini", color: true, keywords: ["gemini"] },
+  { slug: "deepmind", label: "DeepMind", color: true, keywords: ["^imagen-","/imagen-","^imagen\\\\d/","/imagen\\\\d"] },
+  { slug: "gemma", label: "Gemma", color: true, keywords: ["gemma"] },
+  { slug: "moonshot", label: "MoonshotAI", color: false, keywords: ["kimi","moonshot"] },
+  { slug: "qiniu", label: "Qiniu", color: true, keywords: ["qiniu"] },
+  { slug: "qwen", label: "Qwen", color: true, keywords: ["qwen","qwq","qvq","wanx","wan\\\\d/","wan\\\\d\\\\.\\\\d-","tongyi","gte-rerank"] },
+  { slug: "minimax", label: "Minimax", color: true, keywords: ["minimax","abab","^image-"] },
+  { slug: "mistral", label: "Mistral", color: true, keywords: ["mistral","mixtral","codestral","mathstral","/mn-","pixtral","ministral","magistral","devstral","voxtral"] },
+  { slug: "perplexity", label: "Perplexity", color: true, keywords: ["pplx","sonar"] },
+  { slug: "yi", label: "Yi", color: false, keywords: ["^yi-","/yi-","-yi-"] },
+  { slug: "openrouter", label: "OpenRouter", color: true, keywords: ["^openrouter"] },
+  { slug: "relace", label: "Relace", color: false, keywords: ["^relace-","/relace-"] },
+  { slug: "arcee", label: "Arcee", color: true, keywords: ["^trinity-","/trinity-","afm-4.5b","caller-large","spotlight","maestro-reasoning","virtuoso-medium-v2","virtuoso-large","coder-large","arcee-blitz"] },
+  { slug: "essentialai", label: "Essential AI", color: true, keywords: ["^rnj-","/rnj-"] },
+  { slug: "deepcogito", label: "Deep Cogito", color: true, keywords: ["^deepcogito-","/deepcogito-","^cogito-","/cogito-"] },
+  { slug: "morph", label: "Morph", color: true, keywords: ["^morph-","/morph-"] },
+  { slug: "ai2", label: "Ai2", color: true, keywords: ["^olmo-","/olmo-"] },
+  { slug: "inception", label: "Inception", color: false, keywords: ["^mercury","/mercury"] },
+  { slug: "openchat", label: "OpenChat", color: true, keywords: ["^openchat"] },
+  { slug: "aya", label: "Aya", color: true, keywords: ["aya"] },
+  { slug: "cohere", label: "Cohere", color: true, keywords: ["command"] },
+  { slug: "dbrx", label: "DBRX", color: true, keywords: ["dbrx"] },
+  { slug: "stepfun", label: "Stepfun", color: true, keywords: ["step"] },
+  { slug: "aimass", label: "AiMass", color: true, keywords: ["taichu"] },
+  { slug: "ai360", label: "AI360", color: true, keywords: ["360gpt","360zhinao"] },
+  { slug: "baichuan", label: "Baichuan", color: true, keywords: ["baichuan"] },
+  { slug: "rwkv", label: "RWKV", color: true, keywords: ["rwkv","/eagle-"] },
+  { slug: "wenxin", label: "Wenxin", color: true, keywords: ["ernie","irag"] },
+  { slug: "jina", label: "Jina", color: false, keywords: ["^jina","/jina"] },
+  { slug: "jimeng", label: "Jimeng", color: true, keywords: ["^jimeng-","/jimeng-","seedream","seededit","seedance-"] },
+  { slug: "doubao", label: "Doubao", color: true, keywords: ["^ep-","doubao-"] },
+  { slug: "kling", label: "Kling", color: true, keywords: ["^kling","kling-","klingai"] },
+  { slug: "hunyuan", label: "Hunyuan", color: true, keywords: ["hunyuan","hy3","hy4"] },
+  { slug: "fishaudio", label: "FishAudio", color: false, keywords: ["^d_","^g_","^wd_"] },
+  { slug: "bytedance", label: "ByteDance", color: true, keywords: ["skylark","seed-","bytedance"] },
+  { slug: "burncloud", label: "BurnCloud", color: true, keywords: ["burncloud"] },
+  { slug: "stability", label: "Stability", color: true, keywords: ["stable-diffusion","stable-video","stable-cascade","sdxl","stablelm","^stable-","^sd3","^sd2","^sd1"] },
+  { slug: "flux", label: "Flux", color: false, keywords: ["flux"] },
+  { slug: "suno", label: "Suno", color: false, keywords: ["suno"] },
+  { slug: "microsoft", label: "Azure", color: true, keywords: ["wizardlm","/phi-","^phi-","-phi-","mai-","microsoft"] },
+  { slug: "adobe", label: "Adobe", color: true, keywords: ["firefly"] },
+  { slug: "ai21", label: "AI21", color: false, keywords: ["jamba","^j2-","ai21"] },
+  { slug: "upstage", label: "Upsate", color: true, keywords: ["^solar-","/solar"] },
+  { slug: "palm", label: "PaLM", color: true, keywords: ["palm"] },
+  { slug: "sensenova", label: "SenseNova", color: true, keywords: ["SenseChat","SenseNova"] },
+  { slug: "grok", label: "Grok", color: false, keywords: ["^grok-","/grok-"] },
+  { slug: "ideogram", label: "Ideogram", color: false, keywords: ["ideogram","^v_1","^v_2","^v3$","^upscale$","^describe$"] },
+  { slug: "muse", label: "Muse", color: true, keywords: ["(^|/)muse-(spark|wonder|image|video)($|-)"] },
+  { slug: "spark", label: "Spark", color: true, keywords: ["spark","general$","generalv3$","generalv3.5$","4.0ultra$","pro-128k$","^max-32k$","^lite$","^x1$"] },
+  { slug: "udio", label: "Udio", color: true, keywords: ["udio"] },
+  { slug: "unionalpha", label: "UnionAlpha", color: false, keywords: ["union-alpha","unionalpha","pareto"] },
+  { slug: "deepseek", label: "DeepSeek", color: true, keywords: ["deepseek"] },
+  { slug: "voyage", label: "Voyage", color: true, keywords: ["voyage"] },
+  { slug: "assemblyai", label: "AssemblyAI", color: true, keywords: ["assemblyai"] },
+  { slug: "liquid", label: "Liquid", color: false, keywords: ["liquid","lfm"] },
+  { slug: "inflection", label: "Inflection", color: false, keywords: ["inflection-"] },
+  { slug: "aionlabs", label: "AionLabs", color: true, keywords: ["aion-"] },
+  { slug: "aihubmix", label: "AiHubMix", color: true, keywords: ["aihubmix"] },
+  { slug: "v0", label: "V0", color: false, keywords: ["^v0-"] },
+  { slug: "vertexai", label: "VertexAI", color: true, keywords: ["^veo-","/veo-","^veo3"] },
+  { slug: "google", label: "Google", color: true, keywords: ["google","learnlm","nano-banana"] },
+  { slug: "cogview", label: "CogView", color: true, keywords: ["cogview"] },
+  { slug: "kolors", label: "Kolors", color: true, keywords: ["kolors"] },
+  { slug: "baiducloud", label: "BaiduCloud", color: true, keywords: ["baidu","qianfan"] },
+  { slug: "phind", label: "phind", color: false, keywords: ["phind"] },
+  { slug: "dolphin", label: "Dolphin", color: false, keywords: ["dolphin"] },
+  { slug: "ibm", label: "IBM", color: false, keywords: ["ibm","granite"] },
+  { slug: "skywork", label: "Skywork", color: true, keywords: ["skywork"] },
+  { slug: "bilibiliindex", label: "bilibili index", color: false, keywords: ["bilibili-index","index-tts"] },
+  { slug: "bilibili", label: "bilibili", color: true, keywords: ["bilibili"] },
+  { slug: "lg", label: "LG AI", color: true, keywords: ["kmmlu","exaone","lgai"] },
+  { slug: "tii", label: "Technology Innovation Institute", color: true, keywords: ["falcon"] },
+  { slug: "menlo", label: "MENLO", color: true, keywords: ["menlo","lucy","jan-nano"] },
+  { slug: "longcat", label: "LongCat", color: false, keywords: ["longcat"] },
+  { slug: "kwaipilot", label: "Kwaipilot", color: true, keywords: ["kat-"] },
+  { slug: "nova", label: "Nova", color: true, keywords: ["^nova-","/nova-"] },
+  { slug: "xiaomimimo", label: "XiaomiMiMo", color: false, keywords: ["^mimo-","/mimo-"] },
+  { slug: "baai", label: "BAAI", color: false, keywords: ["^baai","^bge-","/bge-","touchd","robobrain"] },
+  { slug: "ace", label: "ace", color: false, keywords: ["ace-step"] },
+  { slug: "cursor", label: "Cursor", color: false, keywords: ["^composer","/composer","-composer"] },
+  { slug: "typesafeai", label: "TypeSafe AI", color: false, keywords: ["(^|/)jev($|-)","typesafe"] },
+  { slug: "ling", label: "Ling", color: true, keywords: ["\\bling-"] },
+  { slug: "nova", label: "Nova", color: true, keywords: ["\\bnova(-|$)"] },
+  { slug: "muse", label: "Muse", color: true, keywords: ["\\bmuse-"] },
+  { slug: "sakana", label: "sakana.ai", color: true, keywords: ["sakana|fugu|namazu"] },
+  { slug: "cohere", label: "Cohere", color: true, keywords: ["cohere/"] },
+  { slug: "poolside", label: "Poolside", color: true, keywords: ["poolside|laguna"] },
+  { slug: "nvidia", label: "Nvidia", color: true, keywords: ["nvidia/"] },
+  { slug: "tencent", label: "Tencent", color: true, keywords: ["tencent/|hy-mt"] },
+  { slug: "grok", label: "Grok", color: false, keywords: ["\\bgrok\\b"] },
+  { slug: "recraft", label: "Recraft", color: false, keywords: ["recraft"] },
+  { slug: "alibaba", label: "Alibaba", color: true, keywords: ["alibaba/"] },
+  { slug: "reka", label: "Reka", color: false, keywords: ["reka"] },
+  { slug: "zai", label: "Z.ai", color: false, keywords: ["zai-org/|zai\\."] },
+  { slug: "happyhorse", label: "HappyHorse", color: false, keywords: ["happyhorse"] },
+  { slug: "perceptron", label: "Perceptron", color: false, keywords: ["perceptron"] },
+  { slug: "elevenlabs", label: "ElevenLabs", color: false, keywords: ["elevenlabs"] },
+  { slug: "venice", label: "Venice", color: true, keywords: ["venice"] },
+  { slug: "perplexity", label: "Perplexity", color: true, keywords: ["perplexity"] },
+  { slug: "runway", label: "Runway", color: false, keywords: ["runway"] },
+  { slug: "antigravity", label: "Antigravity", color: true, keywords: ["antigravity"] },
+  { slug: "codebuddy", label: "CodeBuddy", color: true, keywords: ["codebuddy"] },
+  { slug: "devin", label: "Devin", color: true, keywords: ["\\bdevin"] },
+  { slug: "krea", label: "Krea", color: false, keywords: ["krea"] },
+  { slug: "vidu", label: "Vidu", color: true, keywords: ["vidu"] },
+  { slug: "volcengine", label: "Volcengine", color: true, keywords: ["volcengine"] },
+  { slug: "stability", label: "Stability", color: true, keywords: ["stability"] },
+  { slug: "arcee", label: "Arcee", color: true, keywords: ["arcee"] },
+  { slug: "coqui", label: "Coqui", color: true, keywords: ["coqui"] },
+  { slug: "reflection", label: "Reflection", color: false, keywords: ["beam","reflection"] },
 ];
 
-export function resolveModelBrand(modelId) {
+const PATTERNS = MODEL_ICONS.map((m) => m.keywords.map((k) => new RegExp(k, "i")));
+
+/** Brand for a model id: { slug, label, color, url } or null when unmatched. */
+export function resolveModelIcon(modelId) {
   const id = String(modelId || "");
   if (!id) return null;
-  for (const [slug, pattern] of FAMILIES) {
-    if (pattern.test(id)) return slug;
+  for (let i = 0; i < MODEL_ICONS.length; i++) {
+    if (PATTERNS[i].some((pattern) => pattern.test(id))) {
+      const { slug, label, color } = MODEL_ICONS[i];
+      return { slug, label, color, url: `/model-icons/${slug}${color ? "-color" : ""}.svg` };
+    }
   }
   return null;
-}
-
-/**
- * Brand icon URL.
- *
- * The CDN ships two variants per brand and neither is theme-safe as an <img>:
- *   - `mono` has no fill attribute, so it renders black (invisible on dark),
- *     and it simply does not exist for several brands (openai, deepseek,
- *     xai-grok return 404)
- *   - several `default` icons are hard-coded white (invisible on light)
- * So we always resolve to `default`, which exists for every brand, and let
- * ModelIcon paint it as a CSS mask over currentColor. A mask only reads the
- * alpha channel, so the baked-in fill colour stops mattering.
- */
-export function getBrandIconUrl(modelId, variant = "default") {
-  const slug = resolveModelBrand(modelId);
-  if (!slug) return null;
-  if (variant === "default" && LOCAL_ICONS[slug]) return LOCAL_ICONS[slug];
-  return `${CDN}/${slug}/${variant}.svg`;
 }

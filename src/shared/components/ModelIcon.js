@@ -1,64 +1,16 @@
 "use client";
 
 import PropTypes from "prop-types";
-import { getBrandIconUrl, resolveModelBrand } from "@/shared/utils/modelBrand";
+import { resolveModelIcon } from "@/shared/utils/modelBrand";
 import Icon from "@/shared/components/Icon";
-
-const BRAND_LABELS = {
-  anthropic: "Anthropic",
-  openai: "OpenAI",
-  "google-gemini": "Google Gemini",
-  deepseek: "DeepSeek",
-  "xai-grok": "xAI Grok",
-  moonshot: "Moonshot AI",
-  kimi: "Kimi",
-  zhipu: "Z.ai GLM",
-  mistral: "Mistral",
-  minimax: "MiniMax",
-  longcat: "LongCat",
-  stepfun: "StepFun",
-  xiaomi: "Xiaomi",
-  "alibaba-cloud": "Alibaba Qwen",
-  meta: "Meta Llama",
-  muse: "Meta Muse",
-  nvidia: "NVIDIA",
-  cerebras: "Cerebras",
-  cohere: "Cohere",
-  poolside: "Poolside",
-  perplexity: "Perplexity",
-  openrouter: "OpenRouter",
-  reflection: "Beam",
-  doubao: "ByteDance Doubao",
-  hunyuan: "Tencent Hunyuan",
-  upstage: "Upstage",
-  gemma: "Google Gemma",
-  devin: "Devin (Cognition)",
-};
-
-/**
- * Some CDN icons are a plain white silhouette (fill="#fff"), which is
- * invisible on the light theme. Those are painted as a CSS mask in the
- * brand's own colour instead of being loaded as an <img>.
- *
- * A value of null means the brand genuinely has no colour of its own
- * (OpenAI and xAI are monochrome marks), so it inherits the text colour.
- */
-const MASK_BRANDS = {
-  anthropic: "#D97757", // Anthropic terracotta
-  nvidia: "#76B900",    // NVIDIA green
-  openai: null,         // monochrome mark
-  "xai-grok": null,     // monochrome mark
-  moonshot: null,       // monochrome mark
-  zhipu: null,          // monochrome mark
-  reflection: null,     // monochrome mark
-};
 
 /**
  * ModelIcon — the leading icon for a model row.
  *
  * Resolution order:
  *   1. test status (ok / error) — live state always wins
- *   2. brand icon in the brand's own colour
+ *   2. brand icon: colour art when the brand has it, otherwise a mono
+ *      silhouette masked over currentColor so it follows the theme
  *   3. generic bot glyph — ONLY for models we cannot attribute to a brand
  */
 export default function ModelIcon({ modelId, testStatus, size = 16, className = "" }) {
@@ -71,44 +23,14 @@ export default function ModelIcon({ modelId, testStatus, size = 16, className = 
     );
   }
 
-  const slug = resolveModelBrand(modelId);
-  const url = slug ? getBrandIconUrl(modelId) : null;
+  const brand = resolveModelIcon(modelId);
 
-  if (url) {
-    const label = BRAND_LABELS[slug] || slug;
-
-    // White-only icons: paint as a mask so the brand colour shows through.
-    if (slug in MASK_BRANDS) {
-      const brandColor = MASK_BRANDS[slug];
-      return (
-        <span
-          role="img"
-          aria-label={label}
-          title={label}
-          className={`inline-block shrink-0 ${brandColor ? "" : "bg-current"} ${className}`}
-          style={{
-            width: size,
-            height: size,
-            backgroundColor: brandColor || undefined,
-            WebkitMaskImage: `url("${url}")`,
-            maskImage: `url("${url}")`,
-            WebkitMaskRepeat: "no-repeat",
-            maskRepeat: "no-repeat",
-            WebkitMaskPosition: "center",
-            maskPosition: "center",
-            WebkitMaskSize: "contain",
-            maskSize: "contain",
-          }}
-        />
-      );
-    }
-
-    // Already full-colour icons: show them as they are.
+  if (brand?.color) {
     return (
       <img
-        src={url}
+        src={brand.url}
         alt=""
-        title={label}
+        title={brand.label}
         width={size}
         height={size}
         className={`shrink-0 object-contain ${className}`}
@@ -116,6 +38,29 @@ export default function ModelIcon({ modelId, testStatus, size = 16, className = 
         loading="lazy"
         decoding="async"
         aria-hidden="true"
+      />
+    );
+  }
+
+  if (brand) {
+    return (
+      <span
+        role="img"
+        aria-label={brand.label}
+        title={brand.label}
+        className={`inline-block shrink-0 bg-current ${className}`}
+        style={{
+          width: size,
+          height: size,
+          WebkitMaskImage: `url("${brand.url}")`,
+          maskImage: `url("${brand.url}")`,
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+        }}
       />
     );
   }

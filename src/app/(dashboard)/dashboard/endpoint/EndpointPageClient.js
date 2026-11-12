@@ -20,7 +20,7 @@ import StatusAlert from "./components/StatusAlert";
 import Tooltip from "./components/Tooltip";
 import SecurityWarning from "./components/SecurityWarning";
 import KeyAccessControls from "./components/KeyAccessControls";
-import ModelsCard from "./components/ModelsCard";
+import TopApiKeyUsage from "./components/TopApiKeyUsage";
 import Icon from "@/shared/components/Icon";
 export default function APIPageClient({ machineId }) {
   const [keys, setKeys] = useState([]);
@@ -1094,7 +1094,7 @@ export default function APIPageClient({ machineId }) {
       </Card>
       </div>
 
-      <ModelsCard />
+      <TopApiKeyUsage />
 
       {/* Add Key Modal */}
       <Modal
