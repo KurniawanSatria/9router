@@ -44,6 +44,12 @@ describe("resolveModelIcon", () => {
     expect(resolveModelIcon(null)).toBeNull();
   });
 
+  it("paints currentColor-only brand art with the brand accent", () => {
+    for (const slug of ["aws", "yi", "longcat", "unionalpha"]) {
+      expect(MODEL_ICONS.find((m) => m.slug === slug)?.color, slug).toBe(true);
+    }
+  });
+
   it("points at an asset that exists in /public", () => {
     const missing = MODEL_ICONS.map((m) => `/model-icons/${m.slug}${m.color ? "-color" : ""}.svg`)
       .filter((url) => !existsSync(`${REPO}public${url}`));
