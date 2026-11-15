@@ -411,7 +411,7 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
   const tokenharborResetAtMs = tokenharborFreeTierResetMs(status, errorText, resolveProviderId(provider));
 
   // Provider-specific precise cooldown (e.g. codex usage_limit_reached resets_at) overrides backoff
-  let shouldFallback, cooldownMs, newBackoffLevel;
+  let shouldFallback, cooldownMs, newBackoffLevel, rotateAccount;
   if (githubResetAtMs) {
     shouldFallback = true;
     cooldownMs = githubResetAtMs - Date.now();
@@ -428,8 +428,13 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
       : Math.min(resetsAtMs - Date.now(), MAX_RATE_LIMIT_COOLDOWN_MS);
     newBackoffLevel = 0;
   } else {
-    ({ shouldFallback, cooldownMs, newBackoffLevel } = checkFallbackError(status, errorText, backoffLevel, resolveProviderId(provider)));
+    ({ shouldFallback, cooldownMs, newBackoffLevel, rotateAccount } = checkFallbackError(status, errorText, backoffLevel, resolveProviderId(provider)));
   }
+
+  // The upstream rejected this conversation, not the credential (free-pi pins a
+  // conversation to the account that served it first). Rotate without a lock so
+  // the account stays usable for every other conversation.
+  if (rotateAccount) return { shouldFallback: true, cooldownMs: 0 };
 
   // Providers with an account-wide rate limit (e.g. OrcaRouter: 1 req/min per
   // key) must stop every model on the key, not just the model that got the 429.

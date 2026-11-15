@@ -29,12 +29,29 @@ describe("freepi additions", () => {
     expect(versionCalls()).toBe(1);
   });
 
-  it("gives every request its own session id", async () => {
-    await execute();
-    await execute();
+  it("keeps one session id across the turns of a conversation", async () => {
+    const body = {
+      messages: [
+        { role: "user", content: "build it" },
+        { role: "assistant", content: "Sure, here is a reasonably long opening answer so the turn is recognisably in progress." },
+        { role: "user", content: "go on" },
+      ],
+    };
+    const run = (messages) => getExecutor("freepi").execute({
+      model: "particle",
+      body: { ...body, messages },
+      stream: false,
+      credentials: credentials("0.6.2"),
+    });
+
+    await run(body.messages);
+    await run([...body.messages, { role: "assistant", content: "next" }, { role: "user", content: "more" }]);
+    await run([{ role: "user", content: "a different conversation entirely" }]);
+
     const ids = upstreamFetch.mock.calls.map(([, init]) => init.headers["x-session-id"]);
     expect(ids[0]).toBeTruthy();
-    expect(ids[0]).not.toBe(ids[1]);
+    expect(ids[1]).toBe(ids[0]);
+    expect(ids[2]).not.toBe(ids[0]);
   });
 
   it("keeps trimming and retrying while the conversation is still too long", async () => {

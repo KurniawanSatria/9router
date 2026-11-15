@@ -69,11 +69,12 @@ const COOLDOWN = {
 /**
  * Unified error classification rules.
  * Checked top-to-bottom: text rules first (by order), then status rules.
- * Each rule: { text?, status?, cooldownMs?, backoff? }
+ * Each rule: { text?, status?, cooldownMs?, backoff?, rotateAccount? }
  *   - text: substring match (case-insensitive) on error message
  *   - status: HTTP status code match
  *   - cooldownMs: fixed cooldown duration
  *   - backoff: true = use exponential backoff (rate limit)
+ *   - rotateAccount: true = try the next account without locking this one
  */
 export const ERROR_RULES = [
   // --- Text-based rules (checked first, order = priority) ---
@@ -84,6 +85,10 @@ export const ERROR_RULES = [
   // free-pi allows 4 concurrent CLI sessions per account; rotate instead of
   // failing the request on the caller.
   { provider: "freepi", text: "concurrent_session", cooldownMs: COOLDOWN.long },
+  // free-pi binds a conversation to the account that served it first and answers
+  // "belongs to another free-pi account". Only this conversation is rejected, not
+  // the credential, so rotate without locking the account.
+  { provider: "freepi", text: "another free-pi account", cooldownMs: 0, rotateAccount: true },
   { text: "no credentials",           cooldownMs: COOLDOWN.long },
   { text: "request not allowed",      cooldownMs: COOLDOWN.short },
   { text: "improperly formed request", cooldownMs: COOLDOWN.long },

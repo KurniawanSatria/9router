@@ -10,6 +10,7 @@ import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { stripUnsupportedParams } from "../translator/concerns/paramSupport.js";
 import { extractClaudeSessionIdFromUserId } from "../utils/claudeCloaking.js";
 import { ensureFreepiAd } from "../services/freepiAds.js";
+import { resolveSessionId } from "../utils/sessionManager.js";
 
 // Auth header descriptors — derived from registry transport.auth, fallback to hardcoded defaults.
 const BEARER = { combined: true, header: "Authorization", scheme: "bearer" };
@@ -70,10 +71,17 @@ const HEADER_HOOKS = {
   // Model API keys already work without it
   museHeaders: (h, c) => { if (c?.accessToken && !c?.apiKey) h["x-api-version"] = "1.0.0"; },
   // free-pi gates completions on the official client version and groups traces
-  // by session id. Each request gets its own session; concurrent_session 409
-  // rotates to another account (see errorConfig).
-  freepiHeaders: (h, c) => {
-    h["x-session-id"] = randomUUID();
+  // by session id. The session id is also what free-pi pins a conversation to,
+  // so it must be stable across turns: a fresh one per request makes the next
+  // turn look like a conversation owned by whichever account is picked, which
+  // free-pi rejects with "belongs to another free-pi account" (see errorConfig).
+  freepiHeaders: (h, c, body) => {
+    h["x-session-id"] = resolveSessionId({
+      headers: c?.rawHeaders,
+      body,
+      connectionId: c?.connectionId,
+      scope: "freepi",
+    });
     h["x-client-version"] = c?.providerSpecificData?.clientVersion || "0.6.2";
   },
   clineHeaders: (h, c) => Object.assign(h, buildClineHeaders(c.apiKey || c.accessToken)),
@@ -311,7 +319,7 @@ export class DefaultExecutor extends BaseExecutor {
     const headers = { "Content-Type": "application/json", ...(rt ? rt.headers : this.config.headers) };
     const desc = rt?.auth || AUTH_DESCRIPTORS[this.provider] || this.resolveAuthDescriptor();
     // Hooks run BEFORE auth so dynamic overlays can't clobber the token.
-    for (const hook of desc.hooks || []) HEADER_HOOKS[hook]?.(headers, credentials);
+    for (const hook of desc.hooks || []) HEADER_HOOKS[hook]?.(headers, credentials, body);
     applyAuth(headers, desc, credentials);
 
     // anthropic-compatible-* nodes serving a real Claude model sit in front of
