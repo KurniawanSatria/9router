@@ -39,7 +39,10 @@ export default {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.detail?.message || `ElevenLabs TTS failed: ${res.status}`);
+      throw Object.assign(
+        new Error(err?.detail?.message || `ElevenLabs TTS failed: ${res.status}`),
+        { status: res.status },
+      );
     }
     const buf = await res.arrayBuffer();
     if (buf.byteLength < 1024) throw new Error("ElevenLabs TTS returned empty audio");

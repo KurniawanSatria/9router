@@ -5,8 +5,9 @@ export const SIDEBAR_ITEMS = [
   { key: "combos", href: "/dashboard/combos", label: "Combos", icon: "layers", group: "main" },
   { key: "usage", href: "/dashboard/usage", label: "Usage", icon: "monitoring", group: "main" },
   { key: "quota", href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage", group: "main" },
-  { key: "systemone", href: "/dashboard/systemone", label: "System One", icon: "psychology", group: "system" },
   { key: "console-log", href: "/dashboard/console-log", label: "Console Log", icon: "terminal", group: "system" },
+  { key: "media-tts", href: "/dashboard/media-providers/tts", label: "Text To Speech", icon: "record_voice_over", group: "system" },
+  { key: "systemone", href: "/dashboard/systemone", label: "System One", icon: "psychology", group: "system" },
   { key: "proxy-pools", href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan", group: "system" },
   { key: "translator", href: "/dashboard/translator", label: "Translator", icon: "translate", group: "system", needsTranslator: true },
 ];
@@ -39,12 +40,8 @@ export function resolveSidebarItems(savedOrder) {
   for (let i = 0; i < SIDEBAR_ITEMS.length; i++) {
     const item = SIDEBAR_ITEMS[i];
     if (!byKey.has(item.key)) continue;
-    // Land at the end of its own group segment: the first saved item that comes
-    // after it canonically and belongs to a different group.
-    const at = ordered.findIndex((existing) => {
-      const existingIndex = SIDEBAR_ITEMS.indexOf(existing);
-      return existingIndex > i && existing.group !== item.group;
-    });
+    // Land at its canonical spot: the first saved item that comes after it.
+    const at = ordered.findIndex((existing) => SIDEBAR_ITEMS.indexOf(existing) > i);
     ordered.splice(at === -1 ? ordered.length : at, 0, item);
     byKey.delete(item.key);
   }

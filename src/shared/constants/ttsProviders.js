@@ -36,6 +36,14 @@ export const TTS_PROVIDER_CONFIG = {
     modelKey: "elevenlabs-tts-models",
     apiEndpoint: "/api/media-providers/tts/elevenlabs/voices",
   },
+  "fish-audio": {
+    hasLanguageDropdown: false,
+    hasModelSelector: true,
+    hasBrowseButton: true,
+    hasVoiceIdInput: true, // reference_id can be pasted when the voice list is empty
+    voiceSource: "api-language", // the account's own voice models
+    apiEndpoint: "/api/media-providers/tts/fish-audio/voices",
+  },
   "edge-tts": {
     hasLanguageDropdown: false,
     hasModelSelector: false,

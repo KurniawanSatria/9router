@@ -44,6 +44,7 @@ const getPageInfo = (pathname) => {
       : null;
 
   return (
+    match("/media-providers/tts", "Text To Speech", "TTS providers, their accounts and voices", "record_voice_over") ||
     match("/providers", "Providers", "Manage your AI provider connections", "dns") ||
     match("/combos", "Combos", "Model combos with fallback", "layers") ||
     match("/systemone", "System One", "Decision endpoint for state + typed questions", "psychology") ||

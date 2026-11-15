@@ -23,7 +23,24 @@ export async function throwUpstreamError(res) {
     const parsed = JSON.parse(text);
     msg = parsed?.error?.message || parsed?.message || parsed?.detail?.message || (typeof parsed?.detail === "string" ? parsed.detail : null) || text || msg;
   } catch { msg = text || msg; }
-  throw new Error(msg);
+  // The caller (handleTts) rotates accounts on this status: a quota 429/402 must
+  // stay a 429/402 so ERROR_RULES applies its lock instead of a transient cooldown.
+  throw Object.assign(new Error(msg), { status: res.status });
+}
+
+// First occurrence of each id wins; used to read voices from every account in a pool.
+export function mergeVoiceLists(lists, idOf = (v) => v.id) {
+  const seen = new Set();
+  const merged = [];
+  for (const list of lists || []) {
+    for (const voice of list || []) {
+      const id = idOf(voice);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      merged.push(voice);
+    }
+  }
+  return merged;
 }
 
 // Parse `model` string as "modelId/voiceId" — match against known model list (longest prefix wins)

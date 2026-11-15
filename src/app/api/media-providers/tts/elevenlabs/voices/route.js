@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProviderConnections } from "@/lib/localDb";
 import { fetchElevenLabsVoices } from "open-sse/handlers/ttsCore.js";
+import { mergeVoiceLists } from "open-sse/handlers/ttsProviders/_base.js";
 
 const langNames = new Intl.DisplayNames(["en"], { type: "language" });
 
@@ -16,12 +17,17 @@ export async function GET(request) {
 
     // Direct DB read - bypass auth mutex used for TTS inference
     const connections = await getProviderConnections({ provider: "elevenlabs", isActive: true });
-    const apiKey = connections[0]?.apiKey;
-    if (!apiKey) {
+    const apiKeys = [...new Set(connections.map((c) => c.apiKey).filter(Boolean))];
+    if (!apiKeys.length) {
       return NextResponse.json({ error: "No ElevenLabs connection found" }, { status: 400 });
     }
 
-    const voices = await fetchElevenLabsVoices(apiKey);
+    // Voices belong to the account (cloned + professional library), so read the
+    // whole pool and let a failing account drop out instead of failing the list.
+    const voices = mergeVoiceLists(
+      await Promise.all(apiKeys.map((key) => fetchElevenLabsVoices(key).catch(() => []))),
+      (v) => v.voice_id,
+    );
 
     // Group by all supported languages (verified_languages + labels.language)
     const byLang = {};
