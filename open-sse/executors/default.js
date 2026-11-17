@@ -133,40 +133,6 @@ const REFRESH_GRANTS = Object.fromEntries(
 // Fall back to a minimal OpenAI-format transport instead.
 const COMPAT_FALLBACK_CONFIG = { format: "openai", baseUrl: OPENAI_COMPAT_BASE };
 
-// free-pi answers 413 context_too_long when the whole conversation no longer
-// fits. Keep the system prompt, the opening turns and the recent tail, drop the
-// middle, and retry. Dropping the whole prefix (system + recent only) also fits
-// but loses the task the conversation started with, which reads as the model
-// forgetting what it was asked.
-const FREEPI_HEAD_KEEP = 6;
-
-function dropOldFreepiTurns(body, keepLast = 8) {
-  const messages = body?.messages;
-  if (!Array.isArray(messages) || messages.length <= keepLast + 1) return null;
-
-  const system = [];
-  let first = 0;
-  while (first < messages.length && (messages[first]?.role === "system" || messages[first]?.role === "developer")) {
-    system.push(messages[first]);
-    first++;
-  }
-  const rest = messages.slice(first);
-  if (rest.length <= keepLast) return null;
-
-  // Never end the head on an assistant tool call whose results were dropped.
-  const head = rest.slice(0, Math.min(FREEPI_HEAD_KEEP, rest.length - keepLast));
-  while (head.length && (head.at(-1)?.role === "tool" || head.at(-1)?.tool_calls)) head.pop();
-
-  // A tail of bare tool results is invalid, so back up onto the assistant call
-  // that produced them.
-  let start = rest.length - keepLast;
-  while (start > head.length && rest[start]?.role === "tool") start--;
-
-  const kept = [...system, ...head, ...rest.slice(start)];
-  if (kept.length >= messages.length) return null;
-  return { ...body, messages: kept };
-}
-
 export class DefaultExecutor extends BaseExecutor {
   constructor(provider) {
     super(provider, PROVIDERS[provider] || PROVIDERS.openai || COMPAT_FALLBACK_CONFIG);
@@ -183,25 +149,7 @@ export class DefaultExecutor extends BaseExecutor {
       }
       await ensureFreepiAd(options.credentials);
     }
-    const result = await super.execute(options);
-    if (this.provider !== "freepi" || result?.response?.status !== 413) return result;
-
-    const clone = result.response.clone?.();
-    const errorText = clone && typeof clone.text === "function"
-      ? await clone.text().catch(() => "")
-      : "";
-    if (!errorText.includes("context_too_long")) return result;
-
-    let current = result;
-    let currentBody = options.body;
-    for (const keepLast of [8, 4, 2, 1]) {
-      const compacted = dropOldFreepiTurns(currentBody, keepLast);
-      if (!compacted || compacted.messages.length >= (currentBody?.messages?.length || 0)) continue;
-      currentBody = compacted;
-      current = await super.execute({ ...options, body: currentBody });
-      if (current?.response?.status !== 413) return current;
-    }
-    return current;
+    return super.execute(options);
   }
 
   transformRequest(model, body, stream, credentials) {

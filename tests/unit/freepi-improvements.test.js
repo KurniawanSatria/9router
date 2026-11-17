@@ -54,103 +54,29 @@ describe("freepi additions", () => {
     expect(ids[2]).not.toBe(ids[0]);
   });
 
-  it("keeps trimming and retrying while the conversation is still too long", async () => {
-    const tooLong = () => ({
+  it("leaves a too-long conversation intact so the client can compact it", async () => {
+    const tooLong = {
       status: 413,
       headers: { get: () => "application/json" },
       clone: () => ({ text: async () => '{"code":"context_too_long"}' }),
-    });
-    upstreamFetch.mockReset()
-      .mockResolvedValueOnce(tooLong())
-      .mockResolvedValueOnce(tooLong())
-      .mockResolvedValue(ok);
-
-    const messages = [{ role: "system", content: "sys" }];
-    for (let i = 0; i < 6; i++) {
-      messages.push({ role: "user", content: `u${i}` }, { role: "assistant", content: `a${i}` });
-    }
-
-    const result = await getExecutor("freepi").execute({
-      model: "particle",
-      body: { messages },
-      stream: false,
-      credentials: credentials("0.6.2"),
-    });
-
-    expect(result.response.status).toBe(200);
-    expect(upstreamFetch).toHaveBeenCalledTimes(3);
-    const first = JSON.parse(upstreamFetch.mock.calls[1][1].body).messages;
-    const second = JSON.parse(upstreamFetch.mock.calls[2][1].body).messages;
-    expect(second.length).toBeLessThan(first.length);
-    expect(second[0].role).toBe("system");
-    expect(second[1].role).toBe("user");
-  });
-
-  it("trims when the newest turn is a run of tool calls with no user message", async () => {
-    const tooLong = () => ({
-      status: 413,
-      headers: { get: () => "application/json" },
-      clone: () => ({ text: async () => '{"code":"context_too_long"}' }),
-    });
-    upstreamFetch.mockReset()
-      .mockResolvedValueOnce(tooLong())
-      .mockResolvedValue(ok);
-
-    const messages = [
-      { role: "system", content: "sys" },
-      { role: "user", content: "build it" },
-      { role: "assistant", content: "ok" },
-      { role: "user", content: "go on" },
-    ];
-    for (let i = 0; i < 12; i++) {
-      messages.push(
-        { role: "assistant", content: null, tool_calls: [{ id: `t${i}`, type: "function", function: { name: "read", arguments: "{}" } }] },
-        { role: "tool", tool_call_id: `t${i}`, content: `result ${i}` },
-      );
-    }
-
-    const result = await getExecutor("freepi").execute({
-      model: "particle",
-      body: { messages },
-      stream: false,
-      credentials: credentials("0.6.2"),
-    });
-
-    expect(result.response.status).toBe(200);
-    expect(upstreamFetch).toHaveBeenCalledTimes(2);
-    const trimmed = JSON.parse(upstreamFetch.mock.calls[1][1].body).messages;
-    expect(trimmed.length).toBeLessThan(messages.length);
-    expect(trimmed[0].role).toBe("system");
-    expect(trimmed[1].role).not.toBe("tool");
-  });
-
-  it("keeps the opening turn when trimming the middle", async () => {
-    const tooLong = () => ({
-      status: 413,
-      headers: { get: () => "application/json" },
-      clone: () => ({ text: async () => '{"code":"context_too_long"}' }),
-    });
-    upstreamFetch.mockReset()
-      .mockResolvedValueOnce(tooLong())
-      .mockResolvedValue(ok);
+    };
+    upstreamFetch.mockReset().mockResolvedValue(tooLong);
 
     const messages = [{ role: "system", content: "sys" }];
     for (let i = 0; i < 20; i++) {
       messages.push({ role: "user", content: `u${i}` }, { role: "assistant", content: `a${i}` });
     }
 
-    await getExecutor("freepi").execute({
+    const result = await getExecutor("freepi").execute({
       model: "particle",
       body: { messages },
       stream: false,
       credentials: credentials("0.6.2"),
     });
 
-    const trimmed = JSON.parse(upstreamFetch.mock.calls[1][1].body).messages;
-    expect(trimmed.length).toBeLessThan(messages.length);
-    expect(trimmed[0]).toEqual({ role: "system", content: "sys" });
-    expect(trimmed[1]).toEqual({ role: "user", content: "u0" });
-    expect(trimmed.at(-1).content).toBe("a19");
+    expect(result.response.status).toBe(413);
+    expect(upstreamFetch).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(upstreamFetch.mock.calls[0][1].body).messages).toEqual(messages);
   });
 
   it("strips the promo suffix from model names", () => {
