@@ -10,14 +10,26 @@ vi.stubGlobal("fetch", versionFetch);
 
 const { getExecutor } = await import("../../open-sse/executors/index.js");
 const { FILTERS } = await import("../../src/app/api/providers/suggested-models/filters.js");
+const { resolveConversationKey, getConversationBinding, clearSessionStore } = await import("../../open-sse/utils/sessionManager.js");
 
 const ok = { status: 200, headers: { get: () => "" } };
-const credentials = (clientVersion) => ({ accessToken: "jwt", providerSpecificData: { clientVersion, userId: "user-1" } });
-const execute = () => getExecutor("freepi").execute({ model: "particle", body: {}, stream: false, credentials: credentials("0.6.2") });
+const credentials = (clientVersion, extra = {}) => ({
+  accessToken: "jwt",
+  connectionId: extra.connectionId,
+  freshSession: extra.freshSession,
+  providerSpecificData: { clientVersion, userId: extra.userId || "user-1" },
+});
+const execute = (body = {}, extra = {}) => getExecutor("freepi").execute({
+  model: "particle",
+  body,
+  stream: false,
+  credentials: credentials("0.6.2", extra),
+});
 
 beforeEach(() => {
   upstreamFetch.mockReset().mockResolvedValue(ok);
   versionFetch.mockReset().mockResolvedValue({ ok: true, json: async () => ({ latest: "0.6.15" }) });
+  clearSessionStore();
 });
 
 describe("freepi additions", () => {
@@ -77,6 +89,39 @@ describe("freepi additions", () => {
     expect(result.response.status).toBe(413);
     expect(upstreamFetch).toHaveBeenCalledTimes(1);
     expect(JSON.parse(upstreamFetch.mock.calls[0][1].body).messages).toEqual(messages);
+  });
+
+  it("remembers the account that owns a conversation", async () => {
+    const body = {
+      messages: [
+        { role: "user", content: "pin this conversation" },
+        { role: "assistant", content: "This opening answer is long enough to give the conversation a stable fingerprint." },
+        { role: "user", content: "continue" },
+      ],
+    };
+    await execute(body, { connectionId: "acct-a" });
+
+    const key = resolveConversationKey({ body, scope: "freepi" });
+    expect(key).toBeTruthy();
+    expect(getConversationBinding("freepi", key)).toMatchObject({ connectionId: "acct-a" });
+  });
+
+  it("rekeys the session id after an account mismatch", async () => {
+    const body = {
+      messages: [
+        { role: "user", content: "rekey this conversation" },
+        { role: "assistant", content: "This opening answer is long enough to give the conversation a stable fingerprint." },
+        { role: "user", content: "continue" },
+      ],
+    };
+    await execute(body, { connectionId: "acct-a" });
+    await execute(body, { connectionId: "acct-a", freshSession: true });
+    await execute(body, { connectionId: "acct-b" });
+
+    const ids = upstreamFetch.mock.calls.map(([, init]) => init.headers["x-session-id"]);
+    expect(ids[1]).not.toBe(ids[0]);
+    // The rekey is remembered, so the next turn on any account reuses it.
+    expect(ids[2]).toBe(ids[1]);
   });
 
   it("strips the promo suffix from model names", () => {

@@ -20,7 +20,7 @@ import { augmentModelsWithCapacityAdapter, withCapacityAdapterStripping, getActi
 import { handleBypassRequest } from "open-sse/utils/bypassHandler.js";
 import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
 import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
-import { resolveSessionIdentity } from "open-sse/utils/sessionManager.js";
+import { resolveSessionIdentity, resolveConversationKey, getConversationBinding } from "open-sse/utils/sessionManager.js";
 import * as log from "../utils/logger.js";
 import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
 import { getProjectIdForConnection } from "open-sse/services/projectId.js";
@@ -319,6 +319,18 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
   const { provider, model } = modelInfo;
 
+  // free-pi pins a conversation to the account that served its first turn and
+  // rejects it elsewhere. Prefer the remembered owner; a mismatch below rekeys
+  // the session on the same account instead of rotating (which free-pi forbids).
+  const freepiConversationKey = provider === "freepi"
+    ? resolveConversationKey({ headers: clientRawRequest?.headers, body, scope: "freepi" })
+    : null;
+  let preferredConnectionId = freepiConversationKey
+    ? getConversationBinding("freepi", freepiConversationKey)?.connectionId || null
+    : null;
+  let freepiFreshSession = false;
+  let freepiRekeyed = false;
+
   // Routing shown in the unified "▶" line (client model → provider/model)
 
   // Extract userAgent from request
@@ -331,7 +343,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
   let lastHeaders = null;
 
   while (true) {
-    const credentials = await getProviderCredentials(provider, excludeConnectionIds, model, { requestedModel: requestedModel || model });
+    const credentials = await getProviderCredentials(provider, excludeConnectionIds, model, { requestedModel: requestedModel || model, preferredConnectionId });
 
     // All accounts unavailable
     if (!credentials || credentials.allRateLimited) {
@@ -351,6 +363,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
     // Account selection shown in the unified "▶" line (acc:...)
     const refreshedCredentials = await checkAndRefreshToken(provider, credentials);
+    if (freepiFreshSession) refreshedCredentials.freshSession = true;
 
     // Ensure real project ID is available for providers that need it (P0 fix: cold miss)
     if (provider === "antigravity" && !refreshedCredentials.projectId) {
@@ -410,9 +423,21 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
     // Exhausted Antigravity model is blocked only in RAM cache until upstream resetAt.
     // Do not persist a modelLock_* for this path.
-    const shouldFallback = provider === "antigravity" && quotaResetMs
-      ? true
-      : (await markAccountUnavailable(credentials.connectionId, result.status, result.error, provider, model, resetsAtMs)).shouldFallback;
+    const accountState = provider === "antigravity" && quotaResetMs
+      ? { shouldFallback: true }
+      : await markAccountUnavailable(credentials.connectionId, result.status, result.error, provider, model, resetsAtMs);
+    const shouldFallback = accountState.shouldFallback;
+
+    // The account and the conversation, not the credential, disagree. Keep the
+    // same account (free-pi forbids rotating) and send a new session id so the
+    // conversation restarts there. Once only, so a repeat cannot loop forever.
+    if (shouldFallback && accountState.rotateAccount && provider === "freepi" && !freepiRekeyed) {
+      freepiRekeyed = true;
+      freepiFreshSession = true;
+      preferredConnectionId = credentials.connectionId;
+      log.warn("FALLBACK", `⇄ ACC:${credentials.connectionName} CONVERSATION MISMATCH → NEW SESSION`);
+      continue;
+    }
 
     if (shouldFallback) {
       log.warn("FALLBACK", `⇄ ACC:${credentials.connectionName} UNAVAILABLE (${result.status}) → NEXT ACCOUNT`);

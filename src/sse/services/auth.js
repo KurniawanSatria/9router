@@ -432,9 +432,10 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
   }
 
   // The upstream rejected this conversation, not the credential (free-pi pins a
-  // conversation to the account that served it first). Rotate without a lock so
-  // the account stays usable for every other conversation.
-  if (rotateAccount) return { shouldFallback: true, cooldownMs: 0 };
+  // conversation to the account that served it first). Do not lock the account;
+  // chat.js retries the same account with a fresh session id so free-pi treats
+  // it as a new conversation instead of rotating accounts.
+  if (rotateAccount) return { shouldFallback: true, cooldownMs: 0, rotateAccount: true };
 
   // Providers with an account-wide rate limit (e.g. OrcaRouter: 1 req/min per
   // key) must stop every model on the key, not just the model that got the 429.

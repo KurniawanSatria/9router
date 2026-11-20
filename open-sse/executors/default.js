@@ -10,7 +10,7 @@ import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { stripUnsupportedParams } from "../translator/concerns/paramSupport.js";
 import { extractClaudeSessionIdFromUserId } from "../utils/claudeCloaking.js";
 import { ensureFreepiAd } from "../services/freepiAds.js";
-import { resolveSessionId } from "../utils/sessionManager.js";
+import { resolveSessionId, resolveConversationKey, getConversationBinding, bindConversation, generateBinaryStyleId } from "../utils/sessionManager.js";
 
 // Auth header descriptors — derived from registry transport.auth, fallback to hardcoded defaults.
 const BEARER = { combined: true, header: "Authorization", scheme: "bearer" };
@@ -71,17 +71,24 @@ const HEADER_HOOKS = {
   // Model API keys already work without it
   museHeaders: (h, c) => { if (c?.accessToken && !c?.apiKey) h["x-api-version"] = "1.0.0"; },
   // free-pi gates completions on the official client version and groups traces
-  // by session id. The session id is also what free-pi pins a conversation to,
-  // so it must be stable across turns: a fresh one per request makes the next
-  // turn look like a conversation owned by whichever account is picked, which
-  // free-pi rejects with "belongs to another free-pi account" (see errorConfig).
+  // by session id. It also pins a conversation to the account that served its
+  // first turn and rejects the same session id elsewhere with "belongs to another
+  // free-pi account". So the id is resolved per conversation, remembered with the
+  // account that used it (callers pin to that account), and replaced when the
+  // conversation has to restart on another account (freshSession).
   freepiHeaders: (h, c, body) => {
-    h["x-session-id"] = resolveSessionId({
-      headers: c?.rawHeaders,
-      body,
-      connectionId: c?.connectionId,
-      scope: "freepi",
-    });
+    const conversationKey = resolveConversationKey({ headers: c?.rawHeaders, body, scope: "freepi" });
+    const binding = conversationKey ? getConversationBinding("freepi", conversationKey) : null;
+    const sessionId = c?.freshSession
+      ? generateBinaryStyleId()
+      : binding?.sessionId || resolveSessionId({
+        headers: c?.rawHeaders,
+        body,
+        connectionId: c?.connectionId,
+        scope: "freepi",
+      });
+    h["x-session-id"] = sessionId;
+    if (conversationKey) bindConversation("freepi", conversationKey, { sessionId, connectionId: c?.connectionId });
     h["x-client-version"] = c?.providerSpecificData?.clientVersion || "0.6.2";
   },
   clineHeaders: (h, c) => Object.assign(h, buildClineHeaders(c.apiKey || c.accessToken)),

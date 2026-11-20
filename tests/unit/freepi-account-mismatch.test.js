@@ -9,6 +9,7 @@ describe("free-pi account mismatch", () => {
     const result = checkFallbackError(409, mismatch, 0, "freepi");
     expect(result.shouldFallback).toBe(true);
     expect(result.cooldownMs).toBe(0);
+    expect(result.rotateAccount).toBe(true);
   });
 
   it("leaves the same message alone on other providers", () => {

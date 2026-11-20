@@ -82,6 +82,7 @@ export function clearSessionStore() {
     runtimeSessionStore.clear();
     assistantSessionStore.clear();
     continuationStore.clear();
+    conversationBindings.clear();
 }
 
 // Conversation-stable session store: Key = hash(scope+assistant text), Value = { sessionId, lastUsed }
@@ -198,6 +199,54 @@ function assistantTextSessionId(scope, body) {
 }
 
 /**
+ * Conversation fingerprint that is stable no matter which account serves the
+ * request: the client session id, else a hash of the assistant text, else a
+ * hash of the first user message. Providers that pin a conversation to the
+ * account that served its first turn (free-pi) key their affinity on this.
+ *
+ * Unlike resolveSessionId it never generates an id, so it can be computed
+ * before an account is chosen.
+ */
+export function resolveConversationKey({ headers, body, scope = "" } = {}) {
+    const client = extractClientSessionId(headers, body, scope);
+    if (client) return client;
+    const assistant = accumulateAssistantText(body);
+    if (assistant.length >= ASSISTANT_MIN_LEN) {
+        return sha16(`${scope}:a:${assistant.slice(0, ASSISTANT_CAP_LEN)}`);
+    }
+    for (const item of requestMessages(body)) {
+        if (item?.role !== "user") continue;
+        const text = typeof item.content === "string"
+            ? item.content
+            : (Array.isArray(item.content) ? item.content.map((c) => c?.text || "").join("") : "");
+        if (text.trim()) return sha16(`${scope}:u:${text.slice(0, ASSISTANT_CAP_LEN)}`);
+    }
+    return null;
+}
+
+// Conversation -> account affinity. Key = `${scope}:${conversationKey}`;
+// value = the session id first used and the connection that owns it.
+const conversationBindings = new Map();
+const MAX_CONVERSATION_BINDINGS = 5000;
+
+export function getConversationBinding(scope, key) {
+    if (!key) return null;
+    const entry = conversationBindings.get(`${scope}:${key}`);
+    if (!entry) return null;
+    entry.lastUsed = Date.now();
+    return entry;
+}
+
+export function bindConversation(scope, key, { sessionId, connectionId } = {}) {
+    if (!key || !connectionId) return;
+    const mapKey = `${scope}:${key}`;
+    if (!conversationBindings.has(mapKey) && conversationBindings.size >= MAX_CONVERSATION_BINDINGS) {
+        conversationBindings.delete(conversationBindings.keys().next().value);
+    }
+    conversationBindings.set(mapKey, { sessionId, connectionId, lastUsed: Date.now() });
+}
+
+/**
  * Resolve a conversation-stable session id (generalizes Codex resolveCacheSessionId).
  * Priority: client session → accumulated-assistant-text hash → workspaceId → per-connection.
  *
@@ -266,6 +315,9 @@ const assistantCleanup = setInterval(() => {
     }
     for (const [key, entry] of continuationStore) {
         if (now - entry.lastUsed > MEMORY_CONFIG.sessionTtlMs) continuationStore.delete(key);
+    }
+    for (const [key, entry] of conversationBindings) {
+        if (now - entry.lastUsed > MEMORY_CONFIG.sessionTtlMs) conversationBindings.delete(key);
     }
 }, MEMORY_CONFIG.sessionCleanupIntervalMs);
 if (assistantCleanup.unref) assistantCleanup.unref();
